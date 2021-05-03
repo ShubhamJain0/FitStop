@@ -1,30 +1,43 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState, useEffect, useRef, isValidElement } from 'react';
+import React, { useState, useEffect, useRef, isValidElement, useContext } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, Image, Dimensions, TouchableHighlight, Platform, ScrollView, 
-  TouchableOpacity, RefreshControl, Animated, Easing } from 'react-native';
+  TouchableOpacity, RefreshControl, Animated, Easing, Linking } from 'react-native';
 import Modal from 'react-native-modal';
 import Carousel, {ParallaxImage, Pagination} from 'react-native-snap-carousel';
+import BouncingPreloader from 'react-native-bouncing-preloaders';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'; 
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons'; 
 import { FontAwesome5 } from '@expo/vector-icons';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import * as Font from 'expo-font';
-import AppLoading from 'expo-app-loading';
 import MapView, {Marker, AnimatedRegion, Callout, MarkerAnimated} from 'react-native-maps';
 import Svg, { Path } from 'react-native-svg';
+import { UserContext, PushTokenContext} from './context';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const {width: screenWidth} = Dimensions.get('window');
 const screenHeight = Dimensions.get('window').height;
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
-export default function Home(props){
+
+
+export default function Home({ navigation }){
 
   const [bannerImages, setbannerImages] = useState([]);
   const carouselRef = useRef(null);
   const [activeSlide, setactiveSlide] = useState(0);
 
-  
+  const [homeProductImages, setHomeProductImages] = useState([]);
+
 
   const [location, setLocation] = useState(null);
   const [errormsg, setErrormsg] = useState(null);
@@ -36,6 +49,7 @@ export default function Home(props){
   const[loading, setLoading] = useState('true');
   const [refreshing, setRefreshing] = useState(false);
   const[fontsLoaded, setFontsLoaded] = useState(false);
+  const [refreshOpacity, setRefreshOpacity] = useState(0);
   
   const [modalVisible, setmodalVisible] = useState(false);
   const [locationModal, setLocationModal] = useState(false);
@@ -44,36 +58,14 @@ export default function Home(props){
 
   const [scrollViewScroll, setScrollViewScroll] = useState(0);
 
+  const [conLocation, setConLocation] = useContext(UserContext);
+  const [conPushToken, setConPushToken] = useContext(PushTokenContext);
 
-
-
-
-
-
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestPermissionsAsync();
-      if (status !== 'granted') {
-        setErrormsg('Permission to access location was denied');
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({ enableHighAccuracy: true });
-      setLocation(location.coords);
-
-      let geolocation = await Location.reverseGeocodeAsync({latitude: location.coords.latitude, longitude: location.coords.longitude})
-      setReversegeolocation(geolocation);
-      setMarkerData(location.coords)
-      setMapDefLocation({latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006})
-    })().catch(error => setErrormsg(error))
-        .then(() => setlocationPermission('Permission to access location was denied'));
-  }, []);
-
-
-
+  //component mounts
 
   useEffect(() => {
-
+    let mounted = true;
+    let timeOut = setTimeout(() => setRefreshOpacity(1), 8000);
     fetch('http://192.168.29.234:8000/store/homebanner/',{
       method: 'GET',
       headers: {
@@ -81,10 +73,262 @@ export default function Home(props){
       }
     })
     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+    .then(resp => {if (mounted) {setbannerImages(resp.json)}})
+    .then(() => {if (mounted) setLoading('false')})
+    .catch(error => console.log(error))
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeOut);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    let mounted = true;
+    fetch('http://192.168.29.234:8000/store/homeproducts/',{
+      method: 'GET',
+      headers: {
+        'Content-type': 'application/json'
+      }
+    })
+    .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+    .then(resp => {if (mounted) {setHomeProductImages(resp.json)}})
+    .catch(error => console.log(error))
+
+    return () => {
+      mounted = false;
+    }
+  }, []);
+
+
+
+  ///Push Notifications
+
+  useEffect(() => {
+    registerPushNotificationPermissions();
+  }, [])
+
+
+  const registerPushNotificationPermissions = async () => {
+    let mounted = true;
+    let pushToken;
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    // only ask if permissions have not already been determined, because
+    // iOS won't necessarily prompt the user a second time.
+    if (existingStatus !== 'granted') {
+      // Android remote notification permissions are granted during the app
+      // install, so this will only ask on iOS
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    // Stop here if the user did not grant permissions
+    if (finalStatus !== 'granted') {
+      return setConPushToken(null);
+    }
+
+    // Get the token that uniquely identifies this device
+    pushToken = await Notifications.getExpoPushTokenAsync()
+    .then((pushToken) => {if (mounted) {savePushToken(pushToken), setConPushToken(pushToken)}})
+    .catch(error => console.log(error))
+
+    return () => {
+      mounted = false;
+    }
+  }
+
+
+  const savePushToken = async (pushToken) => {
+    const token = await AsyncStorage.getItem('USER_TOKEN')
+    if (token){
+      fetch('http://192.168.29.234:8000/store/pushnotificationtoken/',{
+              method: 'POST',
+              headers: {
+                'Authorization': `Token ${token}`,
+                'Content-type': 'application/json'
+              },
+              body: JSON.stringify({pushToken: pushToken.data})
+          })
+      .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
+      .catch(error => console.log(error))
+    } else {
+      fetch('http://192.168.29.234:8000/store/pushnotificationtoken/',{
+              method: 'POST',
+              headers: {
+              'Content-type': 'application/json'
+              },
+              body: JSON.stringify({pushToken: pushToken.data})
+          })
+      .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
+      .catch(error => console.log(error))
+    }
+  }
+
+
+
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      if (response.notification.request.content.data.screen){
+        const url = response.notification.request.content.data.screen;
+        navigation.navigate(url);
+      } else {
+        null;
+      } 
+    });
+    return () => subscription.remove();
+  }, [])
+
+
+  const lastNotificationResponse = Notifications.useLastNotificationResponse();
+  useEffect(() => {
+    if (
+      lastNotificationResponse &&
+      lastNotificationResponse.notification.request.content.data.screen &&
+      lastNotificationResponse.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER
+    ) {
+      navigation.navigate(lastNotificationResponse.notification.request.content.data.screen);
+    }
+  }, [lastNotificationResponse]);
+
+
+  //component refresh functions
+
+
+  const wait = timeout => {
+    return new Promise(resolve => {
+      setTimeout(resolve, timeout);
+    });
+  };
+
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+
+    wait(2000).then(() => setRefreshing(false))
+
+    fetch('http://192.168.29.234:8000/store/homebanner/',{
+      method: 'GET',
+      headers: {
+        'Content-type': 'application/json'
+      }
+    })
+    .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
     .then(resp => setbannerImages(resp.json))
     .then(() => setLoading('false'))
     .catch(error => console.log(error))
+
+    
   }, []);
+
+
+
+  ///location related functions
+
+
+
+  useEffect(() => {
+    let mounted = true;
+    if (loading === 'false' && mounted) {
+      setTimeout(() => (async () => {
+        let { status } = await Location.requestPermissionsAsync();
+        if (status !== 'granted') {
+          setErrormsg('Permission to access location was denied');
+          return;
+        }
+  
+        let location = await Location.getCurrentPositionAsync({ enableHighAccuracy: true });
+        setLocation(location.coords);
+  
+        let geolocation = await Location.reverseGeocodeAsync({latitude: location.coords.latitude, longitude: location.coords.longitude})
+        setReversegeolocation(geolocation);
+        setConLocation(geolocation[0]);
+        
+        setMarkerData(location.coords)
+        setMapDefLocation({latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006})
+      })().catch(error => setErrormsg(error))
+          .then(() => setlocationPermission('Permission to access location was denied'))
+      , 1000)
+    }    
+
+    return () => {
+      mounted = false;
+    }
+  }, [loading]);
+
+
+
+  const getLocation = () => {
+    (async () => {
+      let { status } = await Location.requestPermissionsAsync();
+      
+      if (status !== 'granted') {
+        setErrormsg('Permission to access location was denied');
+        setmodalVisible(false);
+        return;
+      }
+
+      
+      setConfirmDisabled(true);
+      setLocationModal(true);
+      
+      let location = await Location.getCurrentPositionAsync({ enableHighAccuracy: true });
+      setLocation(location.coords);
+      
+
+      let geolocation = await Location.reverseGeocodeAsync({latitude: location.coords.latitude, longitude: location.coords.longitude})
+      setReversegeolocation(geolocation);
+      setConLocation(geolocation[0]);
+      
+      setLocationModal(false);
+      setmodalVisible(false);
+      setMarkerData(location.coords)
+      setMapDefLocation({latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006})
+    })().catch(error => setErrormsg(error))
+        .then(() => {setConfirmDisabled(false); setLocationModal(false);});
+  }
+
+
+  if (location){
+    let text;
+    text = JSON.stringify(location)
+  }
+
+  
+
+  //positions the marker and also updates the map position
+  const handleRegionChange = (mapData) => {
+    setMarkerData({latitude: mapData.latitude, longitude: mapData.longitude});
+    setMapDefLocation(mapData);
+    setLocation({latitude: mapData.latitude, longitude: mapData.longitude});
+
+  }
+
+
+
+  const confirmLocation = () => {
+    
+    (async () => {
+
+      setMarkerData({latitude: location.latitude, longitude: location.longitude});
+      setMapDefLocation({latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006});
+
+      let geolocation = await Location.reverseGeocodeAsync({latitude: location.latitude, longitude: location.longitude})
+      setReversegeolocation(geolocation);
+      setConLocation(geolocation[0]);
+
+      setmodalVisible(false);      
+    })().catch(error => setErrormsg(error));
+
+  }
+
+
+
+
+  //Carousel functions
 
 
   const goForward = () => {
@@ -116,113 +360,12 @@ export default function Home(props){
   }
 
 
-  const touched = () => {
-    return (console.log('clicked'))
-  }
-
-
-
-
-  const wait = timeout => {
-    return new Promise(resolve => {
-      setTimeout(resolve, timeout);
-    });
-  };
-
-
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-
-    wait(2000).then(() => setRefreshing(false))
-
-    fetch('http://192.168.29.234:8000/store/homebanner/',{
-      method: 'GET',
-      headers: {
-        'Content-type': 'application/json'
-      }
-    })
-    .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
-    .then(resp => setbannerImages(resp.json))
-    .then(() => setLoading('false'))
-    .catch(error => console.log(error))
-
-    
-  }, []);
-
-
-
-  const getLocation = () => {
-    (async () => {
-      let { status } = await Location.requestPermissionsAsync();
-      
-      if (status !== 'granted') {
-        setErrormsg('Permission to access location was denied');
-        setmodalVisible(false);
-        return;
-      }
-
-      
-      setConfirmDisabled(true);
-      setLocationModal(true);
-      
-      let location = await Location.getCurrentPositionAsync({ enableHighAccuracy: true });
-      setLocation(location.coords);
-      
-
-      let geolocation = await Location.reverseGeocodeAsync({latitude: location.coords.latitude, longitude: location.coords.longitude})
-      setReversegeolocation(geolocation);
-      
-      setLocationModal(false);
-      setmodalVisible(false);
-      setMarkerData(location.coords)
-      setMapDefLocation({latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006})
-    })().catch(error => setErrormsg(error))
-        .then(() => {setConfirmDisabled(false); setLocationModal(false);});
-  }
-
-
-  const getFonts = () => {
-    return Font.loadAsync({
-      'sofia-black' : require('../assets/fonts/Sofia-Pro-Black-Az.otf'),
-      'sofia-medium': require('../assets/fonts/Sofia-Pro-Medium-Az.otf'),
-      'sofia-bold': require('../assets/fonts/Sofia-Pro-Black-Az.otf'),
-      'pro-light': require('../assets/fonts/Font-Awesome-5-Pro-Light-300.otf'),
-      'pro-regular': require('../assets/fonts/Font-Awesome-5-Pro-Regular-400.otf'),
-      'pro-solid': require('../assets/fonts/Font-Awesome-5-Pro-Solid-900.otf'),
-    });
-  };
-
-  let text = 'w'
-
-  if (location){
-    text = JSON.stringify(location)
-  }
-
-  
-
-  //positions the marker and also updates the map position
-  const handleRegionChange = (mapData) => {
-    setMarkerData({latitude: mapData.latitude, longitude: mapData.longitude});
-    setMapDefLocation(mapData);
-    setLocation({latitude: mapData.latitude, longitude: mapData.longitude});
-
-  }
-
-
-
-  const confirmLocation = () => {
-    
-    (async () => {
-
-      setMarkerData({latitude: location.latitude, longitude: location.longitude});
-      setMapDefLocation({latitude: location.latitude, longitude: location.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006});
-
-      let geolocation = await Location.reverseGeocodeAsync({latitude: location.latitude, longitude: location.longitude})
-      setReversegeolocation(geolocation);
-
-      setmodalVisible(false);      
-    })().catch(error => setErrormsg(error));
-
+  const touched = (index) => evt => {
+    if (index === 0) {
+      navigation.navigate('HomeProducts', {from: 'Banner1'});
+    } else if (index === 1){
+      navigation.navigate('HomeProducts', {from: 'Banner2'});
+    }
   }
 
   
@@ -235,22 +378,25 @@ export default function Home(props){
     if (loading == 'true') return (
 
       <SafeAreaView style={styles.refreshcontainer}>
-        <ScrollView
+        <ScrollView bounces={false}
           contentContainerStyle={styles.refreshscrollview}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-            <Text style={{color: 'black', fontSize: 20}}>Loading....</Text>
-            <Text style={{color: 'black', marginTop: 10}}>Pull down to refresh</Text>
+              <BouncingPreloader
+                  icons={[ require('../assets/apple.png'), require('../assets/food.png'), 
+                  null, require('../assets/broccoli.png'),
+                  require('../assets/nut.png'), require('../assets/mango.png')]}
+                  leftRotation="-680deg"
+                  rightRotation="360deg"
+                  leftDistance={-80}
+                  rightDistance={-200}
+                  speed={1000}
+                  size={40}
+              />
+            <Text style={{color: 'black', marginTop: 50, opacity: refreshOpacity}}>Pull down to refresh</Text>
         </ScrollView>
       </SafeAreaView>
     )
 
-    if (!fontsLoaded) {
-      return <AppLoading
-        startAsync={getFonts}
-        onFinish={() => setFontsLoaded(true)}
-        onError={(error) => setErrormsg(error)}
-      />
-    }
 
 
     return (
@@ -351,7 +497,7 @@ export default function Home(props){
               data={bannerImages}
               renderItem={({item, index}, parallaxProps) => {
                   return (
-                    <TouchableOpacity onPress={touched} activeOpacity={0.9}>
+                    <TouchableOpacity onPress={touched(index)} activeOpacity={0.9}>
                       <View style={styles.item}>
                           <ParallaxImage
                             source={{uri: item.image}}
@@ -380,49 +526,41 @@ export default function Home(props){
           
           <View style={{backgroundColor: 'white', marginLeft: wp(2)}}>
             <Text style={{fontFamily: 'sofia-black',fontSize: wp(6), color: '#2a363b'}}>Immunity Boosters</Text>
-            
+            <TouchableOpacity onPress={() => navigation.navigate('ActiveOrders')}>
+              <Text>now</Text>
+            </TouchableOpacity>
           </View>
           
           <View style={{textAlign: 'center', paddingTop: hp(5), justifyContent: 'center', alignItems: 'center', flex: 1, flexDirection: 'row'}}>
-             <View style={{flex: 1, alignItems: 'center'}}>
-               <View  style={{backgroundColor: 'white', elevation: 5, padding: 10, borderRadius: 15, width: wp(45), alignItems: 'center' }}>
-                  <Svg viewBox="0 0 448 512" height="80" width="100" fillOpacity="1">
-                    <Path d="M416 96c2.65 0 5.12.62 7.73.78C406.14 76.87 380.69 64 352 64a95.2 95.2 0 0 0-25.15 3.75 111.94 111.94 0 0 0-205.7 0A95.2 95.2 0 0 0 96 64a96 96 0 0 0 0 192h73.37l-87-87a8 8 0 0 1 0-11.31l11.32-11.29a8 8 0 0 1 11.31 0l103 103V104a8 8 0 0 1 8-8h16a8 8 0 0 1 8 8v152h52.54a126.78 126.78 0 0 1-4.54-32A128.14 128.14 0 0 1 416 96zm33.25 38a95.3 95.3 0 0 0-123.37 122h169.29a48.23 48.23 0 0 1 10.57 1.24A95.86 95.86 0 0 0 449.25 134z" fill="#99b898" />
-                    <Path d="M384 468.52V480a32 32 0 0 1-32 32H160a32 32 0 0 1-32-32v-11.28C58.27 444.26 6.69 381.24.06 304.87-.74 295.75 7 288 16.17 288h479c9.15 0 16.89 7.72 16.1 16.84C504.66 381 453.4 443.9 384 468.52z" fill="#2a363b" />
-                  </Svg>
-                  <Text style={{fontFamily: 'sofia-medium', textAlign: 'center', fontSize: wp(4)}}>Immune power</Text>
-                </View>
-              </View>
-              <View style={{flex: 1, alignItems: 'center'}}>
-                <View  style={{backgroundColor: 'white', elevation: 5, padding: 10, borderRadius: 15, width: wp(45), alignItems: 'center' }}>
-                  <Svg viewBox="0 0 448 512" height="80" width="100" fillOpacity="1">
-                    <Path d="M416 96c2.65 0 5.12.62 7.73.78C406.14 76.87 380.69 64 352 64a95.2 95.2 0 0 0-25.15 3.75 111.94 111.94 0 0 0-205.7 0A95.2 95.2 0 0 0 96 64a96 96 0 0 0 0 192h73.37l-87-87a8 8 0 0 1 0-11.31l11.32-11.29a8 8 0 0 1 11.31 0l103 103V104a8 8 0 0 1 8-8h16a8 8 0 0 1 8 8v152h52.54a126.78 126.78 0 0 1-4.54-32A128.14 128.14 0 0 1 416 96zm33.25 38a95.3 95.3 0 0 0-123.37 122h169.29a48.23 48.23 0 0 1 10.57 1.24A95.86 95.86 0 0 0 449.25 134z" fill="#99b898" />
-                    <Path d="M384 468.52V480a32 32 0 0 1-32 32H160a32 32 0 0 1-32-32v-11.28C58.27 444.26 6.69 381.24.06 304.87-.74 295.75 7 288 16.17 288h479c9.15 0 16.89 7.72 16.1 16.84C504.66 381 453.4 443.9 384 468.52z" fill="#2a363b" />
-                  </Svg>
-                  <Text style={{fontFamily: 'sofia-medium', textAlign: 'center', fontSize: wp(4)}}>Immune power</Text>
-                </View>
-              </View>
+            {homeProductImages.map((item) => {
+              if (item.category === 'Custom1' || item.category === 'Custom2') {
+                return (
+                  <View key={item.id} style={{flex: 1, alignItems: 'center'}}>
+                    <TouchableOpacity style={{elevation: 5, borderRadius: 50, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5}} onPress={() => navigation.navigate('HomeProducts', {from: item.category})}>
+                      <Image source={{uri: item.image}} style={{width: 100, height: 100, borderRadius: 50}} />
+                    </TouchableOpacity>
+                  </View>
+                )
+              } else {
+                return null
+              }
+            })}
           </View>
 
           <View style={{textAlign: 'center', paddingTop: hp(5), justifyContent: 'center', alignItems: 'center', flex: 1, flexDirection: 'row'}}>
-             <View style={{flex: 1, alignItems: 'center'}}>
-                <View  style={{backgroundColor: 'white', elevation: 5, padding: 10, borderRadius: 15, width: wp(45), alignItems: 'center' }}>
-                  <Svg viewBox="0 0 448 512" height="80" width="100" fillOpacity="1">
-                    <Path d="M416 96c2.65 0 5.12.62 7.73.78C406.14 76.87 380.69 64 352 64a95.2 95.2 0 0 0-25.15 3.75 111.94 111.94 0 0 0-205.7 0A95.2 95.2 0 0 0 96 64a96 96 0 0 0 0 192h73.37l-87-87a8 8 0 0 1 0-11.31l11.32-11.29a8 8 0 0 1 11.31 0l103 103V104a8 8 0 0 1 8-8h16a8 8 0 0 1 8 8v152h52.54a126.78 126.78 0 0 1-4.54-32A128.14 128.14 0 0 1 416 96zm33.25 38a95.3 95.3 0 0 0-123.37 122h169.29a48.23 48.23 0 0 1 10.57 1.24A95.86 95.86 0 0 0 449.25 134z" fill="#99b898" />
-                    <Path d="M384 468.52V480a32 32 0 0 1-32 32H160a32 32 0 0 1-32-32v-11.28C58.27 444.26 6.69 381.24.06 304.87-.74 295.75 7 288 16.17 288h479c9.15 0 16.89 7.72 16.1 16.84C504.66 381 453.4 443.9 384 468.52z" fill="#2a363b" />
-                  </Svg>
-                  <Text style={{fontFamily: 'sofia-medium', textAlign: 'center', fontSize: wp(4)}}>Immune power</Text>
-                </View>
-              </View>
-              <View style={{flex: 1, alignItems: 'center'}}>
-                <View  style={{backgroundColor: 'white', elevation: 5, padding: 10, borderRadius: 15, width: wp(45), alignItems: 'center' }}>
-                  <Svg viewBox="0 0 448 512" height="80" width="100" fillOpacity="1">
-                    <Path d="M416 96c2.65 0 5.12.62 7.73.78C406.14 76.87 380.69 64 352 64a95.2 95.2 0 0 0-25.15 3.75 111.94 111.94 0 0 0-205.7 0A95.2 95.2 0 0 0 96 64a96 96 0 0 0 0 192h73.37l-87-87a8 8 0 0 1 0-11.31l11.32-11.29a8 8 0 0 1 11.31 0l103 103V104a8 8 0 0 1 8-8h16a8 8 0 0 1 8 8v152h52.54a126.78 126.78 0 0 1-4.54-32A128.14 128.14 0 0 1 416 96zm33.25 38a95.3 95.3 0 0 0-123.37 122h169.29a48.23 48.23 0 0 1 10.57 1.24A95.86 95.86 0 0 0 449.25 134z" fill="#99b898" />
-                    <Path d="M384 468.52V480a32 32 0 0 1-32 32H160a32 32 0 0 1-32-32v-11.28C58.27 444.26 6.69 381.24.06 304.87-.74 295.75 7 288 16.17 288h479c9.15 0 16.89 7.72 16.1 16.84C504.66 381 453.4 443.9 384 468.52z" fill="#2a363b" />
-                  </Svg>
-                  <Text style={{fontFamily: 'sofia-medium', textAlign: 'center', fontSize: wp(4)}}>Immune power</Text>
-                </View>
-              </View>
+            {homeProductImages.map((item) => {
+              if (item.category === 'Custom3' || item.category === 'Custom4') {
+                return (
+                  <View key={item.id} style={{flex: 1, alignItems: 'center'}}>
+                    <TouchableOpacity style={{elevation: 5, borderRadius: 50, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5}} onPress={() => navigation.navigate('HomeProducts', {from: item.category})}>
+                      <Image source={{uri: item.image}} style={{width: 100, height: 100, borderRadius: 50}} />
+                    </TouchableOpacity>
+                  </View>
+                )
+              } else {
+                return null
+              }
+            })}
           </View>
         </ScrollView>
       </React.Fragment>

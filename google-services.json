@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1007459218618",
+    "project_id": "eatfrut",
+    "storage_bucket": "eatfrut.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1007459218618:android:c87a4341d693510b18be83",
+        "android_client_info": {
+          "package_name": "com.ShubhamJain.EatFrut"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1007459218618-4f7ajmvffutmbbdfeh5j67msi88qhfga.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASfylSqdRTnTn2_-y9T0Kem9O03lWPKOA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1007459218618-4f7ajmvffutmbbdfeh5j67msi88qhfga.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

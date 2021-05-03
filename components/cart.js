@@ -3,60 +3,76 @@ import React, { useState, useEffect } from 'react';
 import { Touchable } from 'react-native';
 import { StyleSheet, Text, View, Button, TouchableOpacity } from 'react-native';
 import Modal from 'react-native-modal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function Cart({ navigation }) {
 
     const [cart, setCart] = useState([]);
-    const [cartStatus, setCartStatus] = useState(401);
+    const [cartStatus, setCartStatus] = useState(0);
 
     const [disabled, setDisabled] = useState(false);
 
+    const [error, setError] = useState('');
+
+
     useEffect(() => {
-        fetch('http://192.168.29.234:8000/store/cart/',{
-            method: 'GET',
-            headers: {
-                'Authorization': 'Token 9b309283a29535f32c28fabbd3be4e08ee3b3f76',
-                'Content-type': 'application/json'
+          (async () => {
+            const token = await AsyncStorage.getItem('USER_TOKEN')
+            if (token) { 
+                fetch('http://192.168.29.234:8000/store/cart/',{
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-type': 'application/json'
+                    }
+                })
+                .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => (setCart(resp.json), setCartStatus(resp.status)))
+                .catch(error => console.log(error))
+            } else {
+                setCartStatus(401);
             }
-        })
-        .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-        .then(resp => (setCart(resp.json), setCartStatus(resp.status)))
-        .catch(error => console.log(error))
-    }, [])
+          })().catch(error => setError(error))
+      }, [])
 
 
-    const deleteCart = () => evt=>  {
-        fetch('http://192.168.29.234:8000/store/cart/',{
-            method: 'DELETE',
-            headers: {
-                'Authorization': 'Token 9b309283a29535f32c28fabbd3be4e08ee3b3f76',
-                'Content-type': 'application/json'
-            }
-        })
-        .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-        .then(() => navigation.goBack())
-        .catch(error => console.log(error))
+
+    const deleteCart = () => async evt=>  {
+        const token = await AsyncStorage.getItem('USER_TOKEN')
+        if (token)
+            fetch('http://192.168.29.234:8000/store/cart/',{
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-type': 'application/json'
+                }
+            })
+            .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+            .then(() => navigation.goBack())
+            .catch(error => console.log(error))
     }
 
 
-    const deleteItem = (item) => {
-        fetch('http://192.168.29.234:8000/store/reduceordelete/',{
-            method: 'DELETE',
-            headers: {
-            'Authorization': 'Token 9b309283a29535f32c28fabbd3be4e08ee3b3f76',
-            'Content-type': 'application/json'
-            },
-            body: JSON.stringify({ item: item })
-        })
-        .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-        .then(resp => {
-            setCart(resp.json.data);
-            if (resp.json.data.length === 0){
-                setCartStatus(404);
-            }
-        })
-        .catch(error => console.log(error))
+    const deleteItem = async (item) => {
+        const token = await AsyncStorage.getItem('USER_TOKEN')
+        if (token)
+            fetch('http://192.168.29.234:8000/store/reduceordelete/',{
+                method: 'DELETE',
+                headers: {
+                'Authorization': `Token ${token}`,
+                'Content-type': 'application/json'
+                },
+                body: JSON.stringify({ item: item })
+            })
+            .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+            .then(resp => {
+                setCart(resp.json.data);
+                if (resp.json.data.length === 0){
+                    setCartStatus(404);
+                }
+            })
+            .catch(error => console.log(error))
     }
     
 
