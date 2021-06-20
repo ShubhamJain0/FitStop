@@ -1,24 +1,29 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useRef, isValidElement, useContext } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, Image, Dimensions, TouchableHighlight, Platform, ScrollView, 
-  TouchableOpacity, RefreshControl, Animated, Easing, Linking } from 'react-native';
+  TouchableOpacity, RefreshControl, Animated, Easing, Linking, Button, FlatList } from 'react-native';
 import Modal from 'react-native-modal';
 import Carousel, {ParallaxImage, Pagination} from 'react-native-snap-carousel';
-import BouncingPreloader from 'react-native-bouncing-preloaders';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'; 
 import * as Location from 'expo-location';
-import { Ionicons } from '@expo/vector-icons'; 
-import { FontAwesome5 } from '@expo/vector-icons';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons, FontAwesome, Ionicons, AntDesign } from '@expo/vector-icons';
 import MapView, {Marker, AnimatedRegion, Callout, MarkerAnimated} from 'react-native-maps';
 import Svg, { Path } from 'react-native-svg';
 import { UserContext, PushTokenContext} from './context';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import SkeletonPlaceholder from "react-native-skeleton-placeholder";
+import LottieView from 'lottie-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 
 const {width: screenWidth} = Dimensions.get('window');
 const screenHeight = Dimensions.get('window').height;
+
+
+const HEADER_MAX_HEIGHT = 30;
+const HEADER_MIN_HEIGHT = 20;
+const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -32,6 +37,7 @@ Notifications.setNotificationHandler({
 
 export default function Home({ navigation }){
 
+  const [mounted, setMounted] = useState(true);
   const [bannerImages, setbannerImages] = useState([]);
   const carouselRef = useRef(null);
   const [activeSlide, setactiveSlide] = useState(0);
@@ -54,6 +60,8 @@ export default function Home({ navigation }){
   const [modalVisible, setmodalVisible] = useState(false);
   const [locationModal, setLocationModal] = useState(false);
 
+  const [orderReceivedModal, setOrderReceivedModal] = useState(false);
+
   const [confirmDisabled, setConfirmDisabled] = useState(false);
 
   const [scrollViewScroll, setScrollViewScroll] = useState(0);
@@ -61,12 +69,24 @@ export default function Home({ navigation }){
   const [conLocation, setConLocation] = useContext(UserContext);
   const [conPushToken, setConPushToken] = useContext(PushTokenContext);
 
+  const [isLogin, setIsLogin] = useState(true);
+  const [userData, setUserData] = useState({});
+
+  const [scrollY] = useState(new Animated.Value(0));
+  const [activeOrderLen, setActiveOrderLen] = useState(0);
+
+  const [previousOrderList, setPreviousOrderList] = useState([]);
+  const [previousOrderItems, setPreviousOrderItems] = useState([]);
+  const [previousOrderStatus, setPreviousOrderStatus] = useState(0);
+
+  const [recipesList, setRecipesList] = useState([]);
+  const [ingredients, setIngredients] = useState([]);
+
   //component mounts
 
   useEffect(() => {
-    let mounted = true;
     let timeOut = setTimeout(() => setRefreshOpacity(1), 8000);
-    fetch('http://192.168.29.234:8000/store/homebanner/',{
+    fetch('http://192.168.0.105:8000/store/homebanner/',{
       method: 'GET',
       headers: {
         'Content-type': 'application/json'
@@ -74,19 +94,17 @@ export default function Home({ navigation }){
     })
     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
     .then(resp => {if (mounted) {setbannerImages(resp.json)}})
-    .then(() => {if (mounted) setLoading('false')})
     .catch(error => console.log(error))
 
     return () => {
-      mounted = false;
+      setMounted(false);
       clearTimeout(timeOut);
     }
   }, []);
 
 
   useEffect(() => {
-    let mounted = true;
-    fetch('http://192.168.29.234:8000/store/homeproducts/',{
+    fetch('http://192.168.0.105:8000/store/homeproducts/',{
       method: 'GET',
       headers: {
         'Content-type': 'application/json'
@@ -97,9 +115,107 @@ export default function Home({ navigation }){
     .catch(error => console.log(error))
 
     return () => {
-      mounted = false;
+      setMounted(false);
     }
   }, []);
+
+
+  useEffect(() => {
+    (async () => {
+        const token = await AsyncStorage.getItem('USER_TOKEN')
+        if (token) {
+          fetch('http://192.168.0.105:8000/store/previousorders/',{
+              method: 'GET',
+              headers: {
+              'Authorization': `Token ${token}`,
+              'Content-type': 'application/json'
+              }
+          })
+          .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
+          .then(resp => {if (mounted) {setPreviousOrderList(resp.json.qs), setPreviousOrderItems(resp.json.data), setPreviousOrderStatus(resp.status)}})
+          .catch(error => console.log(error))
+        }
+      })().catch(error => setError(error))
+  }, [])
+
+
+  useEffect(() => {
+    const getToken = navigation.addListener('focus', () => {
+      (async () => {
+        const token = await AsyncStorage.getItem('USER_TOKEN')
+        if (token) {
+          fetch('http://192.168.0.105:8000/store/activeorders/',{
+              method: 'GET',
+              headers: {
+                  'Authorization': `Token ${token}`,
+                  'Content-type': 'application/json'
+              }
+          })
+          .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+          .then(resp => {if(mounted && resp.status === 200) {
+            setActiveOrderLen(resp.json.data.length);
+            } else if (mounted && resp.status === 404) {
+              setActiveOrderLen(0);
+            }
+          }) 
+          .catch(error => console.log(error))
+        } else {
+          setActiveOrderLen(0);
+        }
+      })().catch(error => console.log(error))
+    });
+
+    return () => {
+      setMounted(false);
+    }
+
+  }, [navigation])
+
+
+  useEffect(() => {
+    fetch('http://192.168.0.105:8000/store/recipes/',{
+      method: 'GET',
+      headers: {
+        'Content-type': 'application/json'
+      }
+    })
+    .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+    .then(resp => {if (mounted) {setRecipesList(resp.json.qs), setIngredients(resp.json.ingredients)}})
+    .catch(error => console.log(error))
+
+    return () => {
+      setMounted(false);
+    }
+  }, []);
+
+
+  ////Profile related
+
+
+  useEffect(() => {
+    const getToken = navigation.addListener('focus', () => {
+      (async () => {
+        const token = await AsyncStorage.getItem('USER_TOKEN')
+        if (token) {
+          fetch('http://192.168.0.105:8000/api/me/',{
+                method: 'GET',
+                headers: {
+                'Authorization': `Token ${token}`,
+                'Content-type': 'application/json'
+                }
+            })
+            .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
+            .then(resp => setUserData(resp.json))
+            .then(() => setIsLogin(true))
+            .then(() => {if (mounted) setLoading('false')})
+            .catch(error => console.log(error));
+        } else {
+          return setIsLogin(false), setLoading('false');
+        }
+      })().catch(error => console.log(error))
+    });
+
+  }, [navigation])
 
 
 
@@ -111,7 +227,6 @@ export default function Home({ navigation }){
 
 
   const registerPushNotificationPermissions = async () => {
-    let mounted = true;
     let pushToken;
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -136,7 +251,7 @@ export default function Home({ navigation }){
     .catch(error => console.log(error))
 
     return () => {
-      mounted = false;
+      setMounted(false);
     }
   }
 
@@ -144,7 +259,7 @@ export default function Home({ navigation }){
   const savePushToken = async (pushToken) => {
     const token = await AsyncStorage.getItem('USER_TOKEN')
     if (token){
-      fetch('http://192.168.29.234:8000/store/pushnotificationtoken/',{
+      fetch('http://192.168.0.105:8000/store/pushnotificationtoken/',{
               method: 'POST',
               headers: {
                 'Authorization': `Token ${token}`,
@@ -155,7 +270,7 @@ export default function Home({ navigation }){
       .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
       .catch(error => console.log(error))
     } else {
-      fetch('http://192.168.29.234:8000/store/pushnotificationtoken/',{
+      fetch('http://192.168.0.105:8000/store/pushnotificationtoken/',{
               method: 'POST',
               headers: {
               'Content-type': 'application/json'
@@ -174,10 +289,16 @@ export default function Home({ navigation }){
     const subscription = Notifications.addNotificationResponseReceivedListener(response => {
       if (response.notification.request.content.data.screen){
         const url = response.notification.request.content.data.screen;
+        if (response.notification.request.content.data.params) {
+          const param = response.notification.request.content.data.params
+          navigation.navigate(url, {from: param});
+        }
+        if (url === 'Home') {
+          navigation.navigate(url);
+          setOrderReceivedModal(true);
+        }
         navigation.navigate(url);
-      } else {
-        null;
-      } 
+      }
     });
     return () => subscription.remove();
   }, [])
@@ -190,7 +311,12 @@ export default function Home({ navigation }){
       lastNotificationResponse.notification.request.content.data.screen &&
       lastNotificationResponse.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER
     ) {
-      navigation.navigate(lastNotificationResponse.notification.request.content.data.screen);
+      if (lastNotificationResponse.notification.request.content.data.screen === 'Home'){
+        navigation.navigate(lastNotificationResponse.notification.request.content.data.screen);
+        setOrderReceivedModal(true)
+      } else{
+        navigation.navigate(lastNotificationResponse.notification.request.content.data.screen)
+      }
     }
   }, [lastNotificationResponse]);
 
@@ -210,7 +336,7 @@ export default function Home({ navigation }){
 
     wait(2000).then(() => setRefreshing(false))
 
-    fetch('http://192.168.29.234:8000/store/homebanner/',{
+    fetch('http://192.168.0.105:8000/store/homebanner/',{
       method: 'GET',
       headers: {
         'Content-type': 'application/json'
@@ -231,21 +357,22 @@ export default function Home({ navigation }){
 
 
   useEffect(() => {
-    let mounted = true;
     if (loading === 'false' && mounted) {
       setTimeout(() => (async () => {
-        let { status } = await Location.requestPermissionsAsync();
+        let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           setErrormsg('Permission to access location was denied');
+          setConLocation('rejected');
           return;
         }
-  
+        
+        setConLocation('granted');
         let location = await Location.getCurrentPositionAsync({ enableHighAccuracy: true });
         setLocation(location.coords);
   
         let geolocation = await Location.reverseGeocodeAsync({latitude: location.coords.latitude, longitude: location.coords.longitude})
         setReversegeolocation(geolocation);
-        setConLocation(geolocation[0]);
+        
         
         setMarkerData(location.coords)
         setMapDefLocation({latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006})
@@ -255,7 +382,7 @@ export default function Home({ navigation }){
     }    
 
     return () => {
-      mounted = false;
+      setMounted(false);
     }
   }, [loading]);
 
@@ -263,7 +390,7 @@ export default function Home({ navigation }){
 
   const getLocation = () => {
     (async () => {
-      let { status } = await Location.requestPermissionsAsync();
+      let { status } = await Location.requestForegroundPermissionsAsync();
       
       if (status !== 'granted') {
         setErrormsg('Permission to access location was denied');
@@ -281,7 +408,6 @@ export default function Home({ navigation }){
 
       let geolocation = await Location.reverseGeocodeAsync({latitude: location.coords.latitude, longitude: location.coords.longitude})
       setReversegeolocation(geolocation);
-      setConLocation(geolocation[0]);
       
       setLocationModal(false);
       setmodalVisible(false);
@@ -318,7 +444,6 @@ export default function Home({ navigation }){
 
       let geolocation = await Location.reverseGeocodeAsync({latitude: location.latitude, longitude: location.longitude})
       setReversegeolocation(geolocation);
-      setConLocation(geolocation[0]);
 
       setmodalVisible(false);      
     })().catch(error => setErrormsg(error));
@@ -341,19 +466,18 @@ export default function Home({ navigation }){
         <Pagination
           dotsLength={bannerImages.length}
           activeDotIndex={activeSlide}
-          containerStyle={{ backgroundColor: 'white' }}
+          containerStyle={{ backgroundColor: 'white', alignSelf: 'flex-end' }}
           dotStyle={{
               width: 10,
               height: 10,
               borderRadius: 5,
-              marginHorizontal: 8,
-              backgroundColor: '#11999e'
+              backgroundColor: '#249C86'
           }}
           inactiveDotStyle={{
               // Define styles for inactive dots here
-              backgroundColor: 'black'
+              backgroundColor: 'grey'
           }}
-          inactiveDotOpacity={0.4}
+          inactiveDotOpacity={1}
           inactiveDotScale={0.6}
         />
     );
@@ -368,31 +492,57 @@ export default function Home({ navigation }){
     }
   }
 
-  
-  const handleScroll = () => evt => {
-    setScrollViewScroll(evt.nativeEvent.contentOffset.y);
+  //Animations
+  const diffClamp = Animated.diffClamp(scrollY, 0, 75)
+  const slideUp = diffClamp.interpolate({
+    inputRange: [0, 75],
+    outputRange: [0, 80],
+    extrapolate: 'clamp',
+  })
+
+
+  const repeatOrder = (item) => async evt => {
+    const token = await AsyncStorage.getItem('USER_TOKEN')
+        if (token) {
+          fetch('http://192.168.0.105:8000/store/repeatorder/',{
+              method: 'POST',
+              headers: {
+              'Authorization': `Token ${token}`,
+              'Content-type': 'application/json'
+              },
+              body: JSON.stringify({id: item.id})
+          })
+          .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
+          .then(resp => {if (resp.status === 404) {alert('Some items are out of stock, sorry for inconvenience!')}})
+          .then(() => navigation.navigate('cart'))
+          .catch(error => console.log(error))
+        } else {
+          navigation.navigate('Register')
+        }
   }
+  
 
   
   
     if (loading == 'true') return (
 
       <SafeAreaView style={styles.refreshcontainer}>
+        <View style={{marginTop: hp(10), paddingBottom: hp(1)}}>
+          <SkeletonPlaceholder>
+              <SkeletonPlaceholder.Item alignItems="center" justifyContent="center">
+                <SkeletonPlaceholder.Item
+                  marginTop={6}
+                  width={wp(90)}
+                  height={hp(2)}
+                  borderRadius={4}
+                />
+              </SkeletonPlaceholder.Item>
+          </SkeletonPlaceholder>
+        </View>
         <ScrollView bounces={false}
-          contentContainerStyle={styles.refreshscrollview}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-              <BouncingPreloader
-                  icons={[ require('../assets/apple.png'), require('../assets/food.png'), 
-                  null, require('../assets/broccoli.png'),
-                  require('../assets/nut.png'), require('../assets/mango.png')]}
-                  leftRotation="-680deg"
-                  rightRotation="360deg"
-                  leftDistance={-80}
-                  rightDistance={-200}
-                  speed={1000}
-                  size={40}
-              />
-            <Text style={{color: 'black', marginTop: 50, opacity: refreshOpacity}}>Pull down to refresh</Text>
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          >
+      
         </ScrollView>
       </SafeAreaView>
     )
@@ -400,112 +550,46 @@ export default function Home({ navigation }){
 
 
     return (
-      <React.Fragment>
-
-        <View style={Platform.OS == "android" ? {backgroundColor: 'white', elevation: 20} : {backgroundColor: 'white', 
-        shadowOffset: {width: 1, height: 1}, shadowColor: '#000', shadowRadius: 7, shadowOpacity: 0.3, borderBottomWidth: 0.29} }>
-
-          <TouchableOpacity onPress={() => setmodalVisible(true)} style={{flexDirection: 'row', marginTop: hp(10), paddingBottom: hp(1)}}>
-            {Platform.OS == "android" ? <Ionicons name="location-outline" size={27} color="#11999e" />
-              : <FontAwesome5 name="location-arrow" size={25} color="#11999e" />}
-            <Text style={{textAlign:'left', fontSize: 18, fontFamily: 'sofia-black'}}  numberOfLines={1} ellipsizeMode='tail'>
-              {(location && reversegeolocation) ? reversegeolocation.map((item) =>{
-                return <Text key={item} numberOfLines={1} ellipsizeMode='tail'> {item.name}, {item.district ? item.district : <Text>Unnamed Area</Text> }, {item.city ? item.city : <Text>Unnamed</Text>}</Text>
-              })
-              : <Text>{locationPermission}</Text> } 
-            </Text>
-          </TouchableOpacity>
-          
-          <SafeAreaView>
-            <Modal 
-              isVisible={modalVisible}
-              animationIn={'zoomInUp'}
-              animationOut={'zoomOutUp'}
-              animationInTiming={1000}
-              animationOutTiming={1000}
-              backdropColor={'white'}
-              backdropOpacity={0.95}
-              backdropTransitionInTiming={1000}
-              backdropTransitionOutTiming={1000}
-              useNativeDriver={true}
-              statusBarTranslucent={false}
-            >
-        
-                <TouchableOpacity 
-                  style={{flexDirection: 'row', borderBottomWidth: 1, paddingBottom: hp(2)}}  
-                  onPress={getLocation}
-                  >
-                  {Platform.OS === 'android' ? <MaterialIcons name="my-location" size={wp(8)} color="#11999e" />: <Ionicons name="ios-location" size={wp(6.5)} color="black" />}
-                  <Text style={styles.modalContent}> Get my location &raquo;</Text>
-                </TouchableOpacity>
-                <Text style={{fontFamily: 'sofia-medium', marginTop: hp(2), fontSize: wp(4.2), color: '#40514e' }}>Or update manually (Drag the marker or move map!)</Text>
-                  
-                <View style={{alignItems: 'center', marginTop: hp(1)}}>
-                  
-                    <MapView
-                      style={styles.map} 
-                      initialRegion={mapDefLocation}
-                      showsUserLocation={true}
-                      showsMyLocationButton={false}
-                      onRegionChangeComplete={handleRegionChange}
-                      customMapStyle={mapStyle}
-                    >
-                      <Marker.Animated draggable
-                      coordinate={markerData}
-                      onDragEnd={(e) => setLocation(e.nativeEvent.coordinate)}
-                      />
-                    </MapView>
-                  <TouchableOpacity disabled={confirmDisabled} onPress={confirmLocation} 
-                    style={confirmDisabled ? {padding: hp(1.6), borderColor: '#40514e', borderWidth: 2, marginTop: hp(4), opacity: 0.1} : {padding: hp(1.6), borderColor: '#40514e', borderWidth: 2, marginTop: hp(4), opacity: 1}}
-                  >
-                    <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4)}}>Confirm location &rarr;</Text>
-                  </TouchableOpacity>
-                </View>
-            </Modal>
-          </SafeAreaView>
-          <Modal
-            isVisible={locationModal}
-            animationIn={'slideInLeft'}
-            animationOut={'slideOutRight'}
-            animationInTiming={10}
-            animationOutTiming={100}
-            backdropColor={'white'}
-            backdropOpacity={0.1}
-            backdropTransitionInTiming={100}
-            backdropTransitionOutTiming={100}
-            useNativeDriver={true}
-            statusBarTranslucent={true}
-          >
-            <Text style={{textAlign: 'center', fontFamily: 'sofia-black', backgroundColor: 'black', color: 'white', borderRadius: 50}}>Detecting your location....</Text>
-          </Modal>
-
+      <View style={{backgroundColor: 'white', flex: 1}}>
+        <View style={{backgroundColor: 'white', paddingBottom: 25}}>
+          <Text></Text>
         </View>
-
         <ScrollView bounces={false}// for ios 
-          backgroundColor={'white'} >
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+            {useNativeDriver: false}
+            
+          )}
+          >
           <StatusBar style="auto" />
           
           <View style={styles.container}>
-            <TouchableOpacity onPress={goForward}>
-              <Text style={styles.text}>go to next slide</Text>
-            </TouchableOpacity>
+            <View style={{flexDirection: 'row', alignItems: 'center', padding: 25, paddingTop: 0, paddingBottom: 10}}>
+              <View style={{flex: 1}}>
+              <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5.5), color: '#249C86'}}> {isLogin ? userData.name ? 'Hello, ' + userData.name + ' !' : 'Welcome Back.': 'Login to place order!'}</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+                {isLogin ? userData.image ? <Image source={{uri: userData.image}} style={{width: 40, height: 40, borderRadius: 50}} />: <LottieView source={require('../assets/animations/43110-male-avatar.json')} autoPlay={true} loop={true} style={{width: 60}}  />: <LottieView source={require('../assets/animations/10152-login-animation.json')} autoPlay={true} loop={true} style={{width: 30, height: 30}} />}
+              </TouchableOpacity>
+            </View>
+            
             <Carousel
               ref={carouselRef}
               sliderWidth={screenWidth}
-              sliderHeight={screenWidth}
-              itemWidth={screenWidth - 60}
+              itemWidth={screenWidth}
               data={bannerImages}
               renderItem={({item, index}, parallaxProps) => {
                   return (
                     <TouchableOpacity onPress={touched(index)} activeOpacity={0.9}>
-                      <View style={styles.item}>
+                      <View>
                           <ParallaxImage
                             source={{uri: item.image}}
                             containerStyle={styles.imageContainer}
                             style={styles.image}
                             parallaxFactor={0.1}
                             showSpinner={true}
-                            spinnerColor={'#11999e'}
+                            spinnerColor={'#99b898'}
                             {...parallaxProps}
                           />
                       </View>
@@ -524,46 +608,130 @@ export default function Home({ navigation }){
 
           </View>
           
-          <View style={{backgroundColor: 'white', marginLeft: wp(2)}}>
-            <Text style={{fontFamily: 'sofia-black',fontSize: wp(6), color: '#2a363b'}}>Immunity Boosters</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('ActiveOrders')}>
-              <Text>now</Text>
+          <View style={{backgroundColor: 'white', padding: 25, paddingTop: 0, paddingBottom: 0}}>
+            <Text style={{fontFamily: 'sofia-black',fontSize: wp(4), color: 'grey'}}>IMMUNITY BOOSTERS</Text>
+          </View>
+          <ScrollView
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{paddingLeft: 25}}
+          >
+            {homeProductImages.map((item) => {
+              
+                return (
+                  <TouchableOpacity key={item.id} style={{ margin: 15, marginLeft: 0, marginRight: 30}} onPress={() => navigation.navigate('HomeProducts', {from: item.category})} activeOpacity={0.9}>
+                    <View style={{alignSelf: 'center', elevation: 5, borderRadius: 10, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5}}>
+                      <Image source={{uri: item.image}} style={{width: 250, height: 250, borderRadius: 10}} />
+                      <LinearGradient colors={['rgba(255,255,255,0)', 'black']} start={{x: 0, y:0.3}} style={{position: 'absolute', top: 0, bottom: 0, left: 0,right: 0, borderRadius: 10}} ></LinearGradient>
+                      <View style={{position: 'absolute', left: 25, right: 25,bottom: 0, height: '40%'}}>
+                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(7),  color: 'white'}}>Number One</Text>
+                        <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5),  color: 'white', marginTop: 10}} numberOfLines={2}>It is good for health</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )
+              
+            })}
+          </ScrollView>
+          <View style={{backgroundColor: 'white', padding: 25, paddingTop: 0, paddingBottom: 0, marginTop: 50, flexDirection: 'row', alignItems: 'center'}}>
+            <Text style={{fontFamily: 'sofia-black',fontSize: wp(4), color: 'grey', flex: 1}}>RECENT RECIPES</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Recipes')}>
+              <Text style={{fontFamily: 'sofia-black',fontSize: wp(3.5), color: '#249C86'}}>SEE ALL</Text>
             </TouchableOpacity>
           </View>
-          
-          <View style={{textAlign: 'center', paddingTop: hp(5), justifyContent: 'center', alignItems: 'center', flex: 1, flexDirection: 'row'}}>
-            {homeProductImages.map((item) => {
-              if (item.category === 'Custom1' || item.category === 'Custom2') {
-                return (
-                  <View key={item.id} style={{flex: 1, alignItems: 'center'}}>
-                    <TouchableOpacity style={{elevation: 5, borderRadius: 50, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5}} onPress={() => navigation.navigate('HomeProducts', {from: item.category})}>
-                      <Image source={{uri: item.image}} style={{width: 100, height: 100, borderRadius: 50}} />
-                    </TouchableOpacity>
+          <FlatList 
+              data={recipesList.slice(0, 2)}
+              keyExtractor={(item, index) => index.toString()}
+              contentContainerStyle={{paddingTop: 15, paddingLeft: 25, paddingBottom: 25}}
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, marginRight: 50, padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}} >
+                  <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}}>
+                    <Image source={{uri: item.image}} style={{width: 125, height: 125, alignSelf: 'center', borderRadius: 100}} />
                   </View>
-                )
-              } else {
-                return null
-              }
-            })}
-          </View>
-
-          <View style={{textAlign: 'center', paddingTop: hp(5), justifyContent: 'center', alignItems: 'center', flex: 1, flexDirection: 'row'}}>
-            {homeProductImages.map((item) => {
-              if (item.category === 'Custom3' || item.category === 'Custom4') {
-                return (
-                  <View key={item.id} style={{flex: 1, alignItems: 'center'}}>
-                    <TouchableOpacity style={{elevation: 5, borderRadius: 50, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5}} onPress={() => navigation.navigate('HomeProducts', {from: item.category})}>
-                      <Image source={{uri: item.image}} style={{width: 100, height: 100, borderRadius: 50}} />
-                    </TouchableOpacity>
+                  <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
+                    <MaterialIcons name="local-fire-department" size={wp(4.5)} color="#249C86" />
+                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
+                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
+                    <Ionicons name="ios-people" size={wp(4)} color="#249c86" />
+                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings}</Text>
                   </View>
-                )
-              } else {
-                return null
+                  <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 5}}>
+                    <View style={{ flex: 1, alignItems: 'flex-end'}}>
+                      <MaterialIcons name="favorite" size={wp(4)} color="#249C86" />
+                    </View>
+                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
+                  </View>
+                  <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 15}}>{item.name}</Text>
+                  <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
+                    <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('RecipeDetails', {recipe_id: item.id, recipe_ingredients: ingredients})}>
+                      <Text style={{textAlign: 'right', fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+              )}
+            />
+          {previousOrderList.length > 0 ? <View style={{backgroundColor: 'white', padding: 25, paddingTop: 0, paddingBottom: 0, marginTop: 50, flexDirection: 'row', alignItems: 'center'}}>
+            <Text style={{fontFamily: 'sofia-black',fontSize: wp(4), color: 'grey', flex: 1}}>ORDER AGAIN</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('PreviousOrders')}>
+              <Text style={{fontFamily: 'sofia-black',fontSize: wp(3.5), color: '#249C86'}}>SEE ALL</Text>
+            </TouchableOpacity>
+          </View>: null}
+            <ScrollView bounces={false} showsHorizontalScrollIndicator={false} horizontal={true} contentContainerStyle={{paddingTop: 15, paddingLeft: 25, paddingBottom: 25}}>
+                {previousOrderStatus === 200 ? previousOrderList.slice(0, 5).map(item => {
+                    return(
+                        <View key={item.id} style={{marginRight: 50, backgroundColor: '#f9f9f9', padding: 25, paddingTop: 15, paddingBottom: 15, borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}}>
+                            <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
+                                <Text style={{flex: 1, fontFamily: 'sofia-black', fontSize: wp(4.5)}}>Order Summary</Text>
+                            </View>
+                            {previousOrderItems.map(item1 => {
+                                return item1.items.map(x => {
+                                    return x.id_of_order === item.id ?
+                                    <View key={x.id} style={{flexDirection: 'row', alignItems: 'center', marginBottom: 3}}>
+                                        <Text style={{flex: 1, fontFamily: 'sf-semi', fontSize: wp(3.5)}}>{x.item_name} </Text>
+                                        <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5)}}>{x.item_weight}</Text>
+                                        <Text style={{fontFamily: 'sf', fontSize: wp(3.5)}}>x{x.item_count}</Text>
+                                    </View>: null
+                                })
+                            })}
+                            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
+                                <Text style={{flex: 1, fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.total_price}</Text>
+                            </View>
+                            <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15, marginBottom: 20}}></Text>
+                            <TouchableOpacity style={{alignSelf: 'center', position: 'absolute', bottom: 10}} onPress={repeatOrder(item)} activeOpacity={0.9} >
+                                <Text style={{fontSize: wp(3.5), color: '#249C86', fontFamily: 'sf-semi'}}>Order Again</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )
+                }): null
               }
-            })}
-          </View>
+            </ScrollView>
         </ScrollView>
-      </React.Fragment>
+
+        <Modal
+          isVisible={orderReceivedModal}
+          backdropColor={'white'}
+          backdropOpacity={1}
+          animationInTiming={0}
+          animationOutTiming={0.1}
+          animationOut={'slideOutRight'}        
+        >
+          <LottieView source={require('../assets/animations/23211-receive-order.json')} autoPlay={true} loop={false} style={{alignSelf: 'center', width: '100%'}} onAnimationFinish={() => setOrderReceivedModal(false)} />
+          <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), textAlign: 'center', position: 'absolute', bottom: 100, alignSelf: 'center'}}>Order delivered successfully !</Text>
+        </Modal>
+        <View style={{position: 'absolute', bottom: 0, width: '100%', height: activeOrderLen > 0 ? 75: 0}}>
+          <Animated.View style={{backgroundColor: 'white', padding: 15, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowOpacity: 0.58, shadowRadius: 16, transform: [{translateY: slideUp}]}}>
+            {activeOrderLen > 0 ? <LottieView source={require('../assets/animations/64632-order-delivery-to-home.json')} autoPlay={true} loop={true} style={{width: 300, alignSelf: 'center'}} />: null}
+            <View style={{flexDirection: 'row', alignItems: 'center', alignSelf: 'center'}}>
+              {activeOrderLen === 1 ? <Text style={{fontFamily: 'sf-semi', fontSize: wp(4)}}>You have {activeOrderLen} active order</Text>: <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5)}}>You have {activeOrderLen} active orders</Text>}
+              <TouchableOpacity style={{marginLeft: 10}} onPress={() => navigation.navigate('ActiveOrders')}>
+                <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textDecorationLine: 'underline'}}>View</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      </View>
     )
 }
 
@@ -573,21 +741,27 @@ export default function Home({ navigation }){
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      paddingTop: hp(5),
-    },
-    item: {
-      width: screenWidth -60,
-      height: wp(75),
+      paddingTop: hp(0)
     },
     imageContainer: {
       flex: 1,
-      marginBottom: Platform.select({ios: 0, android: 1}), // Prevent a random Android rendering issue
+      alignSelf: 'center',
+      width: '90%',
+      height: 700*(screenWidth/1334),
       backgroundColor: 'white',
-      borderRadius: 8,
+      borderRadius: 10,
+      marginBottom: 30,
+      marginTop: 25,
+      elevation: 15,
+      shadowOffset: {width: 0, height: 7},
+      shadowOpacity: 0.43,
+      shadowRadius: 9.51,
+      
     },
     image: {
       ...StyleSheet.absoluteFillObject,
       resizeMode: 'cover',
+      aspectRatio: 1215/700
     },
     refreshcontainer: {
       flex: 1,
