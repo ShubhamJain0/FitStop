@@ -1,18 +1,35 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useContext, useRef, createRef } from 'react';
 import { TouchableOpacity } from 'react-native';
-import { StyleSheet, Text, View, RefreshControl, ScrollView, SafeAreaView, Image, Button, Animated, Dimensions, ActivityIndicator, FlatList, TextInput, Platform } from 'react-native';
+import { StyleSheet, Text, View, RefreshControl, ScrollView, SafeAreaView, Image, Button, Animated, Dimensions, ActivityIndicator, FlatList, TextInput, Platform, LayoutAnimation, UIManager } from 'react-native';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { useIsFocused } from '@react-navigation/native';
-import { Ionicons, FontAwesome, FontAwesome5, MaterialCommunityIcons, Entypo, Feather, AntDesign, MaterialIcons } from "@expo/vector-icons";
-import Svg, { Path, G, Rect, Circle } from 'react-native-svg';
+import { Ionicons, FontAwesome, FontAwesome5, MaterialCommunityIcons, Entypo, Feather, AntDesign, MaterialIcons, createIconSetFromIcoMoon } from "@expo/vector-icons";
+import Svg, { Path, G, Rect, Circle, Polygon, Ellipse, Defs } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 import ModalDropdown from 'react-native-modal-dropdown';
 import FlipCard from 'react-native-flip-card';
+import NetInfo from "@react-native-community/netinfo";
+import LottieView from 'lottie-react-native';
+import { copilot, walkthroughable, CopilotStep } from "react-native-copilot";
+import icoMoonConfig from '../selection.json';
+import Carousel, {ParallaxImage, Pagination} from 'react-native-snap-carousel';
 
-export default function Fruits({ navigation }) {
 
+if (
+    Platform.OS === "android" &&
+    UIManager.setLayoutAnimationEnabledExperimental
+  ) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+
+function Fruits(props) {
+
+    const navigation = props.navigation;
+
+    const CustomIcon = createIconSetFromIcoMoon(icoMoonConfig, 'IcoMoon');
+
+    const [mounted, setMounted] = useState(true);
     const [fruitslist, setFruitsList] = useState([]);
     const [filteredList, setFilteredList] = useState([]);
     const [cartStatus, setCartStatus] = useState(401);
@@ -26,6 +43,7 @@ export default function Fruits({ navigation }) {
 
 
     const animation = new Animated.Value(0);
+    const [scrollY] = useState(new Animated.Value(0));
     const screenHeight = Dimensions.get("window").height;
 
     const [error, setError] = useState('');
@@ -33,9 +51,54 @@ export default function Fruits({ navigation }) {
     const [query, setQuery] = useState('');
     const searchInputRef = useRef(null);
 
+    const [isOffline, setIsOffline] = useState(false);
+    const [showIndic, setShowInidc] = useState(false);    
+
+
+    //Copilot Variables
+  
+    const CoPilotTouchableOpacity = walkthroughable(TouchableOpacity)
+    const CoPilotView = walkthroughable(View)
+
+
+    //Checks for first time and launches co pilot
+    useEffect(() => {
+        (async () => {
+        const isFirstTime = await AsyncStorage.getItem('isFirstTimeStore')
+        if (isFirstTime === null && mounted) {
+            await AsyncStorage.setItem('isFirstTimeStore', 'false')
+            props.start();
+        }
+        })().catch(error => console.log(error))
+
+        return () => {
+            setMounted(false);
+            props.copilotEvents.off("stop");
+        }
+        
+    }, [])
+
+    //Checks for internet connection
+    useEffect(() => {
+        NetInfo.fetch().then(state => {
+            if (!state.isConnected) {
+            setIsOffline(true);
+            }
+        })
+    }, [])
 
     useEffect(() => {
-        let mounted = true;
+        const unsubscribe = NetInfo.addEventListener(state => {
+            if (!state.isConnected || !state.isInternetReachable) {
+            setIsOffline(true);
+        } 
+    })
+
+    unsubscribe();
+    }, [])
+
+
+    useEffect(() => {
             fetch('http://192.168.0.105:8000/store/fruitslist/',{
             method: 'GET',
             headers: {
@@ -44,11 +107,10 @@ export default function Fruits({ navigation }) {
             })
             .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => {if (mounted) {setFruitsList(resp.json); setFilteredList(resp.json); dropDownRef.current = new Array(resp.json.length);}})
-            .then(() => setLoading('false'))
             .catch(error => console.log(error))
 
         return () => {
-            mounted = false;
+            setMounted(false);
         }
     }, [])
 
@@ -60,7 +122,6 @@ export default function Fruits({ navigation }) {
 
 
     useEffect(() => {
-        let mounted = true;
         const getCart = navigation.addListener('focus', () => {
             if (mounted) {
                 setHideButton('flex')
@@ -77,12 +138,16 @@ export default function Fruits({ navigation }) {
                     })
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                     .then(resp => {if (mounted) {setCartData(resp.json), setCartStatus(resp.status)}})
-                    .then(() => setHideButton('none'))
+                    .then(() => {if (mounted) {setHideButton('none')}})
+                    .then(() => {if (mounted) {setLoading('false')}})
+                    .then(() => {if (mounted) {setIsOffline(false)}})
                     .catch(error => console.log(error))
                 } else {
                     if (mounted) {
                         setCartData([]);
                         setHideButton('none');
+                        setLoading('false');
+                        setIsOffline(false);
                     }
                 }
                 
@@ -91,7 +156,7 @@ export default function Fruits({ navigation }) {
         });
         
         return () => {
-            mounted = false;
+            setMounted(false);
         }
         
     }, [navigation])
@@ -236,16 +301,31 @@ export default function Fruits({ navigation }) {
       };
     
 
-      const slideUp = {
-        transform: [
-          {
-            translateY: animation.interpolate({
-              inputRange: [0.01, 1],
-              outputRange: [0, -1 * screenHeight],
-            }),
-          },
-        ],
-      };
+    const diffClamp = Animated.diffClamp(scrollY, 0, 50)
+
+    const triggerOpenAnimation = () => {
+        Animated.timing(scrollY, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true
+        }).start();
+    }
+
+    const triggerCloseAnimation = () => {
+        Animated.timing(scrollY, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true
+        }).start();
+    }
+
+    const slideUp = scrollY.interpolate({
+        inputRange: [0, 1],
+        outputRange: [150, 0],
+        extrapolate: 'clamp',
+    })
+
+    
 
 
       const updateList = (item, index) => {
@@ -266,56 +346,230 @@ export default function Fruits({ navigation }) {
         }
       }
 
+
+
+    
+    
+    
+    //Retry
+
+    const retry = async () => {
+        setShowInidc(true);
+        const token = await AsyncStorage.getItem('USER_TOKEN')
+        try {
+
+            //Fruits list
+            fetch('http://192.168.0.105:8000/store/fruitslist/',{
+                method: 'GET',
+                headers: {
+                    'Content-type': 'application/json'
+                }
+            })
+            .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+            .then(resp => (setFruitsList(resp.json), setFilteredList(resp.json), dropDownRef.current = new Array(resp.json.length)))
+            .catch(error => console.log(error))
+
+            //Cart
+
+            if (token) {
+                fetch('http://192.168.0.105:8000/store/cart/',{
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-type': 'application/json'
+                    }
+                })
+                .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => (setCartData(resp.json), setCartStatus(resp.status)))
+                .then(() => setHideButton('none'))
+                .then(() => setLoading('false'))
+                .then(() => setIsOffline(false))
+                .then(() => setShowInidc(false))
+                .catch(error => console.log(error))
+            } else {
+                setCartData([]);
+                setHideButton('none');
+                setLoading('false');
+                setIsOffline(false);
+                setShowInidc(false)
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            NetInfo.fetch().then(state => {
+                if (!state.isConnected) {
+                  setTimeout(() => setShowInidc(false), 3000)
+                }
+            })
+        }
+        
+    }
+
+
+      if (isOffline) {
+        return (
+            <View style={{flex: 1, backgroundColor: '#fcfcfc'}}>
+                <Image source={require('../assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
+                <View style={{width: '80%', alignSelf: 'center'}}>
+                <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: 50, textAlign: 'center'}}>Uh oh! Seems like you are disconnected !</Text>
+                {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={retry}>
+                    <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
+                </TouchableOpacity>: <LottieView source={require('../assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
+                </View>
+            </View>
+        )
+      }
+
     
 
 
     if (loading == 'true') {
         return (
-            <SafeAreaView style={styles.refreshcontainer}>
-                <View style={{flex: 0.5, paddingTop: hp(15)}}>
-                    <ActivityIndicator size={50} />
+            <View style={{flex: 1, backgroundColor: '#fcfcfc'}}>
+                <SkeletonPlaceholder>
+                    <SkeletonPlaceholder.Item height={hp(99)} marginTop={hp(5)} width={wp(90)} alignSelf={'center'} flexDirection={'row'} justifyContent={'space-between'}>
+                        <SkeletonPlaceholder.Item marginTop={hp(15)} marginLeft={wp(7)} alignItems={'center'}>
+                            <SkeletonPlaceholder.Item  
+                                width={wp(5)}
+                                height={wp(20)}
+                                borderRadius={5}
+                                marginBottom={hp(8)}
+                            />
+                            <SkeletonPlaceholder.Item  
+                                width={wp(5)}
+                                height={wp(20)}
+                                borderRadius={5}
+                                marginBottom={hp(8)}
+                            />
+                            <SkeletonPlaceholder.Item  
+                                width={wp(5)}
+                                height={wp(20)}
+                                borderRadius={5}
+                            />
+                        </SkeletonPlaceholder.Item>
+                        <SkeletonPlaceholder.Item>
+                            <SkeletonPlaceholder.Item
+                                width={wp(50)}
+                                height={20}
+                                borderRadius={5}
+                            />
+                            <SkeletonPlaceholder.Item
+                                marginTop={hp(4)}
+                                width={wp(60)}
+                                height={wp(40)}
+                                borderRadius={10}
+                            />
+                            <SkeletonPlaceholder.Item
+                                marginTop={hp(4)}
+                                width={wp(60)}
+                                height={wp(40)}
+                                borderRadius={10}
+                            />
+                            <SkeletonPlaceholder.Item
+                                marginTop={hp(4)}
+                                width={wp(60)}
+                                height={wp(40)}
+                                borderRadius={10}
+                            />
+                            <SkeletonPlaceholder.Item
+                                marginTop={hp(4)}
+                                width={wp(60)}
+                                height={wp(40)}
+                                borderRadius={10}
+                            />
+                            <SkeletonPlaceholder.Item
+                                marginTop={hp(4)}
+                                width={wp(60)}
+                                height={wp(40)}
+                                borderRadius={10}
+                            />
+                            <SkeletonPlaceholder.Item
+                                marginTop={hp(4)}
+                                width={wp(60)}
+                                height={wp(40)}
+                                borderRadius={10}
+                            />
+                            <SkeletonPlaceholder.Item
+                                marginTop={hp(4)}
+                                width={wp(60)}
+                                height={wp(40)}
+                                borderRadius={10}
+                            />
+                        </SkeletonPlaceholder.Item>
+                    </SkeletonPlaceholder.Item>
+                </SkeletonPlaceholder>
+                <View style={{position: 'absolute', bottom: 0, backgroundColor: '#fcfcfc', width: '100%'}}>
+                <SkeletonPlaceholder>
+                    <SkeletonPlaceholder.Item paddingTop={15} padding={10} flexDirection={'row'} alignItems={'center'}>
+                        <SkeletonPlaceholder.Item 
+                            width={wp(9)}
+                            height={wp(9)}
+                            marginLeft={wp(10)}
+                            borderRadius={10}
+                        />
+                        <SkeletonPlaceholder.Item 
+                            width={wp(9)}
+                            height={wp(9)}
+                            marginLeft={wp(25)}
+                            borderRadius={10}
+                        />
+                        <SkeletonPlaceholder.Item 
+                            width={wp(9)}
+                            height={wp(9)}
+                            marginLeft={wp(25)}
+                            borderRadius={10}
+                        />
+                    </SkeletonPlaceholder.Item>
+                    </SkeletonPlaceholder>
                 </View>
-            </SafeAreaView>
+            </View>
         )
     }
 
     return (
-            <View style={{flexDirection: 'row', backgroundColor: 'white', flex: 1}}>
-                <View style={{flex: 0.5, paddingTop: hp(15)}}>
-                    <TouchableOpacity style={{alignItems: 'center', marginBottom: hp(15)}} onPress={() => navigation.navigate('cart')}>
-                        <Svg height={hp(5)} viewBox="0 0 512 512" width="512"><Path fill="#99B898" d="M509.739,89.437c-2.022-2.586-5.122-4.097-8.405-4.096H96c-5.891-0.001-10.668,4.773-10.669,10.664  c0,0.717,0.072,1.433,0.216,2.136l42.667,213.333c1.079,5.531,6.274,9.269,11.861,8.533l320-42.667c4.339-0.58,7.883-3.752,8.939-8  L511.68,98.674C512.505,95.461,511.787,92.046,509.739,89.437z"/><G><Circle fill="#455A64" cx="394.667" cy="437.341" r="53.333"/><Circle fill="#455A64" cx="181.333" cy="437.341" r="53.333"/><Path fill="#455A64" d="M191.125,362.674h246.208c5.891,0,10.667-4.776,10.667-10.667c0-5.891-4.776-10.667-10.667-10.667   H191.125c-25.408-0.053-47.272-17.976-52.309-42.88L85.12,29.874c-1.014-4.967-5.384-8.534-10.453-8.533h-64   C4.776,21.341,0,26.116,0,32.007s4.776,10.667,10.667,10.667H65.92l51.989,259.968   C124.954,337.505,155.557,362.598,191.125,362.674z"/></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G></Svg>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={{alignItems: 'center', margin: hp(4)}} onPress={() => navigation.navigate('Fruits')} >
-                        <Svg height={hp(5)} viewBox="0 0 512 512" width="512"><Path d="m344 88s0-48-32-64c-32 16-32 64-32 64v72h64z" fill="#35a872"/><Path d="m336 192s9.455-80 104-80c0 0-47.273 40-47.273 80z" fill="#248256"/><Path d="m288 192s-9.455-80-104-80c0 0 47.273 40 47.273 80z" fill="#248256"/><Path d="m304 152s9.455-80 104-80c0 0-47.273 40-47.273 80z" fill="#319c6a"/><Path d="m320 152s-9.455-80-104-80c0 0 47.273 40 47.273 80z" fill="#2e9163"/><Rect fill="#f7b030" height="304" rx="128" width="256" x="184" y="144"/><G fill="#e09f2c"><Path d="m402.79 318.2-45.26 43.89-45.41-44.08 45.26-43.94z"/><Path d="m312.12 318.01-45.4 44.08-45.27-43.9 45.4-44.14z"/><Path d="m309.87 144.02-43.14 41.93-22.93-22.28a127.231 127.231 0 0 1 66.07-19.65z"/><Path d="m312.1 230.05-45.25 44-45.41-44.08 45.29-44.02z"/><Path d="m402.81 229.97-45.43 44.1-45.28-44.02 45.39-44.12z"/><Path d="m380.31 163.74-22.82 22.19-43.11-41.91a127.258 127.258 0 0 1 65.93 19.72z"/><Path d="m221.44 229.97-37.31 36.27a127.238 127.238 0 0 1 16.17-56.79z"/><Path d="m439.86 265.98-37.05-36.01 20.97-20.36a127.14 127.14 0 0 1 16.08 56.37z"/><Path d="m440 282.12v37.88a127.891 127.891 0 0 1 -3.73 30.76l-33.48-32.56z"/><Path d="m221.45 318.19-33.68 32.75a128.261 128.261 0 0 1 -3.77-30.94v-38.12z"/></G><Path d="m266.72 362.09-47.49 46.11a127.877 127.877 0 0 1 -31.46-57.26l33.68-32.75z" fill="#f7b030"/><Path d="m404.89 408.07a128.015 128.015 0 0 1 -185.66.13l47.49-46.11 45.4 44.03 45.41-44.03z" fill="#e09f2c"/><Path d="m349.25 442.12a1.831 1.831 0 0 0 -.3.46 128.6 128.6 0 0 1 -73.95-.02v-.44l37.12-36z" fill="#f7b030"/><Path d="m488 328c0 77.32-82.38 160-184 160s-184-82.68-184-160z" fill="#35a872"/><Path d="m455.67 328c-5.21 63.3-71.12 128-151.67 128s-146.46-64.7-151.67-128z" fill="#d13330"/><Path d="m416 360a8 8 0 0 1 -16 0c0-4.418 3.582-16 8-16s8 11.582 8 16z" fill="#5e3725"/><Path d="m376 400a8 8 0 0 1 -16 0c0-4.418 3.582-16 8-16s8 11.582 8 16z" fill="#5e3725"/><Path d="m336 376a8 8 0 0 1 -16 0c0-4.418 3.582-16 8-16s8 11.582 8 16z" fill="#5e3725"/><Path d="m288 376a8 8 0 0 1 -16 0c0-4.418 3.582-16 8-16s8 11.582 8 16z" fill="#5e3725"/><Path d="m312 424a8 8 0 0 1 -16 0c0-4.418 3.582-16 8-16s8 11.582 8 16z" fill="#5e3725"/><Path d="m232 400a8 8 0 0 0 16 0c0-4.418-3.582-16-8-16s-8 11.582-8 16z" fill="#5e3725"/><Path d="m183.912 280c-6.38 0-23 4.354-29.855 9.5a29.742 29.742 0 0 1 -36.114 0c-6.854-5.145-23.475-9.5-29.855-9.5-41.723 0-69.92 37.576-63.06 83.661l5 33.576a170.458 170.458 0 0 0 19.586 57.937c14.323 25.666 41.786 38.077 68.005 30.736l13.381-4.788a14.779 14.779 0 0 1 10 0l13.381 4.788c26.222 7.341 53.682-5.07 68.008-30.736a170.458 170.458 0 0 0 19.586-57.937l5-33.576c6.857-46.085-21.34-83.661-63.063-83.661z" fill="#eb423f"/><Path d="m136 336a8 8 0 0 1 -8-8c0-.75.023-18.623 2.036-39.758 2.781-29.2 7.931-49.615 15.308-60.68a8 8 0 0 1 13.312 8.875c-12.01 18.016-14.656 72.205-14.656 91.563a8 8 0 0 1 -8 8z" fill="#5e3725"/><Path d="m165.657 314.343a8 8 0 0 0 -11.314 0c-.056.057-6.2 5.657-18.343 5.657s-18.184-5.512-18.435-5.747l.088.087a8 8 0 1 0 -11.306 11.321c1.073 1.072 10.897 10.339 29.653 10.339 18.772 0 28.6-9.285 29.657-10.343a8 8 0 0 0 0-11.314z" fill="#c7312e"/></Svg>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={{alignItems: 'center', margin: hp(4), opacity: 0.2}} onPress={() => navigation.navigate('Dried-Fruits')} >
-                        <Svg viewBox="0 0 512 512" height={hp(4)} width="512"><Path d="m489.67 108.004c-2.908-15.691-14.747-28.731-29.985-33.363-4.553-1.384-9.333-1.998-14.088-1.805-31.893 1.295-95.203 10.662-167.722 57.987-2.73-6.533-5.607-12.952-8.648-19.239-24.736-51.141-54.603-83.261-75.304-101.2-11.829-10.252-29.051-13.163-43.653-7.612-4.646 1.766-8.977 4.356-12.733 7.611-24.217 20.988-58.503 59.07-84.318 121.302-1.59 3.834.229 8.232 4.063 9.823 3.834 1.588 8.232-.228 9.823-4.063 20.617-49.701 46.739-83.165 68.185-104.461-9.267 18.721-19.735 44.861-28.874 79.98-15.709 60.37-23.674 132.275-23.674 213.718 0 54.101 7.87 100.309 22.759 133.628 5.103 11.42 10.969 21.081 17.438 28.849-19.277-7.365-36.57-19.8-50.622-36.718-25.745-30.996-39.353-74.483-39.353-125.759 0-59.448 8.106-114.032 24.092-162.234 1.306-3.94-.829-8.194-4.768-9.5-3.947-1.307-8.195.828-9.501 4.768-16.492 49.731-24.855 105.907-24.855 166.966 0 54.828 14.808 101.636 42.822 135.364 26.756 32.213 64.038 49.954 104.976 49.954 12.627 0 24.903-1.693 36.632-4.972 11.755 3.298 23.894 4.963 36.224 4.963 18.458 0 37.33-3.684 55.899-11.01 33.068-13.046 64.673-37.645 91.399-71.139 23.191-29.065 42.99-58.882 58.846-88.624 1.952-3.663.567-8.216-3.097-10.169-3.663-1.953-8.216-.567-10.169 3.097-15.423 28.931-34.713 57.974-57.331 86.32-25.089 31.442-54.539 54.448-85.165 66.531-20.172 7.957-40.66 11.155-60.356 9.542 15.757-8.345 30.003-19.935 42.095-34.493 4.413-5.313 8.497-10.952 12.249-16.895 17.532-15.495 35.112-34.235 52.267-55.733 50.797-63.661 89.419-124.834 114.793-181.82 14.748-33.121 22.868-60.065 27.304-80.471 4.351 38.257 2.825 102.158-32.757 180.485-1.586 3.489-.214 7.73 3.112 9.633 3.794 2.17 8.77.557 10.574-3.415 42.99-94.636 38.138-169.577 31.421-205.826zm-189.161 94.461c71.675-69.936 126.174-97.159 153.821-107.424l-142.946 179.146c-2.095-24.967-5.73-48.893-10.875-71.722zm129.104-113.325c-52.416 24.469-102.298 66.979-133.235 96.436-3.692-13.935-7.981-27.429-12.855-40.472 59.535-39.5 112.533-52.207 146.09-55.964zm-331.837 237.542c0-80.167 7.802-150.799 23.189-209.932 12.224-46.98 26.753-77.027 37.249-94.454v473.732c-14.791-3.684-28.424-18.214-38.987-41.851-14.034-31.405-21.451-75.492-21.451-127.495zm161.367 125.759c-14.053 16.919-31.345 29.353-50.623 36.718 6.469-7.768 12.335-17.429 17.439-28.849 14.889-33.319 22.759-79.527 22.759-133.628 0-4.151-3.365-7.517-7.516-7.517-4.152 0-7.516 3.365-7.516 7.517 0 52.004-7.418 96.09-21.45 127.495-10.563 23.637-24.197 38.166-38.988 41.851v-473.735c21.036 34.892 55.33 114.851 59.93 269.594.124 4.149 3.624 7.428 7.737 7.29 4.15-.123 7.414-3.587 7.29-7.737-4.027-135.444-30.699-215.469-51.994-258.41 18.18 18.084 40.381 45.604 59.483 85.099 28.403 58.723 42.804 128.89 42.804 208.553-.001 51.276-13.609 94.763-39.355 125.759zm177.14-250.958c-24.855 55.819-62.81 115.896-112.811 178.559-7.278 9.121-14.627 17.718-22.005 25.759 7.96-23.665 12.063-50.28 12.063-79.118 0-10.22-.232-20.292-.695-30.21l153.244-192.052c-2.665 20.167-10.05 52.714-29.796 97.062z" fill="black" /></Svg>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={{alignItems: 'center', margin: hp(4), opacity: 0.2}} onPress={() => navigation.navigate('Exotics')} >
-                        <Svg  viewBox="0 0 512 512" height={hp(4)} width="512" stroke="black" strokeWidth="5" ><Path d="m490 216.9c4.7-9.5 7.2-20 7.2-30.6 0-35.7-27.3-65.2-62.2-68.6 3.2-14.6-2.1-30.8-14.7-43.2-16.8-16.6-40.5-21.7-61.8-13.8-8-14.8-21.2-27.3-38.5-36.5-18.3-9.7-40-14.7-60.9-14.1-19.7.6-38.1 6.1-53.3 15.9-15.4 10-27.2 24-35 41.7-22.7-10.4-45.1-9.5-63.8 2.6-20.6 13.3-33 38.8-31.1 63.5.1 1.2.2 2.3.4 3.5-30.3-1.6-57.7 19.7-62.9 50.3-4.9 29.1 11.8 56.9 38.5 66.8-6.4 13.1-6.6 28.5-.4 41.9 8.3 18 26.1 28.6 44.7 28.6 4.1 0 8.2-.5 12.3-1.6l71.6 153.9c5.9 12.7 18.7 20.8 32.6 20.8h.4l86.4-.9c15.7-.2 29.3-10.3 34-25.3 1.5-5 3.1-10.1 4.7-15.3 12.6-41.2 27.5-90.3 57.9-140.6 4.8 1.9 9.9 2.9 14.9 2.9 7.5 0 15.1-2.1 21.7-6.4 8.2-5.3 14.2-13.3 17-22.5 1.4.1 2.7.2 4.1.2 25.1 0 45.5-20.4 45.5-45.5.1-10.1-3.2-19.8-9.3-27.7zm-464.7-27.2c4.4-25.7 28.3-43.3 54-40 .7 1.9 1.4 3.7 2.2 5.5-8.7 10.7-13.9 23.9-14.6 37.6-.8 15.3 4 30.2 13.5 42.1 2.6 3.3 5.5 6.2 8.7 8.9-7.7 2.7-16 3.4-24.1 2-26.4-4.6-44.2-29.7-39.7-56.1zm37.1 101.7c-5-10.9-4.4-23.4 1.4-33.8 3.1.5 6.2.7 9.3.7 1.7 0 3.3-.1 5-.2l25.2 54.2c-16.4 3.2-33.6-5-40.9-20.9zm264.3 161.6c-1.6 5.2-3.1 10.3-4.7 15.3-3.1 10-12.2 16.8-22.7 16.9l-86.4.9c-.1 0-.2 0-.3 0-9.3 0-17.8-5.4-21.8-13.9l-100.5-216.4c3.7-1.1 7.4-2.6 10.9-4.4 6.7 3.3 14.1 5.5 21.9 6.2 1.3.1 2.6.2 4 .2 7.8 15.3 40.2 78.7 50.3 96.6 5 9 13 14.2 21.1 14.2 1.6 0 3.3-.2 4.9-.6 10.2-2.7 16.8-13 16.7-26.2 0-.2 0-.3 0-.5l-7.1-86.1c9.9 5.2 20.3 8.9 31 11l17.8 100.9c2.1 11.9 12.3 20.2 24 20.2 1.2 0 2.3-.1 3.5-.3 6.7-1 12.7-4.7 16.6-10.2l78.5-113.1c2.4.3 4.8.4 7.2.4 6.8 0 13.5-1 20-3 1 2.2 2.2 4.4 3.5 6.4-52 66.1-72.1 132.2-88.4 185.5zm-149.4-182.7c-11.6 4.3-23.7 2.7-32.8-4.5-1.7-3.4-3.2-6.3-4.5-8.8 10.8-1.8 21.1-6.4 30-13.5 4.2-3.4 8-7.3 11.2-11.5 5.7 5.7 11.7 10.7 17.9 15.1-2.8 10.4-10.8 19.1-21.8 23.2zm24.5-3 6.2 74.8c0 7.5-3.1 13.1-7.8 14.3-4.3 1.1-9.1-1.9-12.5-7.8-6.2-11.2-21.8-41.1-34.2-65.3 3.5.9 7.2 1.3 10.9 1.3 5.7 0 11.4-1 17.1-3.2 8.1-2.9 15-7.8 20.3-14.1zm128.7-18.8c3.3-2.2 6.6-4.5 9.7-7 .1.2.3.3.4.5 8.4 9.1 19 15.8 30.8 19.3l-75.6 108.8c-2 2.8-5 4.7-8.4 5.2-5.4.8-10.5-2-12.9-6.7zm-60 100.3-9.2-51.9c7.5 4.3 16.6 7.2 26 7.2 1.4 0 2.7-.1 4.1-.2zm27.3-58.7c-14.4 5.7-32.8-2.2-39.6-11.1l-1.9-11c2.9.2 5.9.4 8.9.4 16.5 0 32.5-3.5 47.5-10.1zm128.6 12.2c-7.2 4.6-15.8 5.7-23.7 3.2 6.1-9.5 12.8-19 20.2-28.5 4.5 4.3 9.8 7.7 15.4 9.9-2.1 6.4-6.3 11.8-11.9 15.4zm27.5-24.2c-12.7 0-25.6-9.1-31.3-21.4 5.5-2.8 10.8-6.4 15.5-10.8 7.3-6.7 13-14.9 16.9-24 1.4-3.3-.4-7.1-3.9-8.1-2.9-.8-6 .7-7.2 3.5-3.1 7.5-7.9 14.2-13.9 19.8-14.6 13.5-34.8 18.3-54 13-10.2-2.8-19.3-8.5-26.5-16.3-12.5-13.5-17.6-32.3-13.8-50.4 1.6-7.8 4.9-15.1 9.5-21.5 1.6-2.2 1.6-5.1 0-7.2-2.4-3.2-7.3-3.2-9.6 0-5.7 7.8-9.6 16.7-11.6 26.2-3.7 17.6-.3 35.9 9.1 50.9-20 16.1-43.4 24.5-67.8 24.5-28.6 0-55.3-12-77.4-34.8 4.8-9.7 7.2-20.6 6.7-31.5-.2-3.6-3.4-6.3-6.9-5.7-3.1.5-5.2 3.2-5.1 6.3.8 16.6-6.6 32.9-20 43.6-11 8.8-24.6 12.9-38.4 11.6-13.7-1.3-25.9-7.9-34.4-18.5-14-17.5-14.3-42.6-1.6-61.1 6.7 8.8 15.9 16 27.2 21 3 1.4 6.6 0 7.9-3s0-6.6-3-7.9c-19.4-8.6-30.9-24-32.4-43.3-1.6-20.5 8.6-41.6 25.5-52.5 16.5-10.7 36.9-10.4 57.5.8 1.5.8 3.3 1 5 .3 1.6-.6 2.9-1.9 3.5-3.5 12.9-34.5 42-54.9 79.9-56 39.5-1.2 77.8 19.3 90.8 48.8.7 1.5 1.9 2.7 3.4 3.2 1.5.6 3.2.5 4.7-.3 21.8-10.7 42.5-1.8 53.6 9.2 13.8 13.6 13.9 28.4 9.5 37.7-.9 1.9-.7 4.1.4 5.9 1.2 1.8 3.1 2.8 5.3 2.7h1.2c31.4 0 57 25.5 57 57 0 10-2.6 19.8-7.6 28.4-1.3 2.3-1 5.2.8 7.1 5.8 6.2 9.1 14.3 9.1 22.9-.1 18.4-15.1 33.4-33.6 33.4z" fill="black" /></Svg>
-                    </TouchableOpacity>
+            <View style={{flexDirection: 'row', backgroundColor: '#fcfcfc', flex: 1}}>
+                <View style={{flex: 0.4, justifyContent: 'center'}}>
+                    <CopilotStep text={'Explore fruits !'} order={3} name={'fruits'}>
+                        <CoPilotTouchableOpacity style={{alignItems: 'center', margin: hp(4), marginBottom: 75, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Fruits')} >
+                            <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4.5)}}>Fruits</Text>
+                            <Text style={{backgroundColor: '#249C86', height: 2, width: '40%', marginTop: 5, alignSelf: 'center'}}></Text>
+                        </CoPilotTouchableOpacity>
+                    </CopilotStep>
+                    <CopilotStep text={'Explore dried-fruits !'} order={4} name={'dried-fruits'}>
+                        <CoPilotTouchableOpacity style={{alignItems: 'center', margin: hp(4), marginBottom: 75, opacity: 0.2, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Dried-Fruits')} >
+                            <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4.5)}}>Dried{'\n'}Fruits</Text>
+                            <Text style={{ height: 2, marginTop: 5}}></Text>
+                        </CoPilotTouchableOpacity>
+                    </CopilotStep>
+                    <CopilotStep text={'Explore exotics !'} order={5} name={'exotics'}>
+                        <CoPilotTouchableOpacity style={{alignItems: 'center', margin: hp(4), marginBottom: 75, opacity: 0.2, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Exotics')} >
+                            <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4.5)}}>Exotics</Text>
+                            <Text style={{ height: 2, marginTop: 5}}></Text>
+                        </CoPilotTouchableOpacity>
+                    </CopilotStep>
                 </View>
                 
                     <StatusBar style="auto" />
                     <View style={styles.container}>
                         <View
                             style={{
-                            backgroundColor: '#fff',
+                            backgroundColor: '#fcfcfc',
                             flexDirection: 'row',
                             alignItems: 'center',
                             marginBottom: hp(4)
                             }}
                         >
-                            <View style={{flex: 0.1, justifyContent: 'flex-end', alignItems: 'flex-end', marginRight: 5}}>
-                                <TouchableOpacity onPress={() => searchInputRef.current.focus()}>
-                                    <FontAwesome name="search" size={20} color="black"  />
-                                </TouchableOpacity>
-                            </View>
+                            <CopilotStep text={"Search for what you love !!"} order={1} name={'Search'}>
+                                <CoPilotView style={{flex: 0.1, justifyContent: 'flex-end', alignItems: 'flex-end', marginRight: 5}}>
+                                    <TouchableOpacity onPress={() => searchInputRef.current.focus()}>
+                                        <FontAwesome name="search" size={20} color="black"  />
+                                    </TouchableOpacity>
+                                </CoPilotView>
+                            </CopilotStep>
                             <View style={{flex: 1}}>
                                 <TextInput
                                     autoCapitalize="none"
                                     autoCorrect={false}
-                                    clearButtonMode="always"
                                     value={query}
                                     onChangeText={(text) => searchFilterFunction(text)}
                                     ref={searchInputRef}
@@ -323,87 +577,164 @@ export default function Fruits({ navigation }) {
                                 />
                             </View>
                         </View>
-                        <FlatList 
+                        <Animated.FlatList 
                             data={filteredList}
                             contentContainerStyle={{paddingBottom: 100}}
                             showsVerticalScrollIndicator={false}
                             keyExtractor={(item, index) => index.toString()}
                             ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
-                            renderItem={({ item }) => (
-                                    <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true}>
-                                        <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, margin: wp(1), paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
-                                            <ModalDropdown 
-                                                ref={el => dropDownRef.current[item.id] = el}
-                                                defaultValue={item.detail[0].quantity}
-                                                options={item.detail.map(item1 => item1.quantity)} 
-                                                style={{alignSelf: 'center', marginTop: 5, position: 'absolute', bottom: 2, left: 20, padding: 5}}
-                                                dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}} 
-                                                dropdownTextStyle={{fontSize: wp(4), fontFamily: 'sf', textAlign: 'center', color: 'black'}} 
-                                                renderSeparator={() => (<Text style={{backgroundColor: '#ebebeb', height: 1}}></Text>)}
-                                                onSelect={(value, index) => updateList(item, index) ? setCustom([...custom]): setCustom([...custom, {item: item.name, value: index}])}
-                                            >
-                                                <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center'}} onPress={() => dropDownRef.current[item.id].show()}>
-                                                    {exists(item) ?
+                            renderItem={({ item, index }) => (
+                                    <FlipCard friction={500} flipHorizontal={true} flipVertical={false} useNativeDriver={true} onFlipStart={() => LayoutAnimation.configureNext(LayoutAnimation.Presets.spring)}>
+                                        {index === 0 ? 
+                                            <CopilotStep text={'Touch the respective card for more information !'} order={2} name={'Card'}>
+                                                <CoPilotView key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: 10, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
+                                                    <ModalDropdown 
+                                                        ref={el => dropDownRef.current[item.id] = el}
+                                                        defaultValue={item.detail[0].quantity}
+                                                        options={item.detail.map(item1 => item1.quantity)} 
+                                                        style={{alignSelf: 'center', marginTop: 5, position: 'absolute', bottom: 2, left: 20, padding: 5}}
+                                                        dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}} 
+                                                        dropdownTextStyle={{fontSize: wp(4), fontFamily: 'sf', textAlign: 'center', color: 'black'}} 
+                                                        renderSeparator={() => (<Text style={{backgroundColor: '#ebebeb', height: 1}}></Text>)}
+                                                        onSelect={(value, index) => updateList(item, index) ? setCustom([...custom]): setCustom([...custom, {item: item.name, value: index}])}
+                                                    >
+                                                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center'}} onPress={() => dropDownRef.current[item.id].show()}>
+                                                            {exists(item) ?
+                                                                item.detail.map((item2) => {
+                                                                    return item2.quantity === exists(item) ?
+                                                                    <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
+                                                                })
+                                                                : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
+                                                            }
+                                                            <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
+                                                        </TouchableOpacity>
+                                                    </ModalDropdown>
+                                                    <View style={{flex: 1}}>
+                                                        <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
+                                                    </View>
+                                                    <View style={{flex: 1}}>
+                                                        <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
+                                                        {exists(item) ? 
+                                                            item.detail.map((item2) => {
+                                                                return item2.quantity === exists(item) ?
+                                                                item2.previous_price > 0 ? 
+                                                                <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
+                                                                    <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
+                                                                    <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
+                                                                </View>:
+                                                                <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                                                
+                                                            }):  
+                                                            
+                                                            item.detail[0].previous_price > 0 ?
+                                                            <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
+                                                                <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
+                                                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                                            </View>
+                                                            : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                                        }
+                                                        
+                                                            {hideButton === 'none' ? item.availability === 'In stock' ? 
+                                                                search(item) ? cartData.map((item1) => {
+                                                                    return item1.ordereditem  === item.name ? 
+                                                                        
+                                                                    <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, height: 30, padding: wp(1), flex: 0.1}}>
+                                                                            
+                                                                            <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
+                                                                                <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
+                                                                            </TouchableOpacity>
+                                                                            <View style={{justifyContent: 'center'}}>
+                                                                                <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4.5)}}> {item1.item_count} </Text> 
+                                                                            </View>
+                                                                            <TouchableOpacity onPress={reduceItem(item)} style={{justifyContent: 'center'}}>
+                                                                                <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}> -</Text>
+                                                                            </TouchableOpacity>
+                                                                        </View>
+                                                                        : null
+                                                                    }): 
+                                                                    <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, elevation: 5}} activeOpacity={1}>
+                                                                        <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
+                                                                    </TouchableOpacity>
+                                                            :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                                        
+                                                    </View>
+                                                </CoPilotView>
+                                            </CopilotStep> : 
+                                            
+                                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: 10, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
+                                                <ModalDropdown 
+                                                    ref={el => dropDownRef.current[item.id] = el}
+                                                    defaultValue={item.detail[0].quantity}
+                                                    options={item.detail.map(item1 => item1.quantity)} 
+                                                    style={{alignSelf: 'center', marginTop: 5, position: 'absolute', bottom: 2, left: 20, padding: 5}}
+                                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}} 
+                                                    dropdownTextStyle={{fontSize: wp(4), fontFamily: 'sf', textAlign: 'center', color: 'black'}} 
+                                                    renderSeparator={() => (<Text style={{backgroundColor: '#ebebeb', height: 1}}></Text>)}
+                                                    onSelect={(value, index) => updateList(item, index) ? setCustom([...custom]): setCustom([...custom, {item: item.name, value: index}])}
+                                                >
+                                                    <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center'}} onPress={() => dropDownRef.current[item.id].show()}>
+                                                        {exists(item) ?
+                                                            item.detail.map((item2) => {
+                                                                return item2.quantity === exists(item) ?
+                                                                <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
+                                                            })
+                                                            : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
+                                                        }
+                                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
+                                                    </TouchableOpacity>
+                                                </ModalDropdown>
+                                                <View style={{flex: 1}}>
+                                                    <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
+                                                </View>
+                                                <View style={{flex: 1}}>
+                                                    <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
+                                                    {exists(item) ? 
                                                         item.detail.map((item2) => {
                                                             return item2.quantity === exists(item) ?
-                                                            <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
-                                                        })
-                                                        : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
-                                                    }
-                                                    <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
-                                                </TouchableOpacity>
-                                            </ModalDropdown>
-                                            <View style={{flex: 1}}>
-                                                <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
-                                            </View>
-                                            <View style={{flex: 1}}>
-                                                <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
-                                                {exists(item) ? 
-                                                    item.detail.map((item2) => {
-                                                        return item2.quantity === exists(item) ?
-                                                        item2.previous_price > 0 ? 
-                                                        <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
-                                                        </View>:
-                                                        <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                                            item2.previous_price > 0 ? 
+                                                            <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
+                                                                <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
+                                                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
+                                                            </View>:
+                                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                                            
+                                                        }):  
                                                         
-                                                    }):  
+                                                        item.detail[0].previous_price > 0 ?
+                                                        <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                                        </View>
+                                                        : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                                    }
                                                     
-                                                    item.detail[0].previous_price > 0 ?
-                                                    <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                                                        <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                                        <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
-                                                    </View>
-                                                    : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
-                                                }
-                                                
-                                                    {hideButton === 'none' ? item.availability === 'In stock' ? 
-                                                        search(item) ? cartData.map((item1) => {
-                                                            return item1.ordereditem  === item.name ? 
-                                                                
-                                                            <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, height: 30, padding: wp(1), flex: 0.1}}>
+                                                        {hideButton === 'none' ? item.availability === 'In stock' ? 
+                                                            search(item) ? cartData.map((item1) => {
+                                                                return item1.ordereditem  === item.name ? 
                                                                     
-                                                                    <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
-                                                                        <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
-                                                                    </TouchableOpacity>
-                                                                    <View style={{justifyContent: 'center'}}>
-                                                                        <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4.5)}}> {item1.item_count} </Text> 
+                                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, height: 30, padding: wp(1), flex: 0.1}}>
+                                                                        
+                                                                        <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
+                                                                            <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
+                                                                        </TouchableOpacity>
+                                                                        <View style={{justifyContent: 'center'}}>
+                                                                            <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4.5)}}> {item1.item_count} </Text> 
+                                                                        </View>
+                                                                        <TouchableOpacity onPress={reduceItem(item)} style={{justifyContent: 'center'}}>
+                                                                            <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}> -</Text>
+                                                                        </TouchableOpacity>
                                                                     </View>
-                                                                    <TouchableOpacity onPress={reduceItem(item)} style={{justifyContent: 'center'}}>
-                                                                        <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}> -</Text>
-                                                                    </TouchableOpacity>
-                                                                </View>
-                                                                : null
-                                                            }): 
-                                                            <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, elevation: 5}} activeOpacity={1}>
-                                                                <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
-                                                            </TouchableOpacity>
-                                                    :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
-                                                
+                                                                    : null
+                                                                }): 
+                                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, elevation: 5}} activeOpacity={1}>
+                                                                    <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
+                                                                </TouchableOpacity>
+                                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                                    
+                                                </View>
                                             </View>
-                                        </View>
-                                        <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                                            }
+                                        <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: 10, paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                             
                                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                                 <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5)}}>Details</Text>
@@ -422,16 +753,17 @@ export default function Fruits({ navigation }) {
                                                 : null}
                                             </View>
                                             <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1}}>{item.description}</Text>
+                                            <Text style={{backgroundColor: '#ebebeb', height: 1, width: '90%', alignSelf: 'center', marginTop: 10}}></Text>
                                             <View style={{flex: 1, marginTop: 5}}>
                                                 <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 15}}>Nutrition per 100 g</Text>
-                                                <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
+                                                <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15, marginRight: 5, marginLeft: 5}}>
                                                     {item.nutritional_values.slice(0, 3).map((x, index) => {
                                                         return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 2 ? 0: 1, borderColor: '#b5b5b5'}}>
                                                                     <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
                                                                         {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                                         x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                                         x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                                        x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                                        x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                                         x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                                         <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                                     </View>
@@ -439,14 +771,14 @@ export default function Fruits({ navigation }) {
                                                                 </View>
                                                     })}
                                                 </View>
-                                                <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
+                                                <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15, marginRight: 5, marginLeft: 5}}>
                                                     {item.nutritional_values.slice(3, 5).map((x, index) => {
                                                         return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 1 ? 0: 1, borderColor: '#b5b5b5'}}>
                                                                     <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                                                                        {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
+                                                                        {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                                         x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                                         x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                                        x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                                        x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                                         x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                                         <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                                     </View>
@@ -455,20 +787,38 @@ export default function Fruits({ navigation }) {
                                                     })}
                                                 </View>
                                             </View>
+                                            <TouchableOpacity style={{marginTop: 15, marginLeft: 15, alignSelf: 'flex-start'}} onPress={() => navigation.navigate('NutritionCalculator', {Item: item, values: item.nutritional_values})}>
+                                                <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86'}}>Calculate how much you intake ! &rarr;</Text>
+                                            </TouchableOpacity>
                                         </View>
                                     </FlipCard>
                             )}
                         />
                     </View>
-
-                {cartStatus !==401 ? cartData.length > 0 ? handleOpen(): handleClose(): null}
-                <View style={[styles.sheet]}>
-                    <Animated.View style={[styles.popup, slideUp]}>
-                        <Text style={{flex: 1, textAlign: 'right'}}>Items added to your cart!</Text>
-                        <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
-                        <Text style={{textAlign: 'center'}}>View Cart</Text>
+                {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
+                <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 55, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
+                    <Text style={{flex: 1, textAlign: 'right', color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
+                    <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
+                        <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'sf-semi'}}>View Cart</Text>
+                    </TouchableOpacity>
+                </Animated.View>
+                <View style={{width: '100%', position: 'absolute', bottom: 0, backgroundColor: '#fcfcfc', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51}}>
+                    <View style={{flex: 1, alignItems: 'center'}}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Home')} activeOpacity={1}>
+                            <CustomIcon name="home-1" size={wp(6)} style={{color: 'black', alignSelf: 'center'}} />
+                            <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Home</Text>
+                        </TouchableOpacity>         
+                    </View>
+                    <View style={{flex: 1}}>
+                        <CustomIcon name="store" size={wp(6)} color="#249c86" style={{alignSelf: 'center'}} />
+                        <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: '#249c86', textAlign: 'center'}}>Store</Text>
+                    </View>
+                    <View style={{flex: 1}}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Recipes')} activeOpacity={1}>
+                            <CustomIcon name="salad-1" size={wp(6.5)} color="black" style={{alignSelf: 'center'}} />
+                            <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Recipes</Text>
                         </TouchableOpacity>
-                    </Animated.View>
+                    </View>          
                 </View>
             </View>
         
@@ -476,10 +826,11 @@ export default function Fruits({ navigation }) {
 }
 
 
+
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#fff',
+      backgroundColor: '#fcfcfc',
       paddingTop: hp(5),
     },
     refreshcontainer: {
@@ -513,3 +864,70 @@ const styles = StyleSheet.create({
         alignItems: 'center'
       },
 });
+
+
+
+const StepNumberComponent = ({
+    isFirstStep,
+    isLastStep,
+    currentStep,
+    currentStepNumber,
+  }) => {
+    return (
+      <View style={{backgroundColor: '#249c86', flex: 1, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: 14, borderColor: 'white'}}>
+        <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4)}}>{currentStepNumber}</Text>
+      </View>
+    )
+  }
+  
+  const TooltipComponent = ({
+    isFirstStep,
+    isLastStep,
+    handleNext,
+    handlePrev,
+    handleStop,
+    currentStep,
+    labels,
+  }) => {
+    return (
+      <View>
+      <View style={{flex: 1}}>
+        <Text testID="stepDescription" style={{fontFamily: 'sofia-medium', fontSize: wp(4)}}>{currentStep.text}</Text>
+      </View>
+      <View style={{marginTop: 10, flexDirection: 'row', justifyContent: 'flex-end'}}>
+        {
+          !isLastStep ?
+            <TouchableOpacity onPress={handleStop}>
+              <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.skip || 'Skip'}</Text>
+            </TouchableOpacity>
+            : null
+        }
+        {
+          !isFirstStep ?
+            <TouchableOpacity onPress={handlePrev}>
+              <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.previous || 'Previous'}</Text>
+            </TouchableOpacity>
+            : null
+        }
+        {
+          !isLastStep ?
+            <TouchableOpacity onPress={handleNext}>
+              <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.next || 'Next'}</Text>
+            </TouchableOpacity> :
+            <TouchableOpacity onPress={handleStop}>
+              <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.finish || 'Done'}</Text>
+            </TouchableOpacity>
+        }
+      </View>
+    </View>
+    )
+  };
+
+
+export default copilot({
+    overlay: 'view', 
+    animated: true, 
+    backdropColor: 'rgba(0, 0, 0, 0.8)', 
+    stepNumberComponent: StepNumberComponent,
+    tooltipComponent: TooltipComponent
+  })(Fruits);

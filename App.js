@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import { StyleSheet, Text, View, TextInput, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TextInput, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { NavigationContainer, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator, CardStyleInterpolators, HeaderStyleInterpolators, HeaderBackButton } from '@react-navigation/stack';
@@ -24,14 +24,23 @@ import ActiveOrders from './components/active-orders';
 import Recipe from './components/recipe';
 import RecipeDetails from './components/recipe-details';
 import FavRecipe from './components/fav-recipe';
+import Payments from './components/payments';
+import TermsandConditions from './components/terms_conditions';
+import NutritionCalculator from './components/nutrition-calculator';
 import { UserContext, PushTokenContext } from './components/context';
 import SkeletonPlaceholder from "react-native-skeleton-placeholder";
+import { StripeProvider, initStripe } from '@stripe/stripe-react-native';
+import Svg, { Path, Rect, Circle, G, Polygon, LinearGradient as SvgLinearGradient, Defs, Stop, Ellipse, Image as SvgImage, Pattern, Use } from 'react-native-svg';
+import NetInfo from "@react-native-community/netinfo";
+import AppIntroSlider from 'react-native-app-intro-slider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import LottieView from 'lottie-react-native';
 
 const Tab = createBottomTabNavigator();
 
 const Stack = createStackNavigator();
 
-
+const {width: screenWidth} = Dimensions.get('window');
 
 function ShopStackNavigator({ navigation }) {
 
@@ -109,6 +118,7 @@ function HomeStackNavigator() {
         <Stack.Screen name="Register" component={Register} options={{title: '', cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerTransparent: true}} />
         <Stack.Screen name="OtpComponent" component={OtpComponent} options={{title: '', cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerTransparent: true}} />
         <Stack.Screen name="RecipeDetails" component={RecipeDetails}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+        <Stack.Screen name="Payments" component={Payments}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
    </Stack.Navigator>
   )
 }
@@ -152,16 +162,21 @@ function RecipeStackNavigator() {
 
 export default function App() {
 
+  const [showRealApp, setShowRealApp] = useState(true);
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [errorMsg, setErrormsg] = useState(null);
 
   const [conLocation, setConLocation] = useState({'name': '', 'district': ''});
   const [conPushToken, setConPushToken] = useState('');
 
+  const [isOffline, setIsOffline] = useState(false);
+  const [showIndic, setShowInidc] = useState(false);
+
 
   useEffect(() => {
     async function load() {
       try {
+        await SplashScreen.preventAutoHideAsync();
         await Font.loadAsync({
           'sofia-black' : require('./assets/fonts/Sofia-Pro-Black-Az.otf'),
           'sofia-medium': require('./assets/fonts/Sofia-Pro-Medium-Az.otf'),
@@ -171,6 +186,7 @@ export default function App() {
           'pro-light': require('./assets/fonts/Font-Awesome-5-Pro-Light-300.otf'),
           'pro-regular': require('./assets/fonts/Font-Awesome-5-Pro-Regular-400.otf'),
           'pro-solid': require('./assets/fonts/Font-Awesome-5-Pro-Solid-900.otf'),
+          'IcoMoon': require('./assets/fonts/icomoon.ttf'),
         });
         await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -178,7 +194,7 @@ export default function App() {
         setErrormsg(error);
       } finally {
         setFontsLoaded(true);
-        
+        await SplashScreen.hideAsync();
       }
     }
 
@@ -187,180 +203,174 @@ export default function App() {
 
 
 
+  useEffect(() => {
+    NetInfo.fetch().then(state => {
+      if (!state.isConnected) {
+        setIsOffline(true);
+      }
+    })
+  }, [])
+
+
+  const check = () => {
+    setShowInidc(true);
+    NetInfo.fetch().then(state => {
+      if (state.isConnected) {
+        setIsOffline(false);
+        setShowInidc(false);
+      } else {
+        setTimeout(() => setShowInidc(false), 3000);
+      }
+    })
+  }
+
+  //App Intro Related
+
+  useEffect(() => {
+    (async () => {
+      const isFirstTime = await AsyncStorage.getItem('isFirstTime')
+      if (isFirstTime === null) {
+        setShowRealApp(false);
+        await AsyncStorage.setItem('isFirstTime', 'false')
+      }
+    })().catch(error => console.log(error))
+    
+  }, [])
+
+
+  const slides = [
+    {
+      key: 1,
+      title: 'Explore',
+      text: 'Simple description.',
+      image: require('./assets/explore.png'),
+      backgroundColor: '#59b2ab',
+    },
+    {
+      key: 2,
+      title: 'Delivery at ease !',
+      text: 'Simple description for the second step.',
+      image: require('./assets/delivery.png'),
+      backgroundColor: '#59b2ab',
+    }
+  ]
+
+
+  const nextButton = () => {
+    return (
+      <View style={{width: 50, height: 50, backgroundColor: '#249c86', borderRadius: 50, justifyContent: 'center', alignItems: 'center',}}>
+        <Ionicons name="arrow-forward" size={24} color="rgba(255, 255, 255, .9)" />
+      </View>
+    )
+  }
+
+
+  const doneButton = () => {
+    return (
+      <View style={{width: 50, height: 50, backgroundColor: '#249c86', borderRadius: 50, justifyContent: 'center', alignItems: 'center',}}>
+        <Ionicons name="md-checkmark-sharp" size={24} color="rgba(255, 255, 255, .9)" />
+      </View>
+    )
+  }
+
+
 
   if (!fontsLoaded) {
+    return null;
+  }
+
+  if (isOffline) {
     return (
-      <SafeAreaView style={{flex: 1, backgroundColor: 'white'}}>
-        <View style={{marginTop: hp(10), paddingBottom: hp(1)}}>
-          <SkeletonPlaceholder>
-              <SkeletonPlaceholder.Item alignItems="center" justifyContent="center">
-                <SkeletonPlaceholder.Item
-                  marginTop={6}
-                  width={wp(90)}
-                  height={hp(2)}
-                  borderRadius={4}
-                />
-              </SkeletonPlaceholder.Item>
-          </SkeletonPlaceholder>
+      <View style={{flex: 1, backgroundColor: 'white'}}>
+        <Image source={require('./assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
+        <View style={{width: '80%', alignSelf: 'center'}}>
+          <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: 50, textAlign: 'center'}}>Uh oh! Seems like you are disconnected !</Text>
+          {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={check}>
+            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
+          </TouchableOpacity>: <LottieView source={require('./assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
         </View>
-        <ScrollView bounces={false}
-          >
-            <View style={{flex: 1, paddingTop: hp(5)}}>
-              <SkeletonPlaceholder>
-                <SkeletonPlaceholder.Item alignItems="center" justifyContent="center">
-                  <SkeletonPlaceholder.Item
-                    width={wp(100)}
-                    height={wp(100)}
-                    borderRadius={4}
-                  />
-                </SkeletonPlaceholder.Item>
-              </SkeletonPlaceholder>
-            </View>
-            <View style={{margin: wp(5)}}>
-              <SkeletonPlaceholder>
-                <SkeletonPlaceholder.Item>
-                  <SkeletonPlaceholder.Item
-                    width={wp(40)}
-                    height={hp(2)}
-                    borderRadius={4}
-                  />
-                </SkeletonPlaceholder.Item>
-              </SkeletonPlaceholder>
-            </View>
-            <View style={{paddingTop: hp(5), flexDirection: 'row', flex: 1}}>
-              <View style={{flex: 1, alignItems: 'center'}}>
-                <SkeletonPlaceholder>
-                  <SkeletonPlaceholder.Item>
-                    <SkeletonPlaceholder.Item
-                      width={100}
-                      height={100}
-                      borderRadius={50}
-                    />
-                  </SkeletonPlaceholder.Item>
-                </SkeletonPlaceholder>
+      </View>
+    )
+  }
+
+
+  if (!showRealApp){
+    return (
+      <AppIntroSlider  
+          data={slides}
+          keyExtractor={(item, index) => index.toString()}
+          onDone={() => setShowRealApp(true)}
+          renderNextButton={nextButton}
+          renderDoneButton={doneButton}
+          activeDotStyle={{backgroundColor: '#249c86'}}
+          renderItem={({item, index}) => {
+            return (
+              <View style={{paddingTop: 50, flex: 1, backgroundColor: '#f9f9f9'}}>
+                <Image source={item.image} style={{width: '90%', height: index === 0 ? 2130*(screenWidth/3420) : 2236*(screenWidth/3766), alignSelf: 'center', marginTop: 50}} />
+                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(7), textAlign: 'center', marginTop: 50}}>{item.title}</Text>
+                <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', marginTop: 25}}>{item.text}</Text>
               </View>
-              <View style={{flex: 1, alignItems: 'center'}}>
-                <SkeletonPlaceholder>
-                  <SkeletonPlaceholder.Item>
-                    <SkeletonPlaceholder.Item
-                      width={100}
-                      height={100}
-                      borderRadius={50}
-                    />
-                  </SkeletonPlaceholder.Item>
-                </SkeletonPlaceholder>
-              </View>
-            </View>
-            <View style={{paddingTop: hp(5), flexDirection: 'row', flex: 1}}>
-              <View style={{flex: 1, alignItems: 'center'}}>
-                <SkeletonPlaceholder>
-                  <SkeletonPlaceholder.Item>
-                    <SkeletonPlaceholder.Item
-                      width={100}
-                      height={100}
-                      borderRadius={50}
-                    />
-                  </SkeletonPlaceholder.Item>
-                </SkeletonPlaceholder>
-              </View>
-              <View style={{flex: 1, alignItems: 'center'}}>
-                <SkeletonPlaceholder>
-                  <SkeletonPlaceholder.Item>
-                    <SkeletonPlaceholder.Item
-                      width={100}
-                      height={100}
-                      borderRadius={50}
-                    />
-                  </SkeletonPlaceholder.Item>
-                </SkeletonPlaceholder>
-              </View>
-            </View>
-        </ScrollView>
-      </SafeAreaView>
+            )
+          }}
+        />
     )
   }
   
 
-      return (
-        <NavigationContainer>
-          <PushTokenContext.Provider value={[conPushToken, setConPushToken]}>
-            <UserContext.Provider value={[conLocation, setConLocation]} >
-              <Tab.Navigator
-                tabBarOptions={{
-                  showLabel: true,
-                  activeTintColor: '#249C86',
-                  inactiveTintColor: '#40514e',
-                  style: {
-                    elevation: 0,   // for Android
-                    shadowOffset: {
-                      width: 0, height: 0 // for iOS
-                    },
-                    borderTopWidth: 0,
-                  },
-                }}
-              >
-                <Tab.Screen name="Home" component={HomeStackNavigator} options={({ route }) => ({
-                  tabBarIcon: ({ focused, color, size }) => {
-                    let iconName;
-                    let iconSize;
-
-                    iconName = focused ? 'home' : 'home-outline'
-                    iconSize = focused ? wp(10) : wp(10)
-
-                    return <MaterialCommunityIcons name={iconName} size={iconSize} color={color} />
-                  },
-                  tabBarVisible: ((route) => {
-                    const routename = getFocusedRouteNameFromRoute(route);
-
-                    if (routename === 'Register' || routename === 'ActiveOrders' || routename === 'HomeProducts' || routename === 'cart' || routename === 'confirm' || routename === 'Details' || routename === 'PreviousOrders' || routename === 'Reviews' || routename === 'Profile' || routename === 'OtpComponent' || routename === 'RecipeDetails'){
-                      return false
-                    }
-                    return true
-                  })(route),
-                })} />
-                <Tab.Screen name="Store" component={ShopStackNavigator} options={({ route }) => ({
-                  tabBarIcon: ({ focused, color, size }) => {
-                    let iconName;
-                    let iconSize;
-
-                    iconName = focused ? 'storefront' : 'storefront-outline'
-                    iconSize = focused ? wp(8.5) : wp(8.5)
-
-                    return <MaterialCommunityIcons name={iconName} size={iconSize} color={color} />
-                  },
-                  tabBarVisible: ((route) => {
-                    const routename = getFocusedRouteNameFromRoute(route);
-
-                    if (routename === 'cart' || routename === 'confirm' || routename === 'OtpComponent' || routename === 'Register' || routename === 'Details' || routename === 'ActiveOrders'){
-                      return false
-                    }
-                    return true
-                  })(route),
-                })}/>
-                <Tab.Screen name="Recipes" component={RecipeStackNavigator} options={({ route }) => ({
-                  tabBarIcon: ({ focused, color, size }) => {
-                    let iconName;
-                    let iconSize;
-
-                    iconName = focused ? 'bowl-mix' : 'bowl-mix-outline'
-                    iconSize = focused ? wp(8.5) : wp(8.5)
-
-                    return <MaterialCommunityIcons name={iconName} size={iconSize} color={color} />
-                  },
-                  tabBarVisible: ((route) => {
-                    const routename = getFocusedRouteNameFromRoute(route);
-
-                    if (routename === 'cart' || routename === 'confirm' || routename === 'OtpComponent' || routename === 'Register' || routename === 'Details' || routename === 'ActiveOrders' || routename === 'RecipeDetails' || routename === 'FavRecipe'){
-                      return false
-                    }
-                    return true
-                  })(route),
-                })}/>
-              </Tab.Navigator>
-            </UserContext.Provider>
-          </PushTokenContext.Provider>
-        </NavigationContainer>
-      )
+    return (
+      <NavigationContainer>
+        <PushTokenContext.Provider value={[conPushToken, setConPushToken]}>
+          <UserContext.Provider value={[conLocation, setConLocation]} >
+          <Stack.Navigator>
+            <Stack.Screen name="Home" component={Home} options={{headerShown: false}} />
+            <Stack.Screen name="ActiveOrders" component={ActiveOrders} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="HomeProducts" component={HomeProducts} options={({ navigation }) => ({
+              title: '',
+              headerTransparent: true,
+              headerLeft: () => {
+                return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>
+              },
+              cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            })} />
+            <Stack.Screen name="Fruits" component={Fruits} options={({ navigation }) => ({
+              title: '',
+              animationEnabled: false,
+              headerShown: false
+            })} />
+            <Stack.Screen name="Dried-Fruits" component={DriedFruits} options={({ navigation }) => ({
+              title: '',
+              animationEnabled: false,
+              headerShown: false
+            })} />
+            <Stack.Screen name="Exotics" component={Exotics} options={({ navigation }) => ({
+              title: '',
+              animationEnabled: false,
+              headerShown: false
+            })} />
+            <Stack.Screen name="cart" component={Cart} options={({ navigation }) => ({
+              title: '',
+              headerTransparent: true,
+              headerLeft: () => {
+                return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7),  fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>
+              },
+              cardStyleInterpolator: CardStyleInterpolators.forRevealFromBottomAndroid
+            })} />
+            <Stack.Screen name="Recipes" component={Recipe} options={{headerShown: false, animationEnabled: false}} />
+            <Stack.Screen name="RecipeDetails" component={RecipeDetails}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="FavRecipe" component={FavRecipe} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="Profile" component={Profile} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="PreviousOrders" component={PreviousOrders} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="Reviews" component={Reviews} options={({ navigation }) => ({title: '', headerTransparent: true, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="Register" component={Register} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="OtpComponent" component={OtpComponent} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="Payments" component={Payments}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="TermsandConditions" component={TermsandConditions}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="NutritionCalculator" component={NutritionCalculator}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+          </Stack.Navigator>
+          </UserContext.Provider>
+        </PushTokenContext.Provider>
+      </NavigationContainer>
+    )
 }
 
 

@@ -10,11 +10,13 @@
   "dependencies": {
     "@expo/vector-icons": "^12.0.0",
     "@react-native-async-storage/async-storage": "^1.13.0",
+    "@react-native-community/netinfo": "^6.0.0",
     "@react-native-community/slider": "^3.0.3",
     "@react-native-masked-view/masked-view": "^0.2.4",
     "@react-navigation/bottom-tabs": "^5.11.8",
     "@react-navigation/native": "^5.9.3",
     "@react-navigation/stack": "^5.14.3",
+    "@stripe/stripe-react-native": "^0.1.4",
     "@types/react-native-snap-carousel": "^3.8.2",
     "core-js": "^3.11.2",
     "expo": "^41.0.0",
@@ -31,6 +33,9 @@
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-41.0.0.tar.gz",
+    "react-native-app-intro-slider": "^4.0.4",
+    "react-native-copilot": "^2.5.1",
+    "react-native-dropdown-picker": "^5.1.21",
     "react-native-flip-card": "^3.5.6",
     "react-native-maps": "0.27.1",
     "react-native-modal": "^11.7.0",
@@ -40,7 +45,9 @@
     "react-native-skeleton-placeholder": "^4.0.0",
     "react-native-snap-carousel": "^3.9.1",
     "react-native-svg": "^12.1.0",
-    "react-native-web": "~0.13.12"
+    "react-native-web": "~0.13.12",
+    "react-native-webview": "^11.2.3",
+    "victory-native": "^35.3.3"
   },
   "devDependencies": {
     "@babel/core": "~7.9.0"

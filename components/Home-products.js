@@ -326,7 +326,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -341,7 +341,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -481,7 +481,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -496,7 +496,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -640,7 +640,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -655,7 +655,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -795,7 +795,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -810,7 +810,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -950,7 +950,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -965,7 +965,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -1105,7 +1105,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
@@ -1120,7 +1120,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                                                            x.name === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
+                                                            x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>

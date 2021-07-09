@@ -64,8 +64,8 @@ export default function RecipeDetails({ navigation, route }){
     return (
         <View style={styles.container}>
           <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{padding: 25}}>
-          <Text style={{fontFamily: 'sofia-black', fontSize: wp(8)}}>{recipeDetails.name}</Text>
-            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10}}>
+          <Text style={{fontFamily: 'sofia-black', fontSize: wp(7)}}>{recipeDetails.name}</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 1}}>
               <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" />
               <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), marginLeft: 2}}>{recipeDetails.value1}</Text>
               <Text style={{fontFamily: 'sf-semi', fontSize: wp(5), color: 'grey'}}>  |  </Text>
@@ -73,11 +73,6 @@ export default function RecipeDetails({ navigation, route }){
               <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center'}}>   Serves {recipeDetails.servings} </Text>
             </View>
             <View style={{flexDirection: 'row', marginTop: 50, alignItems:'center'}}>
-              <View style={{flex: 1}}>
-                <View style={{backgroundColor: 'white', borderRadius: 200, height: wp(40), width: wp(40), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}}>
-                  <Image source={{uri: recipeDetails.image}} style={{width: wp(40), height: wp(40), borderRadius: 200}} />
-                </View>
-              </View>
               <View style={{flex: 1}}>
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                   <View style={{flex: 1}}>
@@ -117,18 +112,24 @@ export default function RecipeDetails({ navigation, route }){
                       {recipeDetails.name5 === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                       recipeDetails.name5 === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                       recipeDetails.name5 === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
-                      recipeDetails.name5 === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: null}
+                      recipeDetails.name5 === 'Fat (Sat.)' || recipeDetails.name5 === 'Fat (Unsat.)' || recipeDetails.name5 === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: null}
                       <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), marginLeft: 2}}>{recipeDetails.name5}</Text>
                     </View>
                     <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), textAlign: 'center', color: 'grey', marginTop: 2}}>{recipeDetails.value5}</Text>
                   </View>
                 </View>
               </View>
+              <View style={{flex: 1}}>
+                <View style={{backgroundColor: 'white', alignSelf: 'flex-end', borderRadius: 200, height: wp(40), width: wp(40), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}}>
+                  <Image source={{uri: recipeDetails.image}} style={{width: wp(40), height: wp(40), borderRadius: 200}} />
+                </View>
+              </View>
             </View>
-            <Text style={{fontFamily: 'sf', fontSize: wp(4), marginTop: 55}}>{recipeDetails.description}</Text>
-            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 45, marginBottom: 20}}>
+            <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 55}}>{recipeDetails.description}</Text>
+            <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 35}}></Text>
+            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 35, marginBottom: 20}}>
               <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(6)}}>Ingredients</Text>
-              <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), color: 'grey'}}>{recipeDetails.ingredient_count} items</Text>
+              <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: 'grey'}}>{recipeDetails.ingredient_count} items</Text>
             </View>
             <ScrollView horizontal={true} contentContainerStyle={{paddingRight: 25}}>
               {recipe_ingredients.map(item => {
@@ -142,11 +143,12 @@ export default function RecipeDetails({ navigation, route }){
                   </View>: null
               })}
             </ScrollView>
-            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 45}}>Directions</Text>
-            <Text  style={{fontFamily: 'sf-semi', fontSize: wp(4), marginTop: 15}}>{recipeDetails.steps}</Text>
             <TouchableOpacity style={{marginTop: 50, backgroundColor: '#99b898', alignSelf: 'center', padding: 15, borderRadius: 10}} onPress={addCart(recipeDetails)} activeOpacity={0.8}>
-                <Text style={{fontFamily: 'sf-semi', fontSize: wp(4)}}>Add Ingredients to cart  &rarr;</Text>
+                <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5)}}>Add Ingredients to cart  &rarr;</Text>
             </TouchableOpacity>
+            <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 35}}></Text>
+            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 35}}>Directions</Text>
+            <Text  style={{fontFamily: 'sf-semi', fontSize: wp(4), marginTop: 15}}>{recipeDetails.steps}</Text>
           </ScrollView>
         </View>
     )

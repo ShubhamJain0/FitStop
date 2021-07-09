@@ -20,7 +20,6 @@ export default function Cart({ navigation }) {
   const [cartList, setCartList] = useState([]);
   const [itemPhotos, setItemPhotos] = useState([]);
   const [test, setTest] = useState([]);
-  const [test1, setTest1] = useState([]);
   const [cartStatus, setCartStatus] = useState(0);
   const [total, setTotal] = useState(0);
   const [deliveryCharges, setDeliveryCharges] = useState(0);
@@ -40,20 +39,21 @@ export default function Cart({ navigation }) {
   const [couponModal, setCouponModal] = useState(false);
   const [couponList, setCouponList] = useState([]);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const couponAppliedRef = useRef(null);
   const [animationModal, setAnimationModal] = useState(false);
-  const [onPlaceModal, setOnPlaceModal] = useState(false);
+  const [onPlace, setOnPlace] = useState(false);
+  const [onPlaceLottieModal, setOnPlaceLottieModal] = useState(false);
   const [indicPos, setIndicPos] = useState('relative');
 
 
   const [mapDefLocation, setMapDefLocation] = useState({latitude: 17.4217697, longitude: 78.4749875, latitudeDelta: 0.1, longitudeDelta: 0.1});
-  const [markerData, setMarkerData] = useState({latitude: 17.4217697, longitude: 78.4749875 });
+  const [markerData, setMarkerData] = useState(new AnimatedRegion({latitude: 17.4217697, longitude: 78.4749875, latitudeDelta: 0.01, longitudeDelta: 0.01 }));
   const mapRef = useRef(null);
 
 
   const [error, setError] = useState('');
 
   const [conPushToken] = useContext(PushTokenContext);
+
 
     useEffect(() => {
             (async () => {
@@ -164,6 +164,7 @@ export default function Cart({ navigation }) {
     }, [])
 
 
+
     useEffect(() => {
         setDeliveryCharges(25);
         let gst = 0.05;
@@ -255,8 +256,8 @@ export default function Cart({ navigation }) {
   const handleRegionChange = async (mapData) => {
 
     if(mounted){
-      setMarkerData({latitude: mapData.latitude, longitude: mapData.longitude});
-      setMapDefLocation({latitude: mapData.latitude, longitude: mapData.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006});
+      markerData.timing({latitude: mapData.latitude, longitude: mapData.longitude, duration: 1, useNativeDriver: false}).start();
+      setMapDefLocation({latitude: mapData.latitude, longitude: mapData.longitude, latitudeDelta: mapData.latitudeDelta, longitudeDelta: mapData.longitudeDelta});
     }
 
     let geolocation = await Location.reverseGeocodeAsync({latitude: mapData.latitude, longitude: mapData.longitude})
@@ -283,7 +284,7 @@ export default function Cart({ navigation }) {
       if (mounted) {
         setInputAddress(geolocation[0].name !== 'Unnamed Road' ? geolocation[0].name : '');
         setInputCity(geolocation[0].district ? geolocation[0].district + ', Hyderabad' : geolocation[0].postalCode ? geolocation[0].postalCode + ', Hyderabad' : 'Hyderabad')
-        setMarkerData({latitude: location.coords.latitude, longitude: location.coords.longitude});
+        markerData.timing({latitude: location.coords.latitude, longitude: location.coords.longitude, duration: 1, useNativeDriver: false}).start();
         setMapDefLocation({latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006}) 
       }
 
@@ -307,7 +308,7 @@ export default function Cart({ navigation }) {
 
 
   const placeOrder = async () => {
-    setOnPlaceModal(true);
+    setOnPlace(true);
     try {
         const token = await AsyncStorage.getItem('USER_TOKEN')
         if (token) {
@@ -322,19 +323,18 @@ export default function Cart({ navigation }) {
             .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => {
                 if (resp.status === 201) {
-                    navigation.pop();
-                    navigation.navigate('ActiveOrders');
+                    setOnPlaceLottieModal(true);
                 } else {
-                    setOnPlaceModal(false);
+                    setOnPlace(false);
                 }
             })
-            .catch(error => console.log(error))
+            .catch(error => (console.log(error), setOnPlace(false)))
         } else {
             navigation.navigate('Register')
         }
     } catch(error) {
         if (error) {
-            setOnPlaceModal(false);
+            setOnPlace(false);
             console.log(error);
         }
     }
@@ -396,8 +396,8 @@ export default function Cart({ navigation }) {
 
   if (cartStatus === 0) {
       return (
-          <View style={[styles.container, {justifyContent: 'center'}]}>
-              <ActivityIndicator color={'#99b898'} size={30} />
+          <View style={[styles.container, {justifyContent: 'center', alignItems: 'center'}]}>
+              <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
           </View>
       )
   }
@@ -426,14 +426,15 @@ export default function Cart({ navigation }) {
 
   return (
       <View style={styles.container}>
-          <TouchableOpacity style={{marginRight: hp(5), marginBottom: hp(5), alignSelf: 'flex-end'}} disabled={cartStatus === 200 ? false: true} onPress={deleteCart()}>
+        <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 50}}>
+        <TouchableOpacity style={{marginRight: hp(5), marginBottom: hp(5), alignSelf: 'flex-end'}} disabled={cartStatus === 200 ? false: true} onPress={deleteCart()}>
                 <Text style={cartStatus === 200 ? {opacity: 1, fontFamily: 'sofia-medium', color: "#F67280", textDecorationLine: 'underline'} : {opacity: 0.1, fontFamily: 'sofia-medium', color: "#F67280", textDecorationLine: 'underline'}}>Empty cart</Text>
             </TouchableOpacity>
             <View>
-                <ScrollView contentContainerStyle={cartList.length > 2 ? {backgroundColor: 'white'}: {backgroundColor: 'white', flex: 1, justifyContent: 'center'}} horizontal={true} showsHorizontalScrollIndicator={false}>
+                <ScrollView contentContainerStyle={cartList.length > 2 ? {paddingBottom: 25, paddingLeft: 30}: {flex: 1, justifyContent: 'center', paddingBottom: 25, paddingLeft: 30}} horizontal={true} showsHorizontalScrollIndicator={false}>
                 {cartStatus === 200 ? cartList.map((item) => {
                     return (
-                        <View style={{backgroundColor: 'white', maxWidth: '40%', elevation: 5, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3, marginBottom: 15, marginRight: 25, margin: 10, padding: 20, paddingBottom: 30, borderRadius: 10}} key={item.id}>
+                        <View style={{backgroundColor: 'white', maxWidth: '40%', elevation: 5, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3, marginBottom: 15, marginRight: 35, marginTop: 10, padding: 20, paddingBottom: 30, borderRadius: 10}} key={item.id}>
                             {itemPhotos.map((item1) => {
                                 return item1.name === item.ordereditem ? 
                                 <View key={item1.id}>
@@ -459,75 +460,89 @@ export default function Cart({ navigation }) {
                 }): cartStatus === 404 ? <Text style={{textAlign: 'center', fontFamily: 'sofia-medium'}}>Your cart is empty!</Text>: <Text>Please Login to build your cart!</Text>}
                 </ScrollView>
             </View>
-            <Text style={{borderTopWidth: 1, width: '90%', alignSelf: 'center', marginTop: 25, borderColor: 'grey'}}></Text>
-        <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-            <View style={{flex: 1, marginTop: 10}}>
+            <View style={{flex: 1, marginTop: 20, width: '85%', alignSelf: 'center'}}>
                 {deliveryAddressStatus === 200 ? deliveryAddress.map((item) => {
                     return (
-                        <View key={item.id} style={{marginLeft: wp(10)}}>
-                            <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: wp(-8)}}>
-                                <LottieView source={require('../assets/animations/lf30_editor_sotlhn4y.json')} autoPlay={true} loop={true} style={{width: 30, height: 30}} />
-                                <Text style={{fontFamily: 'sf-semi', fontSize: wp(4.5)}}>Items will be delivered at:</Text>
+                        <View key={item.id}>
+                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                <Ionicons name="location-sharp" size={wp(4.5)} color="#249c86" />
+                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 5}}>Order will be delivered at:</Text>
                             </View>
-                            <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(4)}}>{item.address}, {item.locality}, {item.city}</Text>
-                            <TouchableOpacity style={{marginTop: 5, alignSelf: 'flex-start'}} onPress={() => setAddressModal(true)}>
-                                <Text style={{textDecorationLine: 'underline', fontFamily: 'sf'}}>Change delivery address</Text>
+                            <Text style={{flex: 1, fontFamily: 'sf-semi', fontSize: wp(4), marginTop: 5, marginLeft: 25}}>{item.address}, {item.locality}, {item.city}</Text>
+                            <TouchableOpacity style={{marginTop: 5, alignSelf: 'flex-start', marginLeft: 25}} onPress={() => setAddressModal(true)}>
+                                <Text style={{fontFamily: 'sf-semi', color: '#249c86', fontSize: wp(3.5)}}>Change delivery address</Text>
                             </TouchableOpacity>
                         </View>
                     )
                 }):
-                <View style={{marginLeft: wp(10)}}>
-                    <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: wp(-8)}}>
-                        <LottieView source={require('../assets/animations/lf30_editor_sotlhn4y.json')} autoPlay={true} loop={true} style={{width: 30, height: 30}} />
-                        <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), color: 'red'}}>You haven't set your delivery address yet!</Text>
+                <View>
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Ionicons name="location-sharp" size={wp(4.5)} color="#249c86" />
+                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), color: 'red', marginLeft: 5}}>You haven't set your delivery address yet!</Text>
                     </View>
-                    <TouchableOpacity style={{marginTop: 5}} onPress={() => setAddressModal(true)}>
-                        <Text style={{textDecorationLine: 'underline', fontFamily: 'sf'}}>Add delivery address</Text>
+                    <TouchableOpacity style={{marginTop: 5, alignSelf: 'flex-start', marginLeft: 25}} onPress={() => setAddressModal(true)}>
+                        <Text style={{fontFamily: 'sf-semi', color: '#249c86', fontSize: wp(3.5)}}>Add delivery address</Text>
                     </TouchableOpacity>
                 </View>}
-                <View style={{marginLeft: wp(6), marginTop: 40, backgroundColor: '#f0f0f0', width: '90%', padding: 10, paddingBottom: 20, borderRadius: 10}}>
+                <View style={{marginTop: 40, backgroundColor: '#fff', padding: 10, paddingBottom: 20, borderRadius: 10, elevation: 2, shadowOffset: {width: 0, height: 1}, shadowRadius: 1.41, shadowOpacity: 0.20}}>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <LottieView source={require('../assets/animations/48974-offer-animation.json')} autoPlay={true} loop={true} style={{width: 30, height: 30}} />
-                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5)}}>Offers</Text>
-                    </View>
-                    <View style={{flexDirection: 'row', marginTop: 5}}>
-                        {appliedCoupon ? <Text style={{fontFamily: 'sf', flex: 1}}>&#8377; {appliedCoupon.discount} off applied on your order!</Text> : <Text style={{fontFamily: 'sf', flex: 1, marginLeft: 25}}>No offer applied!</Text>}
+                        <View style={{flex: 1}}>
+                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                <LottieView source={require('../assets/animations/48974-offer-animation.json')} autoPlay={true} loop={true} style={{width: 30, height: 30}} />
+                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5)}}>Offers</Text>
+                            </View>
+                            {appliedCoupon ? <Text style={{fontFamily: 'sf-semi', flex: 1, fontSize: wp(3.5), marginLeft: 25}}>&#8377; {appliedCoupon.discount} off applied on your order!</Text> : <Text style={{fontFamily: 'sf-semi', flex: 1, marginLeft: 25, fontSize: wp(3.5)}}>No offer applied!</Text>}
+                        </View>
                         {appliedCoupon ? 
-                            <TouchableOpacity style={{flex: 0.2, justifyContent: 'center'}} onPress={() => setAppliedCoupon(null)}>
-                                <FontAwesome name="remove" size={15} color="black" />
+                            <TouchableOpacity style={{flex: 0.2, justifyContent: 'center', marginTop: 5}} onPress={() => setAppliedCoupon(null)}>
+                                <FontAwesome name="remove" size={wp(3.5)} color="#249c86" />
                             </TouchableOpacity>:
-                            <TouchableOpacity style={{flex: 0.5}} onPress={() => setCouponModal(true)}>
-                                <Text style={{fontFamily: 'sf-semi', color: '#249C86'}}>View offers</Text>
+                            <TouchableOpacity style={{flex: 0.5, marginTop: 5}} onPress={() => setCouponModal(true)}>
+                                <Text style={{fontFamily: 'sf-semi', color: '#249C86', fontSize: wp(3.5)}}>View offers</Text>
                             </TouchableOpacity>
                         }
                     </View>
                 </View>
-                <View style={{marginLeft: wp(6), marginTop: 35, width: '90%', padding: 15, backgroundColor: 'white', elevation: 5, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3, borderRadius: 10, marginBottom: 50}}>
-                    <Ionicons name="receipt-outline" size={30} color="black" />
-                    <Text></Text>
-                    <View style={{flexDirection: 'row', marginBottom: 5}}>
-                        <Text style={{flex: 1, fontFamily: 'sf'}}>Item subtotal</Text>
-                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sf-semi'}}>&#8377; {total}</Text>
+                <View style={{marginTop: 25, borderRadius: 10, marginBottom: 50}}>
+                    <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
+                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4)}}>Item subtotal</Text>
+                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4)}}>&#8377; {total}</Text>
                     </View>
-                    <View style={{flexDirection: 'row', marginBottom: 5}}>
-                        <Text style={{flex: 1, fontFamily: 'sf'}}>Delivery Charges</Text>
-                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sf-semi'}}>&#8377; {deliveryCharges}</Text>
+                    <Text style={{backgroundColor: 'white', height: 1, marginBottom: 10}}></Text>
+                    <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
+                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4)}}>Delivery Charges</Text>
+                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4)}}>&#8377; {deliveryCharges}</Text>
                     </View>
-                    <View style={{flexDirection: 'row'}}>
-                        <Text style={{flex: 1, fontFamily: 'sf', marginBottom: 5}}>Taxes</Text>
-                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sf-semi'}}>&#8377; {taxes}</Text>
+                    <Text style={{backgroundColor: 'white', height: 1, marginBottom: 10}}></Text>
+                    <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
+                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4)}}>Taxes</Text>
+                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4)}}>&#8377; {taxes}</Text>
                     </View>
+                    <Text style={{backgroundColor: 'white', height: 1, marginBottom: 10}}></Text>
                     {appliedCoupon ? 
-                        <View style={{flexDirection: 'row'}}>
-                            <Text style={{flex: 1, fontFamily: 'sf-semi', marginBottom: 5}}>Coupon Applied</Text>
-                            <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sf-semi'}}>- &#8377; {appliedCoupon.discount}</Text>
+                        <View>
+                            <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
+                                <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4), color: '#249c86'}}>Coupon Applied</Text>
+                                <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4), color: '#249c86'}}>- &#8377; {appliedCoupon.discount}</Text>
+                            </View>
+                            <Text style={{backgroundColor: 'white', height: 2, marginBottom: 10}}></Text>
                         </View>: null
                     }
-                    <View style={{flexDirection: 'row'}}>
-                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4.5)}}>Grand Total</Text>
-                        {appliedCoupon ? <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4.5)}}>&#8377; {total + deliveryCharges + taxes - appliedCoupon.discount}</Text>: <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4.5)}}>&#8377; {total + deliveryCharges + taxes}</Text>}
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Text style={{flex: 1, fontFamily: 'sofia-black', fontSize: wp(4.5)}}>Grand Total</Text>
+                        {appliedCoupon ? <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-black', fontSize: wp(4.5)}}>&#8377; {total + deliveryCharges + taxes - appliedCoupon.discount}</Text>: <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-black', fontSize: wp(4.5)}}>&#8377; {total + deliveryCharges + taxes}</Text>}
                     </View>
                 </View>
+
+                {onPlace ? <ActivityIndicator color="#99b898" size={50} />
+                 : myAddressesStatus === 200 && deliveryAddressStatus === 200 && cartStatus === 200 ? 
+                    <TouchableOpacity onPress={paymentMethod} style={{flex: 1, opacity: 1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
+                        <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>Place Order &raquo;</Text>
+                    </TouchableOpacity>:
+                    <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, position: 'absolute', bottom: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
+                        <Text style={{textAlign: 'center', fontFamily: 'sf-semi'}}>Place Order &raquo;</Text>
+                    </TouchableOpacity>
+                }
 
                 <Modal
                     isVisible={addressModal}
@@ -552,10 +567,10 @@ export default function Cart({ navigation }) {
                             showsMyLocationButton={false}
                             onRegionChangeComplete={handleRegionChange}
                             customMapStyle={mapStyle}
+                            onRegionChange={(mapData) => markerData.timing({latitude: mapData.latitude, longitude: mapData.longitude, duration: 0, useNativeDriver: false}).start()}
                         >
-                            <Marker.Animated draggable
-                            coordinate={markerData}
-                            onDragEnd={(e) => handleRegionChange(e.nativeEvent.coordinate)}
+                            <MarkerAnimated
+                                coordinate={markerData}
                             />
                         </MapView>
                         
@@ -566,20 +581,43 @@ export default function Cart({ navigation }) {
                         {Platform.OS === 'android' ? <MaterialIcons name="my-location" size={wp(8)} color="black" />: <Ionicons name="ios-location" size={wp(6.5)} color="black" />}
                         </TouchableOpacity>
                     </View>
-                    <View style={{backgroundColor: 'white', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, borderTopLeftRadius: 50, borderTopRightRadius: 50, flex: 1, paddingTop: 5}}>
-                        <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{padding: 35, paddingBottom: 10}} >
-                            <Text style={{fontFamily: 'sofia-black', fontSize: wp(8)}}>Address</Text>
-                            <Text style={{fontFamily: 'sf', fontSize: wp(3.5)}}>Add new address where the order should be delivered or choose from below saved addresses.</Text>
-                            <View style={{marginTop: hp(5)}} >
+                    <View style={{backgroundColor: '#fafafa', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, borderTopLeftRadius: 50, borderTopRightRadius: 50, flex: 1, paddingTop: 5}}>
+                        <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{padding: 35, paddingBottom: 50}} >
+                            <View>
+                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginBottom: 25}}>Choose delivery address</Text>
+                                {myAddressesStatus === 200 ? myAddresses.map((item, index) => {
+                                    return (
+                                        <View key={item.id}>
+                                            <TouchableOpacity onPress={setDeliveryAdrress(item)}>
+                                                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                                    {item.type_of_address === 'Home' ?  <MaterialIcons name="home" size={wp(4)} color="#249c86" />: <MaterialIcons name="work" size={wp(3)} color="#249c86" />}
+                                                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), color: '#249c86'}}> {item.type_of_address}</Text>
+                                                </View>
+                                                <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10}}>
+                                                    <Text style={{fontFamily: 'sf', flex: 1, fontSize: wp(3.5)}}>{item.address}, {item.locality}, {item.city}</Text>
+                                                    <TouchableOpacity onPress={deleteAddress(item)}>
+                                                        <Text style={{fontFamily: 'sf', color: 'red'}}>Remove</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </TouchableOpacity>
+                                            {myAddresses && index !== (myAddresses.length - 1) ?<Text style={{borderBottomWidth: 1, marginBottom: 20, borderBottomColor: '#f0f0f0'}}></Text> : null}
+                                        </View>
+                                    )
+                                }):<Text style={{fontFamily: 'sf'}}>You don't have any saved addresses. Add one now!</Text>}
+                            </View>
+                            <Text style={{borderBottomWidth: 1, borderBottomColor: '#ebebeb', marginTop: 25}}></Text>
+                            <View style={{marginTop: 25}} >
+                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5)}}>Add an address</Text>
+                                <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), marginBottom: 25}}>(Use the map to auto-fill)</Text>
                                 <ActivityIndicator size={50} color="#99b898" style={{position: indicPos, display: 'none', alignSelf: 'center', top: 0, bottom: 0}} />
                                 <TextInput style={{ height: 30, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'House/Colony'} value={inputAddress} onChangeText={(text) => setInputAddress(text)} />
                                 <TextInput style={{ height: 30, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'Road Number, Road Name'} value={inputLocality} onChangeText={(text) => setInputLocality(text)} />
                                 <TextInput style={{ height: 30, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'City'} value={inputCity} />
                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                    <TouchableOpacity style={{backgroundColor: inputAddressType === 'Home' ? '#11999e' :'white', padding: 10, borderRadius: 5, borderWidth: 0.3}} onPress={() => setInputAddressType('Home')} activeOpacity={1}>
+                                    <TouchableOpacity style={{backgroundColor: inputAddressType === 'Home' ? '#249c86' :'white', padding: 10, borderRadius: 5, borderWidth: 0.3, borderColor: inputAddressType === 'Home' ? '#249c86': 'black'}} onPress={() => setInputAddressType('Home')} activeOpacity={1}>
                                         <Text style={{fontFamily: 'sf', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Home' ? 'white': 'black'}}>Home</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={{marginLeft: 25, backgroundColor: inputAddressType === 'Work' ? '#11999e' :'white', padding: 10, borderRadius: 5, borderWidth: 0.3}} onPress={() => setInputAddressType('Work')} activeOpacity={1}>
+                                    <TouchableOpacity style={{marginLeft: 25, backgroundColor: inputAddressType === 'Work' ? '#249c86' :'white', padding: 10, borderRadius: 5, borderWidth: 0.3, borderColor: inputAddressType === 'Work' ? '#249c86': 'black'}} onPress={() => setInputAddressType('Work')} activeOpacity={1}>
                                     <Text style={{fontFamily: 'sf', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Work' ? 'white': 'black'}}>Work</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -591,28 +629,6 @@ export default function Cart({ navigation }) {
                                         <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), textAlign: 'center'}}>Save address</Text>
                                     </TouchableOpacity>
                                 }
-                            </View>
-                            <View style={{marginTop: 50}}>
-                            <Text style={{fontFamily: 'sf-semi', fontSize: wp(5), marginBottom: 25}}>Choose delivery address</Text>
-                                {myAddressesStatus === 200 ? myAddresses.map((item) => {
-                                    return (
-                                        <View key={item.id}>
-                                            <TouchableOpacity onPress={setDeliveryAdrress(item)}>
-                                                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                                    {item.type_of_address === 'Home' ?  <MaterialIcons name="home" size={wp(6)} color="black" />: <MaterialIcons name="work" size={wp(5)} color="black" />}
-                                                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4)}}> {item.type_of_address}</Text>
-                                                </View>
-                                                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                                    <Text style={{fontFamily: 'sf', flex: 1}}>{item.address}, {item.locality}, {item.city}</Text>
-                                                    <TouchableOpacity onPress={deleteAddress(item)}>
-                                                        <Text style={{fontFamily: 'sf', color: 'red'}}>Remove</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            </TouchableOpacity>
-                                            <Text style={{borderBottomWidth: 2, marginBottom: 20, borderBottomColor: '#f0f0f0'}}></Text>
-                                        </View>
-                                    )
-                                }):<Text style={{fontFamily: 'sf'}}>You don't have any saved addresses. Add one now!</Text>}
                             </View>
                         </ScrollView>    
                     </View>     
@@ -682,33 +698,29 @@ export default function Cart({ navigation }) {
                     </View>
                 </Modal>
 
-                <Modal 
-                    isVisible={onPlaceModal}
-                    backdropColor={'white'}
-                    backdropOpacity={0.5}
-                >
-                    <ActivityIndicator color="#99b898" size={50} />
-                </Modal>
                 <Modal isVisible={animationModal} backdropOpacity={0}>
                     <LottieView source={require('../assets/animations/55150-confetti.json')} autoPlay={true} loop={false} onAnimationFinish={() => setAnimationModal(false)} />
                 </Modal>
+
+                <Modal
+                    isVisible={onPlaceLottieModal}
+                    backdropColor={'white'}
+                    backdropOpacity={1}
+                >
+                    <LottieView style={{alignSelf: 'center', width: 300}} source={require('../assets/animations/order-placed.json')} autoPlay={true} loop={false} onAnimationFinish={() => navigation.pop()} />
+                    <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), marginTop: 50, textAlign: 'center'}}>Order Placed !</Text>
+                </Modal>
             </View>
         </ScrollView>
-        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+        {/* <View style={{flexDirection: 'row', alignItems: 'center'}}>
             <Text style={{fontFamily: 'sf-semi', position: 'absolute', top: 0, left: 50, fontSize: wp(2.5)}}>Payment type</Text>
             <TouchableOpacity style={{flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}} onPress={() => setPaymentModal(true)}>
                 {paymentType === 'Cash On Delivery' ? <MaterialCommunityIcons name="cash" size={20} color="green"/> : paymentType === 'Card' ? <Entypo name="credit-card" size={20} color="black" />: <FontAwesome name="google-wallet" size={20} color="blue" />}
                 <Text style={{textAlign: 'center', fontFamily: 'sf-semi'}}> {paymentType}</Text>
             </TouchableOpacity>
-            {myAddressesStatus === 200 && deliveryAddressStatus === 200 && cartStatus === 200 ? 
-            <TouchableOpacity onPress={paymentMethod} style={{flex: 1, opacity: 1, backgroundColor: '#99b898', borderColor: '#99b898', borderWidth: 1, padding: 15}}>
-                <Text style={{textAlign: 'center', fontFamily: 'sf-semi'}}>Place Order &raquo;</Text>
-            </TouchableOpacity>:
-            <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#99b898', borderColor: '#99b898', borderWidth: 1, padding: 15}}>
-                <Text style={{textAlign: 'center', fontFamily: 'sf-semi'}}>Place Order &raquo;</Text>
-            </TouchableOpacity>
-            }
-        </View>
+            
+        </View> */}
+        
     </View>
   )
 }
@@ -717,7 +729,7 @@ export default function Cart({ navigation }) {
 const styles = StyleSheet.create({
   container: {
       flex: 1,
-      backgroundColor: '#fff',
+      backgroundColor: '#fafafa',
       paddingTop: hp(10)
       
   },
