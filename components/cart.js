@@ -262,8 +262,8 @@ export default function Cart({ navigation }) {
 
     let geolocation = await Location.reverseGeocodeAsync({latitude: mapData.latitude, longitude: mapData.longitude})
     if (mounted) {
-      setInputAddress(geolocation[0].name !== 'Unnamed Road' ? geolocation[0].name : '');
-      setInputCity(geolocation[0].district ? geolocation[0].district + ', Hyderabad' : geolocation[0].postalCode ? geolocation[0].postalCode + ', Hyderabad' : 'Hyderabad')
+      setInputAddress(geolocation[0].name !== 'Unnamed Road' && !(geolocation[0].name.includes(geolocation[0].city)) && !(geolocation[0].name.includes('Road')) && !(geolocation[0].name.includes('Nagar')) && geolocation[0].name !== geolocation[0].district ? geolocation[0].name : '');
+      setInputCity(geolocation[0].district ? geolocation[0].district + (geolocation[0].city === null ? '' : ', ' + geolocation[0].city)  : geolocation[0].postalCode ? geolocation[0].postalCode + (geolocation[0].city === null ? '' : ', ' + geolocation[0].city)  : (geolocation[0].city === null ? '' : geolocation[0].city))
     }
 
   }
@@ -282,13 +282,13 @@ export default function Cart({ navigation }) {
       
       let geolocation = await Location.reverseGeocodeAsync({latitude: location.coords.latitude, longitude: location.coords.longitude})
       if (mounted) {
-        setInputAddress(geolocation[0].name !== 'Unnamed Road' ? geolocation[0].name : '');
-        setInputCity(geolocation[0].district ? geolocation[0].district + ', Hyderabad' : geolocation[0].postalCode ? geolocation[0].postalCode + ', Hyderabad' : 'Hyderabad')
+        setInputAddress(geolocation[0].name !== 'Unnamed Road' && !(geolocation[0].name.includes(geolocation[0].city)) && !(geolocation[0].name.includes('Road')) && !(geolocation[0].name.includes('Nagar')) && geolocation[0].name !== geolocation[0].district ? geolocation[0].name : '');
+        setInputCity(geolocation[0].district ? geolocation[0].district + (geolocation[0].city === null ? '' : ', ' + geolocation[0].city)  : geolocation[0].postalCode ? geolocation[0].postalCode + (geolocation[0].city === null ? '' : ', ' + geolocation[0].city)  : (geolocation[0].city === null ? '' : geolocation[0].city))
         markerData.timing({latitude: location.coords.latitude, longitude: location.coords.longitude, duration: 1, useNativeDriver: false}).start();
         setMapDefLocation({latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006}) 
       }
 
-    })().catch(error => setErrormsg(error))
+    })().catch(error => setError(error))
   }
 
 
@@ -353,7 +353,7 @@ export default function Cart({ navigation }) {
             }
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-        .then(() => navigation.goBack())
+        .then(resp => {if (mounted && resp.status === 200) {setCartStatus(404)}})
         .catch(error => console.log(error))
     }
 
@@ -405,8 +405,12 @@ export default function Cart({ navigation }) {
   
   if (cartStatus === 404){
       return (
-          <View style={styles.container}>
-              <Text style={{textAlign: 'center', fontFamily: 'sofia-medium'}}>Your cart is empty!</Text>
+          <View style={{flex: 1, backgroundColor: 'white', justifyContent: 'center'}}>
+              <LottieView source={require('../assets/animations/empty-cart.json')} autoPlay={true} style={{width: 225, alignSelf: 'center'}} />
+              <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(5), marginTop: 25}}>Your cart is empty!</Text>
+              <TouchableOpacity style={{alignSelf: 'center', marginTop: 15}} onPress={() => navigation.goBack()}>
+                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}>ADD NOW</Text>
+              </TouchableOpacity>
           </View>
       )
   }
@@ -427,8 +431,8 @@ export default function Cart({ navigation }) {
   return (
       <View style={styles.container}>
         <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 50}}>
-        <TouchableOpacity style={{marginRight: hp(5), marginBottom: hp(5), alignSelf: 'flex-end'}} disabled={cartStatus === 200 ? false: true} onPress={deleteCart()}>
-                <Text style={cartStatus === 200 ? {opacity: 1, fontFamily: 'sofia-medium', color: "#F67280", textDecorationLine: 'underline'} : {opacity: 0.1, fontFamily: 'sofia-medium', color: "#F67280", textDecorationLine: 'underline'}}>Empty cart</Text>
+            <TouchableOpacity style={{marginRight: hp(5), marginBottom: hp(5), alignSelf: 'flex-end'}} disabled={cartStatus === 200 ? false: true} onPress={deleteCart()}>
+                <Text style={{fontFamily: 'Maison-bold', color: "#F67280", fontSize: wp(4)}}>Empty cart</Text>
             </TouchableOpacity>
             <View>
                 <ScrollView contentContainerStyle={cartList.length > 2 ? {paddingBottom: 25, paddingLeft: 30}: {flex: 1, justifyContent: 'center', paddingBottom: 25, paddingLeft: 30}} horizontal={true} showsHorizontalScrollIndicator={false}>
@@ -442,7 +446,7 @@ export default function Cart({ navigation }) {
                                 </View>
                                 : null
                             })}
-                            <Text style={{fontFamily: 'sf-semi', textAlign: 'center', marginTop: 5, fontSize: wp(4)}}>{item.ordereditem}</Text>
+                            <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', marginTop: 5, fontSize: wp(4)}}>{item.ordereditem}</Text>
                             {test.map(w => {
                                 return w.get_count.map(x => {
                                     return x.ordereditem === item.ordereditem ?
@@ -451,7 +455,7 @@ export default function Cart({ navigation }) {
                                     </View>: null
                                 })
                             })}
-                            <Text style={{fontFamily: 'sofia-medium', fontSize: wp(3.5), position: 'absolute', bottom: 5, alignSelf: 'center', marginTop: 10}}> &#8377; {item.items_price['price__sum']} </Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), position: 'absolute', bottom: 5, alignSelf: 'center', marginTop: 10}}> &#8377; {item.items_price['price__sum']} </Text>
                             <TouchableOpacity style={{position: 'absolute', top: 2, right: 2}} onPress={() => deleteItem(item)}>
                                 <Entypo name="circle-with-cross" size={15} color="#F67280" />
                             </TouchableOpacity>
@@ -468,9 +472,9 @@ export default function Cart({ navigation }) {
                                 <Ionicons name="location-sharp" size={wp(4.5)} color="#249c86" />
                                 <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 5}}>Order will be delivered at:</Text>
                             </View>
-                            <Text style={{flex: 1, fontFamily: 'sf-semi', fontSize: wp(4), marginTop: 5, marginLeft: 25}}>{item.address}, {item.locality}, {item.city}</Text>
+                            <Text style={{flex: 1, fontFamily: 'Maison-bold', fontSize: wp(3.5), marginTop: 5, marginLeft: 25}}>{item.address}, {item.locality}, {item.city}</Text>
                             <TouchableOpacity style={{marginTop: 5, alignSelf: 'flex-start', marginLeft: 25}} onPress={() => setAddressModal(true)}>
-                                <Text style={{fontFamily: 'sf-semi', color: '#249c86', fontSize: wp(3.5)}}>Change delivery address</Text>
+                                <Text style={{fontFamily: 'Maison-bold', color: '#249c86', fontSize: wp(3.5)}}>Change delivery address</Text>
                             </TouchableOpacity>
                         </View>
                     )
@@ -478,10 +482,10 @@ export default function Cart({ navigation }) {
                 <View>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
                         <Ionicons name="location-sharp" size={wp(4.5)} color="#249c86" />
-                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), color: 'red', marginLeft: 5}}>You haven't set your delivery address yet!</Text>
+                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'red', marginLeft: 5}}>You haven't set your delivery address yet!</Text>
                     </View>
                     <TouchableOpacity style={{marginTop: 5, alignSelf: 'flex-start', marginLeft: 25}} onPress={() => setAddressModal(true)}>
-                        <Text style={{fontFamily: 'sf-semi', color: '#249c86', fontSize: wp(3.5)}}>Add delivery address</Text>
+                        <Text style={{fontFamily: 'Maison-bold', color: '#249c86', fontSize: wp(3.5)}}>Add delivery address</Text>
                     </TouchableOpacity>
                 </View>}
                 <View style={{marginTop: 40, backgroundColor: '#fff', padding: 10, paddingBottom: 20, borderRadius: 10, elevation: 2, shadowOffset: {width: 0, height: 1}, shadowRadius: 1.41, shadowOpacity: 0.20}}>
@@ -491,19 +495,19 @@ export default function Cart({ navigation }) {
                                 <LottieView source={require('../assets/animations/48974-offer-animation.json')} autoPlay={true} loop={true} style={{width: 30, height: 30}} />
                                 <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5)}}>Offers</Text>
                             </View>
-                            {appliedCoupon ? <Text style={{fontFamily: 'sf-semi', flex: 1, fontSize: wp(3.5), marginLeft: 25}}>&#8377; {appliedCoupon.discount} off applied on your order!</Text> : <Text style={{fontFamily: 'sf-semi', flex: 1, marginLeft: 25, fontSize: wp(3.5)}}>No offer applied!</Text>}
+                            {appliedCoupon ? <Text style={{fontFamily: 'Maison-bold', flex: 1, fontSize: wp(3.5), marginLeft: 25}}>&#8377; {appliedCoupon.discount} off applied on your order!</Text> : <Text style={{fontFamily: 'Maison-bold', flex: 1, marginLeft: 25, fontSize: wp(3.5)}}>No offer applied!</Text>}
                         </View>
                         {appliedCoupon ? 
                             <TouchableOpacity style={{flex: 0.2, justifyContent: 'center', marginTop: 5}} onPress={() => setAppliedCoupon(null)}>
                                 <FontAwesome name="remove" size={wp(3.5)} color="#249c86" />
                             </TouchableOpacity>:
                             <TouchableOpacity style={{flex: 0.5, marginTop: 5}} onPress={() => setCouponModal(true)}>
-                                <Text style={{fontFamily: 'sf-semi', color: '#249C86', fontSize: wp(3.5)}}>View offers</Text>
+                                <Text style={{fontFamily: 'Maison-bold', color: '#249C86', fontSize: wp(3.5)}}>View offers</Text>
                             </TouchableOpacity>
                         }
                     </View>
                 </View>
-                <View style={{marginTop: 25, borderRadius: 10, marginBottom: 50}}>
+                <View style={{marginTop: 40, borderRadius: 10, marginBottom: 50}}>
                     <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
                         <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4)}}>Item subtotal</Text>
                         <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4)}}>&#8377; {total}</Text>
@@ -537,10 +541,10 @@ export default function Cart({ navigation }) {
                 {onPlace ? <ActivityIndicator color="#99b898" size={50} />
                  : myAddressesStatus === 200 && deliveryAddressStatus === 200 && cartStatus === 200 ? 
                     <TouchableOpacity onPress={paymentMethod} style={{flex: 1, opacity: 1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
-                        <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>Place Order &raquo;</Text>
+                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}>Place Order &raquo;</Text>
                     </TouchableOpacity>:
-                    <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, position: 'absolute', bottom: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
-                        <Text style={{textAlign: 'center', fontFamily: 'sf-semi'}}>Place Order &raquo;</Text>
+                    <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
+                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold'}}>Place Order &raquo;</Text>
                     </TouchableOpacity>
                 }
 
@@ -574,10 +578,10 @@ export default function Cart({ navigation }) {
                             />
                         </MapView>
                         
-                        <TouchableOpacity style={{position: 'absolute', top: 5, left: 5}} onPress={() => (setAddressModal(false), setInputAddress(''), setInputLocality(''), setInputAddressType(''))}>
-                            <Entypo name="circle-with-cross" size={wp(6)} color="black" />
+                        <TouchableOpacity style={{position: 'absolute', top: 5, left: 15}} onPress={() => (setAddressModal(false), setInputAddress(''), setInputLocality(''), setInputAddressType(''))}>
+                            <Text style={{fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={{position: 'absolute', top: 15, right: 5, backgroundColor: '#f0f0f0', padding: wp(2), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58}} onPress={getLocation}>
+                        <TouchableOpacity style={{position: 'absolute', top: 15, right: 15, backgroundColor: '#f0f0f0', padding: wp(2), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58}} onPress={getLocation}>
                         {Platform.OS === 'android' ? <MaterialIcons name="my-location" size={wp(8)} color="black" />: <Ionicons name="ios-location" size={wp(6.5)} color="black" />}
                         </TouchableOpacity>
                     </View>
@@ -591,7 +595,7 @@ export default function Cart({ navigation }) {
                                             <TouchableOpacity onPress={setDeliveryAdrress(item)}>
                                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                                     {item.type_of_address === 'Home' ?  <MaterialIcons name="home" size={wp(4)} color="#249c86" />: <MaterialIcons name="work" size={wp(3)} color="#249c86" />}
-                                                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), color: '#249c86'}}> {item.type_of_address}</Text>
+                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}> {item.type_of_address}</Text>
                                                 </View>
                                                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10}}>
                                                     <Text style={{fontFamily: 'sf', flex: 1, fontSize: wp(3.5)}}>{item.address}, {item.locality}, {item.city}</Text>
@@ -608,11 +612,11 @@ export default function Cart({ navigation }) {
                             <Text style={{borderBottomWidth: 1, borderBottomColor: '#ebebeb', marginTop: 25}}></Text>
                             <View style={{marginTop: 25}} >
                                 <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5)}}>Add an address</Text>
-                                <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), marginBottom: 25}}>(Use the map to auto-fill)</Text>
+                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), marginBottom: 25}}>(Use the map to auto-fill)</Text>
                                 <ActivityIndicator size={50} color="#99b898" style={{position: indicPos, display: 'none', alignSelf: 'center', top: 0, bottom: 0}} />
                                 <TextInput style={{ height: 30, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'House/Colony'} value={inputAddress} onChangeText={(text) => setInputAddress(text)} />
                                 <TextInput style={{ height: 30, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'Road Number, Road Name'} value={inputLocality} onChangeText={(text) => setInputLocality(text)} />
-                                <TextInput style={{ height: 30, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'City'} value={inputCity} />
+                                <TextInput style={{ height: 30, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'City'} value={inputCity} onChangeText={(text) => setInputCity(text)} />
                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                     <TouchableOpacity style={{backgroundColor: inputAddressType === 'Home' ? '#249c86' :'white', padding: 10, borderRadius: 5, borderWidth: 0.3, borderColor: inputAddressType === 'Home' ? '#249c86': 'black'}} onPress={() => setInputAddressType('Home')} activeOpacity={1}>
                                         <Text style={{fontFamily: 'sf', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Home' ? 'white': 'black'}}>Home</Text>
@@ -623,10 +627,10 @@ export default function Cart({ navigation }) {
                                 </View>
                                 {inputAddress === '' || inputLocality === '' || inputCity === '' || inputAddressType === '' ? 
                                     <TouchableOpacity style={{marginTop: 25, opacity: 0.2, backgroundColor: '#99b898', padding: 10, borderRadius: 10}} disabled={true}>
-                                        <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), textAlign: 'center'}}>Save address</Text>
+                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center'}}>Save address</Text>
                                     </TouchableOpacity>:
                                     <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#99b898', padding: 10, borderRadius: 10}} disabled={false} onPress={addAddress}>
-                                        <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), textAlign: 'center'}}>Save address</Text>
+                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center'}}>Save address</Text>
                                     </TouchableOpacity>
                                 }
                             </View>
@@ -682,15 +686,15 @@ export default function Cart({ navigation }) {
                             data={couponList}
                             keyExtractor={(item, index) => index.toString()}
                             showsVerticalScrollIndicator={false}
-                            ListEmptyComponent={() => (!couponList.length ? <Text style={{textAlign: 'center', fontFamily: 'sf-semi'}}>No offers available right now!</Text>: null)}
+                            ListEmptyComponent={() => (!couponList.length ? <Text style={{textAlign: 'center', fontFamily: 'Maison-bold'}}>No offers available right now!</Text>: null)}
                             renderItem={({ item }) => (
                                 <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 20, borderWidth: 0.7, borderStyle: 'dashed', borderRadius: 1, padding: 10}}>
                                     <View style={{flex: 1}}>
                                         <Text style={{fontFamily: 'sf'}}>{item.name}</Text>
-                                        <Text style={{fontFamily: 'sf-semi', textDecorationLine: 'underline'}}>{item.description}</Text>
+                                        <Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline'}}>{item.description}</Text>
                                     </View>
                                     <TouchableOpacity disabled={total > item.min_items_price ? false : true} onPress={() => (setAppliedCoupon(item), setCouponModal(false), animationModalShow())}>
-                                        <Text style={total > item.min_items_price ? {opacity: 1, fontFamily: 'sf-semi', color: '#99b898'}: {opacity: 0.2, fontFamily: 'sf-semi', color: '#99b898'}}>Apply</Text>
+                                        <Text style={total > item.min_items_price ? {opacity: 1, fontFamily: 'Maison-bold', color: '#99b898'}: {opacity: 0.2, fontFamily: 'Maison-bold', color: '#99b898'}}>Apply</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -713,10 +717,10 @@ export default function Cart({ navigation }) {
             </View>
         </ScrollView>
         {/* <View style={{flexDirection: 'row', alignItems: 'center'}}>
-            <Text style={{fontFamily: 'sf-semi', position: 'absolute', top: 0, left: 50, fontSize: wp(2.5)}}>Payment type</Text>
+            <Text style={{fontFamily: 'Maison-bold', position: 'absolute', top: 0, left: 50, fontSize: wp(2.5)}}>Payment type</Text>
             <TouchableOpacity style={{flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}} onPress={() => setPaymentModal(true)}>
                 {paymentType === 'Cash On Delivery' ? <MaterialCommunityIcons name="cash" size={20} color="green"/> : paymentType === 'Card' ? <Entypo name="credit-card" size={20} color="black" />: <FontAwesome name="google-wallet" size={20} color="blue" />}
-                <Text style={{textAlign: 'center', fontFamily: 'sf-semi'}}> {paymentType}</Text>
+                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold'}}> {paymentType}</Text>
             </TouchableOpacity>
             
         </View> */}

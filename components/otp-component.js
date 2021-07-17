@@ -152,7 +152,7 @@ export default function OtpComponent({ navigation, route }){
         <View style={styles.container}>
             <Image source={require('../assets/message-sent.png')} style={{width: '100%', height: 2073*(screenWidth/3381), alignSelf: 'center'}} />
             <View style={{width: '100%', height: '100%', backgroundColor: 'white', position:'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 5, shadowOpacity: 0.3}}>
-                <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), paddingTop: wp(8), textAlign: 'center'}} >We have sent the verification code to{'\n'}+91 {phone}.</Text>
+                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), paddingTop: wp(8), textAlign: 'center'}} >We have sent the verification code to{'\n'}+91 {phone}.</Text>
                 <View style={{flexDirection: 'row', marginTop: 40, alignSelf: 'center', alignItems: 'center'}}>
                 <TextInput ref={ti1} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
                         value={OTP1} onChangeText={(text) => {setOTP1(text); if (text) {copyFromClipboard(text), ti2.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) Login()}} />
@@ -175,7 +175,7 @@ export default function OtpComponent({ navigation, route }){
                 <View style={{flexDirection: 'row', alignItems: 'center', alignSelf: 'center', marginTop: 40}}>
                     <Text style={{fontFamily: 'sf', fontSize: wp(4)}}>Didn't received code? </Text>
                     <TouchableOpacity disabled={counter === 0 ? false: true} style={counter === 0 ? {opacity: 1}: {opacity: 0.3}} onPress={resendOTP}>
-                        <Text style={{fontFamily: 'sf-semi', color: '#99b898', textDecorationLine: 'underline', fontSize: wp(4)}}> Resend code </Text>
+                        <Text style={{fontFamily: 'Maison-bold', color: '#99b898', textDecorationLine: 'underline', fontSize: wp(3.5)}}> Resend code </Text>
                     </TouchableOpacity>
                 </View>
                 <Text style={{fontFamily: 'sf', fontSize: wp(4), textAlign: 'center'}}> in {counter}s</Text>
@@ -188,7 +188,7 @@ export default function OtpComponent({ navigation, route }){
                 >
                     <Text style={{borderTopWidth: 0.3}}></Text>
                     <TouchableOpacity style={{alignSelf: 'flex-end'}} onPress={() => navigation.pop(2)}>
-                        <Text style={{fontFamily: 'sf-semi', textDecorationLine: 'underline'}}>Do it later &#187;</Text>
+                        <Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline', fontSize: wp(3)}}>Do it later &#187;</Text>
                     </TouchableOpacity>
                     <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), marginBottom: 50}}>Enter your{'\n'}Personal Information.</Text>
                     <TextInput style={{ height: 30, borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%' }} 
@@ -209,7 +209,7 @@ export default function OtpComponent({ navigation, route }){
                 <View style={{alignSelf: 'center', backgroundColor: 'white', padding: 25}}>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
                         <ActivityIndicator size={40} color={'#99b898'}  />
-                        <Text style={{fontFamily: 'sf-semi', marginLeft: 20}}>Verifying code...</Text>
+                        <Text style={{fontFamily: 'Maison-bold', marginLeft: 20}}>Verifying code...</Text>
                     </View>
                 </View>
             </Modal>

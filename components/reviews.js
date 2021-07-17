@@ -5,6 +5,7 @@ import Slider from '@react-native-community/slider';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path, Rect, Circle, G, Polygon, LinearGradient, Defs, Stop, Ellipse } from 'react-native-svg';
+import LottieView from 'lottie-react-native';
 
 
 
@@ -93,7 +94,7 @@ export default function Reviews({ route, navigation }) {
                     .then(resp => {if (resp.status === 201)(setReviews(resp.json.rating)) })
                     .catch(error => console.log(error))
                 } else {
-                    alert('one star')
+                    alert('Move the slider to rate the item')
                 }
             } else {
                 navigation.navigate('Register')
@@ -116,7 +117,7 @@ export default function Reviews({ route, navigation }) {
                     .then(resp => {if (resp.status === 201){navigation.goBack()} })
                     .catch(error => console.log(error))
                 } else {
-                    alert('one star')
+                    alert('Please provide a valid rating')
                 }
         } else {
             navigation.navigate('Register')
@@ -135,8 +136,8 @@ export default function Reviews({ route, navigation }) {
     
     if (respStatus === 0){
         return (
-            <View style={{flex: 1, backgroundColor: 'white', justifyContent: 'center'}}>
-                <ActivityIndicator size={50} color={'#99b898'}  />
+            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
             </View>
         )
     }
@@ -151,8 +152,8 @@ export default function Reviews({ route, navigation }) {
                     {ratingItems.map((item) => {
                         return (
                             <View key={item.item_name} style={{marginRight: 35, marginTop: 25}}>
-                                <TouchableOpacity onPress={() => (setActiveItem(item), setSliderValue(1), setSliderPosition(1))}>
-                                    <Text style={{fontSize: wp(5), fontFamily: 'sf-semi', color: activeItem.item_name === item.item_name ? '#249c86' : 'black', opacity: activeItem.item_name === item.item_name ? 1: 0.1, textDecorationLine: activeItem.item_name === item.item_name ? 'underline': 'none', fontWeight: 'bold'}}>{item.item_name}</Text>
+                                <TouchableOpacity onPress={() => (setActiveItem(item), setSliderValue(1), setSliderPosition(1))} activeOpacity={0.8}>
+                                    <Text style={{fontSize: wp(4.5), fontFamily: 'Maison-bold', color: activeItem.item_name === item.item_name ? '#249c86' : 'black', opacity: activeItem.item_name === item.item_name ? 1: 0.1, textDecorationLine: activeItem.item_name === item.item_name ? 'underline': 'none', fontWeight: 'bold'}}>{item.item_name}</Text>
                                 </TouchableOpacity>
                             </View>
                         )
@@ -161,25 +162,25 @@ export default function Reviews({ route, navigation }) {
                 <View style={{marginTop: 50}}>
                     {exists() ? 
                         <View style={{alignItems: 'center'}}>
-                            <Text style={{fontFamily: 'sf-semi', fontSize: wp(5), marginBottom: 50}}>You have rated {activeItem.item_name} : </Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), marginBottom: 25}}>You have rated {activeItem.item_name} : </Text>
                              {exists() === 1 ? emojis[0]: exists() === 2 ? emojis[1]: exists() === 3 ? emojis[2]: exists() === 4 ? emojis[3]: exists() === 5 ? emojis[4] : null } 
-                             <Text style={{marginTop: 10, fontFamily: 'sofia-bold', textAlign: 'center', fontSize: wp(7)}}>{exists() === 1 ? 'Ugh! Terrible!': exists() === 2 ? 'Could have been better!': exists() === 3 ? 'Satisfied' : exists() === 4 ? 'Good': exists() === 5 ? 'Awesome': null}</Text>
+                             <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5)}}>{exists() === 1 ? 'Ugh ! Terrible !': exists() === 2 ? 'Bad': exists() === 3 ? 'Could have been better !' : exists() === 4 ? 'Good': exists() === 5 ? 'Awesome': null}</Text>
                         </View> :
                         <View>
                             <View style={{alignItems: 'center'}}>
                                 {sliderValue === 1 ? emojis[0]: sliderValue === 2 ? emojis[1]: sliderValue === 3 ? emojis[2]: sliderValue === 4 ? emojis[3]: sliderValue === 5 ? emojis[4]:  null}
                             </View>
-                            <Text style={{marginTop: 10, fontFamily: 'sofia-bold', textAlign: 'center', fontSize: wp(7)}}>{sliderValue === 1 ? 'Ugh! Terrible!': sliderValue === 2 ? 'Could have been better!': sliderValue === 3 ? 'Satisfied' : sliderValue === 4 ? 'Good': sliderValue === 5 ? 'Awesome': null}</Text>
-                            <Slider style={{marginTop: 50, width: '60%', alignSelf: 'center'}} minimumValue={1} maximumValue={5} onValueChange={(value) => (setSliderValue(value), setSliderPosition(value))} step={1} value={sliderPosition} thumbTintColor={'#99b898'} minimumTrackTintColor={'#99b898'} />
+                            <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5)}}>{sliderValue === 1 ? 'Ugh ! Terrible !': sliderValue === 2 ? 'Bad': sliderValue === 3 ? 'Could have been better !' : sliderValue === 4 ? 'Good': sliderValue === 5 ? 'Awesome': null}</Text>
+                            <Slider style={{marginTop: 25, width: '60%', alignSelf: 'center'}} minimumValue={1} maximumValue={5} onValueChange={(value) => (setSliderValue(value), setSliderPosition(value))} step={1} value={sliderPosition} thumbTintColor={'#99b898'} minimumTrackTintColor={'#99b898'} />
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 45}}>
-                                <Ionicons name="ios-chatbox-ellipses" size={wp(5)} color="#99b898" />
+                                <Ionicons name="ios-chatbox-ellipses" size={wp(4.5)} color="#99b898" />
                                 <View style={{marginLeft: 5}}>
-                                    <Text style={{fontSize: wp(5), fontFamily: 'sf-semi'}}>Wanna leave a comment?</Text>
+                                    <Text style={{fontSize: wp(4.5), fontFamily: 'Maison-bold'}}>Wanna leave a comment?</Text>
                                 </View>
                             </View>
                             <TextInput style={{fontFamily: 'sf', fontSize: wp(4), width: wp(50), marginTop: 10}} placeholder={'Write Here...'} multiline={true} onChangeText={(text) => setComment(text)} />
-                            <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={createRating(activeItem.item_name)}>
-                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi'}}>Submit Rating</Text>
+                            <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={createRating(activeItem.item_name)} activeOpacity={0.8}>
+                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold'}}>Submit Rating</Text>
                             </TouchableOpacity>
                         </View>
                     }
@@ -187,7 +188,7 @@ export default function Reviews({ route, navigation }) {
                         <View style={{marginTop: 40}}>
                             <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6)}}>Rate Packaging and delivery</Text>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
-                                <TouchableOpacity style={{marginRight: 15}} onPress={() => setDelPackRating(1)}>
+                                <TouchableOpacity style={{marginRight: 15}} onPress={() => setDelPackRating(1)} activeOpacity={0.8}>
                                     <Svg style={{opacity: delPackRating === 1 ? 1 : 0.4}} viewBox="0 0 65.441 65.441" width={50} height={40}>
                                         <G>
                                             <G>
@@ -201,7 +202,7 @@ export default function Reviews({ route, navigation }) {
                                             </G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G>
                                     </Svg>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{marginRight: 15}} onPress={() => setDelPackRating(2)}>
+                                <TouchableOpacity style={{marginRight: 15}} onPress={() => setDelPackRating(2)} activeOpacity={0.8}>
                                 <Svg style={{opacity: delPackRating === 2 ? 1: 0.4}} viewBox="0 0 65.441 65.441" width={50} height={40}>
                                     <G>
                                         <G>
@@ -213,7 +214,7 @@ export default function Reviews({ route, navigation }) {
                                         </G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G>
                                     </Svg>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{marginRight: 15}} onPress={() => setDelPackRating(3)}>
+                                <TouchableOpacity style={{marginRight: 15}} onPress={() => setDelPackRating(3)} activeOpacity={0.8}>
                                     <Svg style={{opacity: delPackRating === 3 ? 1: 0.4}} viewBox="0 0 65.441 65.441" width={50} height={40}>
                                         <G>
                                             <G>
@@ -225,7 +226,7 @@ export default function Reviews({ route, navigation }) {
                                             </G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G>
                                     </Svg>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{marginRight: 15}} onPress={() => (setDelPackRating(4), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''))}>
+                                <TouchableOpacity style={{marginRight: 15}} onPress={() => (setDelPackRating(4), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''))} activeOpacity={0.8}>
                                     <Svg style={{opacity: delPackRating === 4 ? 1: 0.4}} viewBox="0 0 65.441 65.441" width={50} height={40}>
                                         <G>
                                             <G>
@@ -238,7 +239,7 @@ export default function Reviews({ route, navigation }) {
                                             </G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G>
                                     </Svg>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{marginRight: 15}} onPress={() => (setDelPackRating(5), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''))}>
+                                <TouchableOpacity style={{marginRight: 15}} onPress={() => (setDelPackRating(5), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''))} activeOpacity={0.8}>
                                     <Svg style={{opacity: delPackRating === 5 ? 1: 0.4}} viewBox="0 0 65.441 65.441" width={50} height={40}>
                                         <G>
                                             <G>
@@ -256,41 +257,41 @@ export default function Reviews({ route, navigation }) {
                             </View>
                             {delPackRating >0 && delPackRating <=3 ? 
                                 <View style={{marginTop: 30}}>
-                                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4)}}>Sorry to hear that! Please tell us what went wrong</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Sorry to hear that! Please tell us what went wrong</Text>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
-                                        <TouchableOpacity style={{flex: 1, marginRight: 25, backgroundColor: problem1 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem1 !== '' ? setProblem1(''): setProblem1('Items were damaged ')}>
+                                        <TouchableOpacity style={{flex: 1, marginRight: 25, backgroundColor: problem1 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem1 !== '' ? setProblem1(''): setProblem1('Items were damaged ')} activeOpacity={0.8}>
                                             <Text style={{fontFamily: 'sf', textAlign: 'center'}}>Items were damaged</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem2 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem2 !== '' ? setProblem2(''): setProblem2('Delivery man was impolite ')}>
+                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem2 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem2 !== '' ? setProblem2(''): setProblem2('Delivery man was impolite ')} activeOpacity={0.8}>
                                             <Text style={{fontFamily: 'sf', textAlign: 'center'}}>Delivery man was impolite</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
-                                        <TouchableOpacity style={{flex: 1, marginRight: 15, backgroundColor: problem3 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem3 !== '' ? setProblem3(''): setProblem3("Packing wasn't up-to mark ")}>
+                                        <TouchableOpacity style={{flex: 1, marginRight: 15, backgroundColor: problem3 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem3 !== '' ? setProblem3(''): setProblem3("Packing wasn't up-to mark ")} activeOpacity={0.8}>
                                             <Text style={{fontFamily: 'sf', textAlign: 'center'}}>Packing wasn't up-to mark</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem4 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem4 !== '' ?(setProblem4(''), setProblem5('')): setProblem4('other ')}>
+                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem4 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem4 !== '' ?(setProblem4(''), setProblem5('')): setProblem4('other ')} activeOpacity={0.8}>
                                             <Text style={{fontFamily: 'sf', textAlign: 'center'}}>Other</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <View style={{display: problem4 === '' ? 'none': 'flex', marginTop: 25}}>
-                                        <Text style={{fontFamily: 'sf-semi'}}>Please specify the reason</Text>
+                                        <Text style={{fontFamily: 'Maison-bold'}}>Please specify the reason</Text>
                                         <TextInput style={{fontFamily: 'sf', fontSize: wp(4), marginTop: 10}} placeholder={'Write Here...'} multiline={true} value={problem5} onChangeText={(text) => setProblem5(text)} />
                                     </View>
                                 </View>
                                 : 
                                 delPackRating === 4 ?
                                 <View style={{marginTop: 30}}>
-                                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4)}}>Glad to hear that! Tell us what we can improve. (optional)</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Glad to hear that! Tell us what we can improve. (optional)</Text>
                                     <TextInput style={{fontFamily: 'sf', fontSize: wp(4), marginTop: 10}} placeholder={'Write Here...'} multiline={true} value={problem5} onChangeText={(text) => setProblem5(text)} />
                                 </View>
                                 : 
                                 delPackRating === 5 ?
-                                <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), marginTop: 30}}>Awesome ! We will do our best to continue this experience with you !</Text>
+                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 30}}>Awesome ! We will do our best to continue this experience with you !</Text>
                                 : null
                             }
-                            <TouchableOpacity style={{marginTop: 50, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={createDelPackRating()}>
-                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi'}}>Done</Text>
+                            <TouchableOpacity style={{marginTop: 50, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={createDelPackRating()} activeOpacity={0.8}>
+                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold'}}>Done</Text>
                             </TouchableOpacity>
                         </View>
                 </View>

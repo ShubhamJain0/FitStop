@@ -6,7 +6,7 @@ import Modal from 'react-native-modal';
 import Carousel, {ParallaxImage, Pagination} from 'react-native-snap-carousel';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'; 
 import * as Location from 'expo-location';
-import { MaterialCommunityIcons, MaterialIcons, FontAwesome, Ionicons, AntDesign, createIconSetFromIcoMoon } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons, FontAwesome, Ionicons, AntDesign, createIconSetFromIcoMoon, FontAwesome5 } from '@expo/vector-icons';
 import { UserContext, PushTokenContext} from './context';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -367,7 +367,6 @@ function Home(props){
           setOrderReceivedModal(true);
         } else if (url === 'ActiveOrders') {
           const param = response.notification.request.content.data.item_id
-          console.log(param)
           navigation.navigate(url, {activeOrder: param})
         } else {
           navigation.navigate(url);
@@ -519,7 +518,7 @@ function Home(props){
         <Pagination
           dotsLength={bannerImages.length}
           activeDotIndex={activeSlide}
-          containerStyle={{ backgroundColor: '#fafafa', alignSelf: 'flex-end', paddingVertical: 0, marginTop: 2, marginBottom: 10}}
+          containerStyle={{ backgroundColor: '#fafafa', alignSelf: 'flex-end', paddingVertical: 0, marginTop: 2}}
           dotStyle={{
               width: 10,
               height: 10,
@@ -804,19 +803,19 @@ function Home(props){
                   <SkeletonPlaceholder.Item 
                     width={wp(9)}
                     height={wp(9)}
-                    marginLeft={wp(10)}
+                    marginLeft={wp(11)}
                     borderRadius={10}
                   />
                   <SkeletonPlaceholder.Item 
                     width={wp(9)}
                     height={wp(9)}
-                    marginLeft={wp(25)}
+                    marginLeft={wp(23)}
                     borderRadius={10}
                   />
                   <SkeletonPlaceholder.Item 
                     width={wp(9)}
                     height={wp(9)}
-                    marginLeft={wp(25)}
+                    marginLeft={wp(23)}
                     borderRadius={10}
                   />
               </SkeletonPlaceholder.Item>
@@ -844,19 +843,16 @@ function Home(props){
           <StatusBar style="auto" />
           
           <View style={styles.container}>
-            <View style={{flexDirection: 'row', alignItems: 'center', padding: 25, paddingTop: 0, paddingBottom: 10}}>
+            <View style={{flexDirection: 'row', alignItems: 'center', padding: 25, paddingTop: 15}}>
               <View style={{flex: 1}}>
-              <Text style={{fontFamily: 'sf-semi', fontSize: wp(5.5), color: '#249C86', fontWeight: '500'}}> {isLogin ? userData.name ? 'Hello, ' + userData.name + ' !' : 'Hello !': 'Login to place order!'}</Text>
+                <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), color: '#228f7b'}}> {isLogin ? userData.name ? 'Hello, ' + userData.name + ' !' : 'Hello !': 'Login to place order!'}</Text>
               </View>
               <CopilotStep text={isLogin ? "Manage your profile" : 'Login Here'} order={4} name={'Profile'}>
                 <CoPilotTouchableOpacity onPress={() => navigation.navigate('Profile')}>
-                  {isLogin ? userData.image ? <Image source={{uri: userData.image}} style={{width: 40, height: 40, borderRadius: 50}} />: <LottieView source={require('../assets/animations/43110-male-avatar.json')} autoPlay={true} loop={true} style={{width: 60}}  />: <LottieView source={require('../assets/animations/10152-login-animation.json')} autoPlay={true} loop={true} style={{width: 30, height: 30}} />}
+                  {isLogin ? userData.image ? <Image source={{uri: userData.image}} style={{width: 40, height: 40, borderRadius: 50}} />: <LottieView source={require('../assets/animations/43110-male-avatar.json')} autoPlay={true} loop={true} style={{width: 60}}  />: <FontAwesome5 name="sign-in-alt" size={wp(6)} color="black" />}
                 </CoPilotTouchableOpacity>
               </CopilotStep>
             </View>
-            <TouchableOpacity onPress={() => setIsOffline(true)}>
-              <Text>sdj</Text>
-            </TouchableOpacity>
             <Carousel
               ref={carouselRef}
               sliderWidth={screenWidth}
@@ -891,7 +887,7 @@ function Home(props){
 
           </View>
           
-          <View style={{backgroundColor: '#fafafa', padding: 25, paddingTop: 0, paddingBottom: 0}}>
+          <View style={{backgroundColor: '#fafafa', padding: 25, paddingBottom: 0, marginTop: 50, paddingTop: 0}}>
             <Text style={{fontFamily: 'sofia-black',fontSize: wp(4), color: 'grey'}}>IMMUNITY BOOSTERS</Text>
           </View>
           <View
@@ -907,7 +903,7 @@ function Home(props){
                         <LinearGradient colors={['rgba(255,255,255,0)', 'black']} start={{x: 0, y:0.3}} style={{position: 'absolute', top: 0, bottom: 0, left: 0,right: 0, borderRadius: 10}} ></LinearGradient>
                         <View style={{position: 'absolute', left: 15, right: 15,bottom: 10}}>
                           <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5),  color: 'white'}}>{item.title}</Text>
-                          <Text style={{fontFamily: 'sf-semi', fontSize: wp(3),  color: 'white', marginTop: 5}} numberOfLines={2}>{item.description}</Text>
+                          <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3),  color: 'white', marginTop: 5}} numberOfLines={2}>{item.description}</Text>
                         </View>
                       </View>
                     </TouchableOpacity>
@@ -929,7 +925,7 @@ function Home(props){
                         <LinearGradient colors={['rgba(255,255,255,0)', 'black']} start={{x: 0, y:0.2}} style={{position: 'absolute', top: 0, bottom: 0, left: 0,right: 0, borderRadius: 10}} ></LinearGradient>
                         <View style={{position: 'absolute', left: 15, right: 15,bottom: 10}}>
                           <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5),  color: 'white'}}>{item.title}</Text>
-                          <Text style={{fontFamily: 'sf-semi', fontSize: wp(3),  color: 'white', marginTop: 5}} numberOfLines={2}>{item.description}</Text>
+                          <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3),  color: 'white', marginTop: 5}} numberOfLines={2}>{item.description}</Text>
                         </View>
                       </View>
                     </TouchableOpacity>
@@ -957,22 +953,22 @@ function Home(props){
                   </View>
                   <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
                     <MaterialIcons name="local-fire-department" size={wp(4.5)} color="#249C86" />
-                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
-                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
                     <Ionicons name="ios-people" size={wp(4)} color="#249c86" />
-                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings}</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings}</Text>
                   </View>
                   <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 5}}>
                     <View style={{ flex: 1, alignItems: 'flex-end'}}>
                       <MaterialIcons name="favorite" size={wp(4)} color="#249C86" />
                     </View>
-                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                   </View>
                   <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15}}>{item.name}</Text>
                   <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
                     <View style={{flex: 1}}>
                       <TouchableOpacity style={{alignSelf: 'center'}} onPress={() => navigation.navigate('RecipeDetails', {recipe_id: item.id, recipe_ingredients: ingredients})}>
-                        <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
+                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
                       </TouchableOpacity>
                     </View>
                 </View>
@@ -990,8 +986,8 @@ function Home(props){
                     return(
                         <View key={item.id} style={{marginRight: 50, backgroundColor: 'white', padding: 25, paddingTop: 15, paddingBottom: 15, borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}}>
                             <View style={{flex: 1}}>
-                                <Text style={{fontFamily: 'sofia-black', fontSize: wp(4)}}>Order #{item.id}</Text>
-                                <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: 'grey', marginTop: 2}}>{item.ordereddate}</Text>
+                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Order #{item.id}</Text>
+                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'grey', marginTop: 2}}>{item.ordereddate}</Text>
                             </View>
                             <ScrollView>
                               {previousOrderItems.map(item1 => {
@@ -1008,7 +1004,7 @@ function Home(props){
                                                   })
                                               : null}
                                               <View style={{marginLeft: 25, marginTop: 5}}>
-                                                  <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), fontWeight: 'bold'}}>{x.item_name} </Text>
+                                                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), fontWeight: 'bold'}}>{x.item_name} </Text>
                                                   <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5}}>{x.item_weight}     x{x.item_count}</Text>
                                               </View>
                                           </View>
@@ -1020,7 +1016,7 @@ function Home(props){
                             <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                               <View style={{flex: 1, alignItems: 'flex-start'}}>
                                 <TouchableOpacity onPress={repeatOrder(item)} activeOpacity={0.5} >
-                                    <Text style={{fontSize: wp(3.5), color: '#249C86', fontFamily: 'sf-semi'}}>Order Again</Text>
+                                    <Text style={{fontSize: wp(3.5), color: '#249C86', fontFamily: 'Maison-bold'}}>Order Again</Text>
                                 </TouchableOpacity>
                               </View>
                               <View>
@@ -1047,7 +1043,7 @@ function Home(props){
           <LottieView source={require('../assets/animations/23211-receive-order.json')} autoPlay={true} loop={false} style={{alignSelf: 'center', width: '100%'}} onAnimationFinish={() => setOrderReceivedModal(false)} />
           <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), textAlign: 'center', position: 'absolute', bottom: 100, alignSelf: 'center'}}>Order delivered successfully !</Text>
         </Modal>
-        <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 15, paddingLeft: 0, position: 'absolute', bottom: 55, width: '100%', transform: [{translateY: activeOrderLen > 0 ? slideUp : 150}]}}>
+        <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 15, paddingLeft: 0, position: 'absolute', bottom: 50, width: '100%', transform: [{translateY: activeOrderLen > 0 ? slideUp : 150}]}}>
           <View>
             {activeOrderRespStatus === 200 ?
               <Carousel 
@@ -1064,7 +1060,7 @@ function Home(props){
                         : getStatus(item) === 'Order Confirmed' ? 
                           <LottieView source={require('../assets/animations/64289-jiji.json')} loop={true} autoPlay={true} style={{width: 50}} />
                         : getStatus(item) === 'Out for delivery' ? 
-                          <LottieView source={require('../assets/animations/lf30_editor_nh0dezle.json')} loop={true} autoPlay={true} style={{width: 50}} />
+                          <LottieView source={require('../assets/animations/delivery.json')} loop={true} autoPlay={true} style={{width: 70}} />
                         : null}
                       <Text style={{fontFamily: 'sf', textAlign: 'center', fontSize: wp(3), flex: 1, marginLeft: 5, marginRight: 10}}>
                         {getStatus(item) === 'Order Placed' ? 
@@ -1076,7 +1072,7 @@ function Home(props){
                           : null}
                       </Text>
                       <TouchableOpacity style={{alignSelf: 'center'}} onPress={() => navigation.navigate('ActiveOrders', {activeOrder: item.id})}>
-                        <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86'}}>View</Text>
+                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>View</Text>
                       </TouchableOpacity>
                     </View>
                   )
@@ -1088,7 +1084,7 @@ function Home(props){
               <Pagination
                 dotsLength={activeOrders.length}
                 activeDotIndex={activeSlide1}
-                containerStyle={{alignSelf: 'center', paddingVertical: 0, marginTop: 10}}
+                containerStyle={{alignSelf: 'center', paddingVertical: 0, marginTop: 10, marginBottom: 5}}
                 dotStyle={{
                     width: 20,
                     height: 2,
@@ -1111,7 +1107,7 @@ function Home(props){
             <CopilotStep text="View offers of the day and other information " order={1} name={'Home'}>
               <CoPilotTouchableOpacity activeOpacity={1} style={{alignSelf: 'center'}}>
                 <CustomIcon name="home" size={wp(6)} color="#249c86" style={{alignSelf: 'center'}} />
-                <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: '#249c86', textAlign: 'center'}}>Home</Text>
+                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: '#249c86', textAlign: 'center'}}>Home</Text>
               </CoPilotTouchableOpacity>
             </CopilotStep>
           </View>
@@ -1119,7 +1115,7 @@ function Home(props){
             <CopilotStep text="Explore all items and add to cart !" order={2} name={"Store"}>
               <CoPilotTouchableOpacity onPress={() => navigation.navigate('Fruits')} activeOpacity={1} style={{alignSelf: 'center'}}>
                 <CustomIcon name="store-1" size={wp(6)} color="black" style={{alignSelf: 'center'}} />
-                <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Store</Text>
+                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Store</Text>
               </CoPilotTouchableOpacity>
             </CopilotStep>            
           </View>
@@ -1127,7 +1123,7 @@ function Home(props){
             <CopilotStep text="View all the recipes here" order={3} name={"Recipes"}>
               <CoPilotTouchableOpacity onPress={() => navigation.navigate('Recipes')} activeOpacity={1} style={{alignSelf: 'center'}}>
                 <CustomIcon name="salad-1" size={wp(6.5)} color="black" style={{alignSelf: 'center'}} />
-                <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Recipes</Text>
+                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Recipes</Text>
               </CoPilotTouchableOpacity>
             </CopilotStep>
           </View>          
@@ -1371,24 +1367,24 @@ const TooltipComponent = ({
       {
         !isLastStep ?
           <TouchableOpacity onPress={handleStop}>
-            <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.skip || 'Skip'}</Text>
+            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.skip || 'Skip'}</Text>
           </TouchableOpacity>
           : null
       }
       {
         !isFirstStep ?
           <TouchableOpacity onPress={handlePrev}>
-            <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.previous || 'Previous'}</Text>
+            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.previous || 'Previous'}</Text>
           </TouchableOpacity>
           : null
       }
       {
         !isLastStep ?
           <TouchableOpacity onPress={handleNext}>
-            <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.next || 'Next'}</Text>
+            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.next || 'Next'}</Text>
           </TouchableOpacity> :
           <TouchableOpacity onPress={handleStop}>
-            <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.finish || 'Done'}</Text>
+            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.finish || 'Done'}</Text>
           </TouchableOpacity>
       }
     </View>

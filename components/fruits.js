@@ -55,6 +55,7 @@ function Fruits(props) {
     const [showIndic, setShowInidc] = useState(false);    
 
 
+
     //Copilot Variables
   
     const CoPilotTouchableOpacity = walkthroughable(TouchableOpacity)
@@ -324,7 +325,6 @@ function Fruits(props) {
         outputRange: [150, 0],
         extrapolate: 'clamp',
     })
-
     
 
 
@@ -425,125 +425,30 @@ function Fruits(props) {
 
     if (loading == 'true') {
         return (
-            <View style={{flex: 1, backgroundColor: '#fcfcfc'}}>
-                <SkeletonPlaceholder>
-                    <SkeletonPlaceholder.Item height={hp(99)} marginTop={hp(5)} width={wp(90)} alignSelf={'center'} flexDirection={'row'} justifyContent={'space-between'}>
-                        <SkeletonPlaceholder.Item marginTop={hp(15)} marginLeft={wp(7)} alignItems={'center'}>
-                            <SkeletonPlaceholder.Item  
-                                width={wp(5)}
-                                height={wp(20)}
-                                borderRadius={5}
-                                marginBottom={hp(8)}
-                            />
-                            <SkeletonPlaceholder.Item  
-                                width={wp(5)}
-                                height={wp(20)}
-                                borderRadius={5}
-                                marginBottom={hp(8)}
-                            />
-                            <SkeletonPlaceholder.Item  
-                                width={wp(5)}
-                                height={wp(20)}
-                                borderRadius={5}
-                            />
-                        </SkeletonPlaceholder.Item>
-                        <SkeletonPlaceholder.Item>
-                            <SkeletonPlaceholder.Item
-                                width={wp(50)}
-                                height={20}
-                                borderRadius={5}
-                            />
-                            <SkeletonPlaceholder.Item
-                                marginTop={hp(4)}
-                                width={wp(60)}
-                                height={wp(40)}
-                                borderRadius={10}
-                            />
-                            <SkeletonPlaceholder.Item
-                                marginTop={hp(4)}
-                                width={wp(60)}
-                                height={wp(40)}
-                                borderRadius={10}
-                            />
-                            <SkeletonPlaceholder.Item
-                                marginTop={hp(4)}
-                                width={wp(60)}
-                                height={wp(40)}
-                                borderRadius={10}
-                            />
-                            <SkeletonPlaceholder.Item
-                                marginTop={hp(4)}
-                                width={wp(60)}
-                                height={wp(40)}
-                                borderRadius={10}
-                            />
-                            <SkeletonPlaceholder.Item
-                                marginTop={hp(4)}
-                                width={wp(60)}
-                                height={wp(40)}
-                                borderRadius={10}
-                            />
-                            <SkeletonPlaceholder.Item
-                                marginTop={hp(4)}
-                                width={wp(60)}
-                                height={wp(40)}
-                                borderRadius={10}
-                            />
-                            <SkeletonPlaceholder.Item
-                                marginTop={hp(4)}
-                                width={wp(60)}
-                                height={wp(40)}
-                                borderRadius={10}
-                            />
-                        </SkeletonPlaceholder.Item>
-                    </SkeletonPlaceholder.Item>
-                </SkeletonPlaceholder>
-                <View style={{position: 'absolute', bottom: 0, backgroundColor: '#fcfcfc', width: '100%'}}>
-                <SkeletonPlaceholder>
-                    <SkeletonPlaceholder.Item paddingTop={15} padding={10} flexDirection={'row'} alignItems={'center'}>
-                        <SkeletonPlaceholder.Item 
-                            width={wp(9)}
-                            height={wp(9)}
-                            marginLeft={wp(10)}
-                            borderRadius={10}
-                        />
-                        <SkeletonPlaceholder.Item 
-                            width={wp(9)}
-                            height={wp(9)}
-                            marginLeft={wp(25)}
-                            borderRadius={10}
-                        />
-                        <SkeletonPlaceholder.Item 
-                            width={wp(9)}
-                            height={wp(9)}
-                            marginLeft={wp(25)}
-                            borderRadius={10}
-                        />
-                    </SkeletonPlaceholder.Item>
-                    </SkeletonPlaceholder>
-                </View>
+            <View style={{flex: 1, backgroundColor: '#fcfcfc', justifyContent: 'center', alignItems: 'center'}}>
+                <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
             </View>
         )
     }
 
     return (
             <View style={{flexDirection: 'row', backgroundColor: '#fcfcfc', flex: 1}}>
-                <View style={{flex: 0.4, justifyContent: 'center'}}>
+                <View style={{flex: 0.4, marginTop: hp(30)}}>
                     <CopilotStep text={'Explore fruits !'} order={3} name={'fruits'}>
-                        <CoPilotTouchableOpacity style={{alignItems: 'center', margin: hp(4), marginBottom: 75, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Fruits')} >
-                            <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4.5)}}>Fruits</Text>
+                        <CoPilotTouchableOpacity style={{alignItems: 'center', marginBottom: 100, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Fruits')} >
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Fruits</Text>
                             <Text style={{backgroundColor: '#249C86', height: 2, width: '40%', marginTop: 5, alignSelf: 'center'}}></Text>
                         </CoPilotTouchableOpacity>
                     </CopilotStep>
                     <CopilotStep text={'Explore dried-fruits !'} order={4} name={'dried-fruits'}>
-                        <CoPilotTouchableOpacity style={{alignItems: 'center', margin: hp(4), marginBottom: 75, opacity: 0.2, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Dried-Fruits')} >
-                            <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4.5)}}>Dried{'\n'}Fruits</Text>
+                        <CoPilotTouchableOpacity style={{alignItems: 'center', marginBottom: 100, opacity: 0.2, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Dried-Fruits')} >
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Dried{'\n'}Fruits</Text>
                             <Text style={{ height: 2, marginTop: 5}}></Text>
                         </CoPilotTouchableOpacity>
                     </CopilotStep>
                     <CopilotStep text={'Explore exotics !'} order={5} name={'exotics'}>
-                        <CoPilotTouchableOpacity style={{alignItems: 'center', margin: hp(4), marginBottom: 75, opacity: 0.2, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Exotics')} >
-                            <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4.5)}}>Exotics</Text>
+                        <CoPilotTouchableOpacity style={{alignItems: 'center', opacity: 0.2, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Exotics')} >
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Exotics</Text>
                             <Text style={{ height: 2, marginTop: 5}}></Text>
                         </CoPilotTouchableOpacity>
                     </CopilotStep>
@@ -577,14 +482,14 @@ function Fruits(props) {
                                 />
                             </View>
                         </View>
-                        <Animated.FlatList 
+                        <FlatList 
                             data={filteredList}
                             contentContainerStyle={{paddingBottom: 100}}
                             showsVerticalScrollIndicator={false}
                             keyExtractor={(item, index) => index.toString()}
-                            ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
+                            ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                             renderItem={({ item, index }) => (
-                                    <FlipCard friction={500} flipHorizontal={true} flipVertical={false} useNativeDriver={true} onFlipStart={() => LayoutAnimation.configureNext(LayoutAnimation.Presets.spring)}>
+                                    <FlipCard friction={500} flipHorizontal={true} flipVertical={false} useNativeDriver={true} >
                                         {index === 0 ? 
                                             <CopilotStep text={'Touch the respective card for more information !'} order={2} name={'Card'}>
                                                 <CoPilotView key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: 10, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
@@ -602,9 +507,9 @@ function Fruits(props) {
                                                             {exists(item) ?
                                                                 item.detail.map((item2) => {
                                                                     return item2.quantity === exists(item) ?
-                                                                    <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
+                                                                    <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>{item2.quantity}</Text>: null 
                                                                 })
-                                                                : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
+                                                                : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>{item.detail[0].quantity}</Text>
                                                             }
                                                             <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
                                                         </TouchableOpacity>
@@ -613,25 +518,25 @@ function Fruits(props) {
                                                         <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                                     </View>
                                                     <View style={{flex: 1}}>
-                                                        <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
+                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
                                                         {exists(item) ? 
                                                             item.detail.map((item2) => {
                                                                 return item2.quantity === exists(item) ?
                                                                 item2.previous_price > 0 ? 
                                                                 <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                                                     <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                                    <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
+                                                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
                                                                 </View>:
-                                                                <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                                                <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
                                                                 
                                                             }):  
                                                             
                                                             item.detail[0].previous_price > 0 ?
                                                             <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                                                 <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                                             </View>
-                                                            : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                                            : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                                         }
                                                         
                                                             {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -676,9 +581,9 @@ function Fruits(props) {
                                                         {exists(item) ?
                                                             item.detail.map((item2) => {
                                                                 return item2.quantity === exists(item) ?
-                                                                <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
+                                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>{item2.quantity}</Text>: null 
                                                             })
-                                                            : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
+                                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>{item.detail[0].quantity}</Text>
                                                         }
                                                         <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
                                                     </TouchableOpacity>
@@ -687,25 +592,25 @@ function Fruits(props) {
                                                     <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                                 </View>
                                                 <View style={{flex: 1}}>
-                                                    <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
+                                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
                                                     {exists(item) ? 
                                                         item.detail.map((item2) => {
                                                             return item2.quantity === exists(item) ?
                                                             item2.previous_price > 0 ? 
                                                             <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                                                 <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
+                                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
                                                             </View>:
-                                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
                                                             
                                                         }):  
                                                         
                                                         item.detail[0].previous_price > 0 ?
                                                         <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                                         </View>
-                                                        : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                                        : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                                     }
                                                     
                                                         {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -755,7 +660,7 @@ function Fruits(props) {
                                             <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1}}>{item.description}</Text>
                                             <Text style={{backgroundColor: '#ebebeb', height: 1, width: '90%', alignSelf: 'center', marginTop: 10}}></Text>
                                             <View style={{flex: 1, marginTop: 5}}>
-                                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 15}}>Nutrition per 100 g</Text>
+                                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15}}>Nutrition per 100 g</Text>
                                                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15, marginRight: 5, marginLeft: 5}}>
                                                     {item.nutritional_values.slice(0, 3).map((x, index) => {
                                                         return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 2 ? 0: 1, borderColor: '#b5b5b5'}}>
@@ -765,7 +670,7 @@ function Fruits(props) {
                                                                         x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                                         x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                                         x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                                        <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                                     </View>
                                                                     <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey', marginTop: 3}}>{x.value}</Text>
                                                                 </View>
@@ -780,7 +685,7 @@ function Fruits(props) {
                                                                         x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                                         x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                                         x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                                        <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                                     </View>
                                                                     <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey'}}>{x.value}</Text>
                                                                 </View>
@@ -788,7 +693,7 @@ function Fruits(props) {
                                                 </View>
                                             </View>
                                             <TouchableOpacity style={{marginTop: 15, marginLeft: 15, alignSelf: 'flex-start'}} onPress={() => navigation.navigate('NutritionCalculator', {Item: item, values: item.nutritional_values})}>
-                                                <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86'}}>Calculate how much you intake ! &rarr;</Text>
+                                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>Calculate how much you intake ! &rarr;</Text>
                                             </TouchableOpacity>
                                         </View>
                                     </FlipCard>
@@ -796,27 +701,27 @@ function Fruits(props) {
                         />
                     </View>
                 {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
-                <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 55, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
-                    <Text style={{flex: 1, textAlign: 'right', color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
-                    <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
-                        <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'sf-semi'}}>View Cart</Text>
+                <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', justifyContent: 'center', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 55, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
+                    <Text style={{color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
+                    <TouchableOpacity style={{marginLeft: 25}} onPress={() => navigation.navigate('cart')}>
+                        <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
                     </TouchableOpacity>
                 </Animated.View>
                 <View style={{width: '100%', position: 'absolute', bottom: 0, backgroundColor: '#fcfcfc', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51}}>
                     <View style={{flex: 1, alignItems: 'center'}}>
                         <TouchableOpacity onPress={() => navigation.navigate('Home')} activeOpacity={1}>
                             <CustomIcon name="home-1" size={wp(6)} style={{color: 'black', alignSelf: 'center'}} />
-                            <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Home</Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Home</Text>
                         </TouchableOpacity>         
                     </View>
                     <View style={{flex: 1}}>
                         <CustomIcon name="store" size={wp(6)} color="#249c86" style={{alignSelf: 'center'}} />
-                        <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: '#249c86', textAlign: 'center'}}>Store</Text>
+                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: '#249c86', textAlign: 'center'}}>Store</Text>
                     </View>
                     <View style={{flex: 1}}>
                         <TouchableOpacity onPress={() => navigation.navigate('Recipes')} activeOpacity={1}>
                             <CustomIcon name="salad-1" size={wp(6.5)} color="black" style={{alignSelf: 'center'}} />
-                            <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Recipes</Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Recipes</Text>
                         </TouchableOpacity>
                     </View>          
                 </View>
@@ -898,24 +803,24 @@ const StepNumberComponent = ({
         {
           !isLastStep ?
             <TouchableOpacity onPress={handleStop}>
-              <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.skip || 'Skip'}</Text>
+              <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.skip || 'Skip'}</Text>
             </TouchableOpacity>
             : null
         }
         {
           !isFirstStep ?
             <TouchableOpacity onPress={handlePrev}>
-              <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.previous || 'Previous'}</Text>
+              <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.previous || 'Previous'}</Text>
             </TouchableOpacity>
             : null
         }
         {
           !isLastStep ?
             <TouchableOpacity onPress={handleNext}>
-              <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.next || 'Next'}</Text>
+              <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.next || 'Next'}</Text>
             </TouchableOpacity> :
             <TouchableOpacity onPress={handleStop}>
-              <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.finish || 'Done'}</Text>
+              <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.finish || 'Done'}</Text>
             </TouchableOpacity>
         }
       </View>

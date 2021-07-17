@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, RefreshControl, ScrollView, SafeAreaView, Image, Button, TouchableOpacity, Animated, Dimensions, FlatList } from 'react-native';
+import { StyleSheet, Text, View, RefreshControl, ScrollView, SafeAreaView, Image, Button, TouchableOpacity, Animated, Dimensions, FlatList, ActivityIndicator } from 'react-native';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { Ionicons, FontAwesome, FontAwesome5, MaterialCommunityIcons, Feather, Entypo, MaterialIcons, AntDesign } from "@expo/vector-icons";
 import Svg, { Path, G, Rect } from 'react-native-svg';
@@ -23,7 +23,7 @@ export default function HomeProducts({ navigation, route }) {
     const [custom, setCustom] = useState([{item: 'default', value: 'default'}]);
     const dropDownRef = useRef([]);
 
-    const animation = new Animated.Value(0);
+    const [scrollY] = useState(new Animated.Value(0));
     const screenHeight = Dimensions.get("window").height;
 
     const [error, setError] = useState('');
@@ -160,35 +160,27 @@ export default function HomeProducts({ navigation, route }) {
     }
 
 
-    const handleOpen = () => {
-        Animated.timing(animation, {
-        toValue: 1,
-        duration: 1,
-        useNativeDriver: true,
+    const triggerOpenAnimation = () => {
+        Animated.timing(scrollY, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true
         }).start();
-    };
+    }
 
-
-    const handleClose = () => {
-        Animated.timing(animation, {
-        toValue: 0,
-        duration: 1000,
-        useNativeDriver: true,
+    const triggerCloseAnimation = () => {
+        Animated.timing(scrollY, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true
         }).start();
-        
-    };
+    }
 
-
-    const slideUp = {
-        transform: [
-        {
-            translateY: animation.interpolate({
-            inputRange: [0.01, 1],
-            outputRange: [0, -1 * screenHeight],
-            }),
-        },
-        ],
-    };
+    const slideUp = scrollY.interpolate({
+        inputRange: [0, 1],
+        outputRange: [150, 0],
+        extrapolate: 'clamp',
+    })
 
 
     const updateList = (item, index) => {
@@ -222,11 +214,11 @@ export default function HomeProducts({ navigation, route }) {
                 contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
-                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
+                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Banner1' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
@@ -241,9 +233,9 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
                                         <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
                                     </TouchableOpacity>
@@ -252,25 +244,25 @@ export default function HomeProducts({ navigation, route }) {
                                     <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                 </View>
                                 <View style={{flex: 1}}>
-                                    <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
+                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
                                     {exists(item) ? 
                                         item.detail.map((item2) => {
                                             return item2.quantity === exists(item) ?
                                             item2.previous_price > 0 ? 
                                             <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                                 <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
+                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
                                             </View>:
-                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
                                             
                                         }):  
                                         
                                         item.detail[0].previous_price > 0 ?
                                         <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                             <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                         </View>
-                                        : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                        : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                     }
                                     
                                         {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -298,7 +290,7 @@ export default function HomeProducts({ navigation, route }) {
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5)}}>Details</Text>
@@ -317,8 +309,9 @@ export default function HomeProducts({ navigation, route }) {
                                     : null}
                                 </View>
                                 <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1}}>{item.description}</Text>
+                                <Text style={{backgroundColor: '#ebebeb', height: 1, width: '90%', alignSelf: 'center', marginTop: 10}}></Text>
                                 <View style={{flex: 1, marginTop: 5}}>
-                                    <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 15}}>Nutrition per 100 g</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15}}>Nutrition per 100 g</Text>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
                                         {item.nutritional_values.slice(0, 3).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 2 ? 0: 1, borderColor: '#b5b5b5'}}>
@@ -328,7 +321,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey', marginTop: 3}}>{x.value}</Text>
                                                     </View>
@@ -338,32 +331,33 @@ export default function HomeProducts({ navigation, route }) {
                                         {item.nutritional_values.slice(3, 5).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 1 ? 0: 1, borderColor: '#b5b5b5'}}>
                                                         <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
+                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey'}}>{x.value}</Text>
                                                     </View>
                                         })}
                                     </View>
                                 </View>
+                                <TouchableOpacity style={{marginTop: 15, marginLeft: 15, alignSelf: 'flex-start'}} onPress={() => navigation.navigate('NutritionCalculator', {Item: item, values: item.nutritional_values})}>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>Calculate how much you intake ! &rarr;</Text>
+                                </TouchableOpacity>
                             </View>
                         </FlipCard>: null
                 }}
             />
 
-            {cartStatus !==401 ? cartData.length > 0 ? handleOpen(): handleClose(): null}
-            <View style={[styles.sheet]}>
-                <Animated.View style={[styles.popup, slideUp]}>
-                    <Text style={{flex: 1, textAlign: 'center'}}>Items added to your cart!</Text>
-                    <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center'}}>View Cart</Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
+            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
+            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{flex: 1, textAlign: 'right', color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
+                <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
+                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
+                </TouchableOpacity>
+            </Animated.View>
         </View>
     )
 
@@ -377,11 +371,11 @@ export default function HomeProducts({ navigation, route }) {
                 contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
-                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
+                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Banner2' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
@@ -396,9 +390,9 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
                                         <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
                                     </TouchableOpacity>
@@ -407,25 +401,25 @@ export default function HomeProducts({ navigation, route }) {
                                     <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                 </View>
                                 <View style={{flex: 1}}>
-                                    <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
+                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
                                     {exists(item) ? 
                                         item.detail.map((item2) => {
                                             return item2.quantity === exists(item) ?
                                             item2.previous_price > 0 ? 
                                             <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                                 <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
+                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
                                             </View>:
-                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
                                             
                                         }):  
                                         
                                         item.detail[0].previous_price > 0 ?
                                         <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                             <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                         </View>
-                                        : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                        : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                     }
                                     
                                         {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -453,7 +447,7 @@ export default function HomeProducts({ navigation, route }) {
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5)}}>Details</Text>
@@ -472,8 +466,9 @@ export default function HomeProducts({ navigation, route }) {
                                     : null}
                                 </View>
                                 <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1}}>{item.description}</Text>
+                                <Text style={{backgroundColor: '#ebebeb', height: 1, width: '90%', alignSelf: 'center', marginTop: 10}}></Text>
                                 <View style={{flex: 1, marginTop: 5}}>
-                                    <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 15}}>Nutrition per 100 g</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15}}>Nutrition per 100 g</Text>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
                                         {item.nutritional_values.slice(0, 3).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 2 ? 0: 1, borderColor: '#b5b5b5'}}>
@@ -483,7 +478,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey', marginTop: 3}}>{x.value}</Text>
                                                     </View>
@@ -493,32 +488,33 @@ export default function HomeProducts({ navigation, route }) {
                                         {item.nutritional_values.slice(3, 5).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 1 ? 0: 1, borderColor: '#b5b5b5'}}>
                                                         <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
+                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey'}}>{x.value}</Text>
                                                     </View>
                                         })}
                                     </View>
                                 </View>
+                                <TouchableOpacity style={{marginTop: 15, marginLeft: 15, alignSelf: 'flex-start'}} onPress={() => navigation.navigate('NutritionCalculator', {Item: item, values: item.nutritional_values})}>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>Calculate how much you intake ! &rarr;</Text>
+                                </TouchableOpacity>
                             </View>
                         </FlipCard>: null
                 }}
             />
 
-            {cartStatus !==401 ? cartData.length > 0 ? handleOpen(): handleClose(): null}
-            <View style={[styles.sheet]}>
-                <Animated.View style={[styles.popup, slideUp]}>
-                    <Text style={{flex: 1, textAlign: 'center'}}>Items added to your cart!</Text>
-                    <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center'}}>View Cart</Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
+            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
+            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{flex: 1, textAlign: 'right', color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
+                <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
+                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
+                </TouchableOpacity>
+            </Animated.View>
         </View>
     )
 
@@ -536,11 +532,11 @@ export default function HomeProducts({ navigation, route }) {
                 contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
-                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
+                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Custom1' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
@@ -555,9 +551,9 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
                                         <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
                                     </TouchableOpacity>
@@ -566,25 +562,25 @@ export default function HomeProducts({ navigation, route }) {
                                     <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                 </View>
                                 <View style={{flex: 1}}>
-                                    <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
+                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
                                     {exists(item) ? 
                                         item.detail.map((item2) => {
                                             return item2.quantity === exists(item) ?
                                             item2.previous_price > 0 ? 
                                             <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                                 <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
+                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
                                             </View>:
-                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
                                             
                                         }):  
                                         
                                         item.detail[0].previous_price > 0 ?
                                         <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                             <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                         </View>
-                                        : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                        : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                     }
                                     
                                         {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -612,7 +608,7 @@ export default function HomeProducts({ navigation, route }) {
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5)}}>Details</Text>
@@ -631,8 +627,9 @@ export default function HomeProducts({ navigation, route }) {
                                     : null}
                                 </View>
                                 <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1}}>{item.description}</Text>
+                                <Text style={{backgroundColor: '#ebebeb', height: 1, width: '90%', alignSelf: 'center', marginTop: 10}}></Text>
                                 <View style={{flex: 1, marginTop: 5}}>
-                                    <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 15}}>Nutrition per 100 g</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15}}>Nutrition per 100 g</Text>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
                                         {item.nutritional_values.slice(0, 3).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 2 ? 0: 1, borderColor: '#b5b5b5'}}>
@@ -642,7 +639,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey', marginTop: 3}}>{x.value}</Text>
                                                     </View>
@@ -652,32 +649,33 @@ export default function HomeProducts({ navigation, route }) {
                                         {item.nutritional_values.slice(3, 5).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 1 ? 0: 1, borderColor: '#b5b5b5'}}>
                                                         <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
+                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey'}}>{x.value}</Text>
                                                     </View>
                                         })}
                                     </View>
                                 </View>
+                                <TouchableOpacity style={{marginTop: 15, marginLeft: 15, alignSelf: 'flex-start'}} onPress={() => navigation.navigate('NutritionCalculator', {Item: item, values: item.nutritional_values})}>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>Calculate how much you intake ! &rarr;</Text>
+                                </TouchableOpacity>
                             </View>
                         </FlipCard>: null
                 }}
             />
 
-            {cartStatus !==401 ? cartData.length > 0 ? handleOpen(): handleClose(): null}
-            <View style={[styles.sheet]}>
-                <Animated.View style={[styles.popup, slideUp]}>
-                    <Text style={{flex: 1, textAlign: 'center'}}>Items added to your cart!</Text>
-                    <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center'}}>View Cart</Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
+            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
+            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{flex: 1, textAlign: 'right', color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
+                <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
+                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
+                </TouchableOpacity>
+            </Animated.View>
         </View>
     )
 
@@ -691,11 +689,11 @@ export default function HomeProducts({ navigation, route }) {
                 contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
-                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
+                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Custom2' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
@@ -710,9 +708,9 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
                                         <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
                                     </TouchableOpacity>
@@ -721,25 +719,25 @@ export default function HomeProducts({ navigation, route }) {
                                     <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                 </View>
                                 <View style={{flex: 1}}>
-                                    <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
+                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
                                     {exists(item) ? 
                                         item.detail.map((item2) => {
                                             return item2.quantity === exists(item) ?
                                             item2.previous_price > 0 ? 
                                             <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                                 <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
+                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
                                             </View>:
-                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
                                             
                                         }):  
                                         
                                         item.detail[0].previous_price > 0 ?
                                         <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                             <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                         </View>
-                                        : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                        : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                     }
                                     
                                         {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -767,7 +765,7 @@ export default function HomeProducts({ navigation, route }) {
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5)}}>Details</Text>
@@ -786,8 +784,9 @@ export default function HomeProducts({ navigation, route }) {
                                     : null}
                                 </View>
                                 <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1}}>{item.description}</Text>
+                                <Text style={{backgroundColor: '#ebebeb', height: 1, width: '90%', alignSelf: 'center', marginTop: 10}}></Text>
                                 <View style={{flex: 1, marginTop: 5}}>
-                                    <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 15}}>Nutrition per 100 g</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15}}>Nutrition per 100 g</Text>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
                                         {item.nutritional_values.slice(0, 3).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 2 ? 0: 1, borderColor: '#b5b5b5'}}>
@@ -797,7 +796,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey', marginTop: 3}}>{x.value}</Text>
                                                     </View>
@@ -807,32 +806,33 @@ export default function HomeProducts({ navigation, route }) {
                                         {item.nutritional_values.slice(3, 5).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 1 ? 0: 1, borderColor: '#b5b5b5'}}>
                                                         <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
+                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey'}}>{x.value}</Text>
                                                     </View>
                                         })}
                                     </View>
                                 </View>
+                                <TouchableOpacity style={{marginTop: 15, marginLeft: 15, alignSelf: 'flex-start'}} onPress={() => navigation.navigate('NutritionCalculator', {Item: item, values: item.nutritional_values})}>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>Calculate how much you intake ! &rarr;</Text>
+                                </TouchableOpacity>
                             </View>
                         </FlipCard>: null
                 }}
             />
 
-            {cartStatus !==401 ? cartData.length > 0 ? handleOpen(): handleClose(): null}
-            <View style={[styles.sheet]}>
-                <Animated.View style={[styles.popup, slideUp]}>
-                    <Text style={{flex: 1, textAlign: 'center'}}>Items added to your cart!</Text>
-                    <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center'}}>View Cart</Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
+            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
+            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{flex: 1, textAlign: 'right', color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
+                <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
+                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
+                </TouchableOpacity>
+            </Animated.View>
         </View>
     )
 
@@ -846,11 +846,11 @@ export default function HomeProducts({ navigation, route }) {
                 contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
-                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
+                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Custom3' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
@@ -865,9 +865,9 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
                                         <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
                                     </TouchableOpacity>
@@ -876,25 +876,25 @@ export default function HomeProducts({ navigation, route }) {
                                     <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                 </View>
                                 <View style={{flex: 1}}>
-                                    <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
+                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
                                     {exists(item) ? 
                                         item.detail.map((item2) => {
                                             return item2.quantity === exists(item) ?
                                             item2.previous_price > 0 ? 
                                             <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                                 <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
+                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
                                             </View>:
-                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
                                             
                                         }):  
                                         
                                         item.detail[0].previous_price > 0 ?
                                         <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                             <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                         </View>
-                                        : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                        : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                     }
                                     
                                         {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -922,7 +922,7 @@ export default function HomeProducts({ navigation, route }) {
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5)}}>Details</Text>
@@ -941,8 +941,9 @@ export default function HomeProducts({ navigation, route }) {
                                     : null}
                                 </View>
                                 <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1}}>{item.description}</Text>
+                                <Text style={{backgroundColor: '#ebebeb', height: 1, width: '90%', alignSelf: 'center', marginTop: 10}}></Text>
                                 <View style={{flex: 1, marginTop: 5}}>
-                                    <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 15}}>Nutrition per 100 g</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15}}>Nutrition per 100 g</Text>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
                                         {item.nutritional_values.slice(0, 3).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 2 ? 0: 1, borderColor: '#b5b5b5'}}>
@@ -952,7 +953,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey', marginTop: 3}}>{x.value}</Text>
                                                     </View>
@@ -962,32 +963,33 @@ export default function HomeProducts({ navigation, route }) {
                                         {item.nutritional_values.slice(3, 5).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 1 ? 0: 1, borderColor: '#b5b5b5'}}>
                                                         <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
+                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey'}}>{x.value}</Text>
                                                     </View>
                                         })}
                                     </View>
                                 </View>
+                                <TouchableOpacity style={{marginTop: 15, marginLeft: 15, alignSelf: 'flex-start'}} onPress={() => navigation.navigate('NutritionCalculator', {Item: item, values: item.nutritional_values})}>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>Calculate how much you intake ! &rarr;</Text>
+                                </TouchableOpacity>
                             </View>
                         </FlipCard>: null
                 }}
             />
 
-            {cartStatus !==401 ? cartData.length > 0 ? handleOpen(): handleClose(): null}
-            <View style={[styles.sheet]}>
-                <Animated.View style={[styles.popup, slideUp]}>
-                    <Text style={{flex: 1, textAlign: 'center'}}>Items added to your cart!</Text>
-                    <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center'}}>View Cart</Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
+            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
+            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{flex: 1, textAlign: 'right', color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
+                <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
+                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
+                </TouchableOpacity>
+            </Animated.View>
         </View>
     )
 
@@ -1001,11 +1003,11 @@ export default function HomeProducts({ navigation, route }) {
                 contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
-                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
+                ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Custom4' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
@@ -1020,9 +1022,9 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86', fontWeight: 'bold'}}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
                                         <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
                                     </TouchableOpacity>
@@ -1031,25 +1033,25 @@ export default function HomeProducts({ navigation, route }) {
                                     <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                 </View>
                                 <View style={{flex: 1}}>
-                                    <Text style={{textAlign: 'center', fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 5}}>{item.name}</Text>
+                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
                                     {exists(item) ? 
                                         item.detail.map((item2) => {
                                             return item2.quantity === exists(item) ?
                                             item2.previous_price > 0 ? 
                                             <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                                 <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text>
+                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
                                             </View>:
-                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item2.price}</Text> : null
+                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
                                             
                                         }):  
                                         
                                         item.detail[0].previous_price > 0 ?
                                         <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
                                             <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                         </View>
-                                        : <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}>&#8377; {item.detail[0].price}</Text>
+                                        : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
                                     }
                                     
                                         {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -1077,7 +1079,7 @@ export default function HomeProducts({ navigation, route }) {
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 1, height: 1}, shadowRadius: 1.5, shadowOpacity: 0.3, elevation: 2, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5)}}>Details</Text>
@@ -1096,8 +1098,9 @@ export default function HomeProducts({ navigation, route }) {
                                     : null}
                                 </View>
                                 <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1}}>{item.description}</Text>
+                                <Text style={{backgroundColor: '#ebebeb', height: 1, width: '90%', alignSelf: 'center', marginTop: 10}}></Text>
                                 <View style={{flex: 1, marginTop: 5}}>
-                                    <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 15}}>Nutrition per 100 g</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15}}>Nutrition per 100 g</Text>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
                                         {item.nutritional_values.slice(0, 3).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 2 ? 0: 1, borderColor: '#b5b5b5'}}>
@@ -1107,7 +1110,7 @@ export default function HomeProducts({ navigation, route }) {
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey', marginTop: 3}}>{x.value}</Text>
                                                     </View>
@@ -1117,32 +1120,33 @@ export default function HomeProducts({ navigation, route }) {
                                         {item.nutritional_values.slice(3, 5).map((x, index) => {
                                             return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 1 ? 0: 1, borderColor: '#b5b5b5'}}>
                                                         <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="brown" />: 
+                                                            {x.name === 'Protein' ? <MaterialCommunityIcons name="arm-flex" size={wp(4)} color="#c58c85" />: 
                                                             x.name === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                                                             x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                             x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                             x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf-semi', fontSize: wp(4)}}> {x.name}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
                                                         </View>
                                                         <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey'}}>{x.value}</Text>
                                                     </View>
                                         })}
                                     </View>
                                 </View>
+                                <TouchableOpacity style={{marginTop: 15, marginLeft: 15, alignSelf: 'flex-start'}} onPress={() => navigation.navigate('NutritionCalculator', {Item: item, values: item.nutritional_values})}>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>Calculate how much you intake ! &rarr;</Text>
+                                </TouchableOpacity>
                             </View>
                         </FlipCard>: null
                 }}
             />
 
-            {cartStatus !==401 ? cartData.length > 0 ? handleOpen(): handleClose(): null}
-            <View style={[styles.sheet]}>
-                <Animated.View style={[styles.popup, slideUp]}>
-                    <Text style={{flex: 1, textAlign: 'center'}}>Items added to your cart!</Text>
-                    <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center'}}>View Cart</Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
+            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
+            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{flex: 1, textAlign: 'right', color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
+                <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('cart')}>
+                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
+                </TouchableOpacity>
+            </Animated.View>
         </View>
     )
 
@@ -1155,7 +1159,7 @@ export default function HomeProducts({ navigation, route }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#fafafa',
         paddingTop: hp(5),
     },
     sheet: {

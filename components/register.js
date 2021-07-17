@@ -83,16 +83,16 @@ export default function Register({ navigation }) {
                     <Polygon fill="#41479B"  points="255.691,256.746 267.793,263.252 295.449,273.214 296.067,271.723 269.466,259.211    256.309,255.254  "/>
                     <Polygon fill="#41479B"  points="255.254,255.691 259.211,242.534 271.723,215.933 273.214,216.551 263.252,244.207    256.746,256.309  "/>
                     <Polygon fill="#41479B"  points="255.254,255.691 248.748,267.793 238.786,295.449 240.277,296.067 252.789,269.466    256.746,256.309  "/></G><Circle fill="#F5F5F5" cx="256" cy="256" r="7.256"/><Circle fill="#41479B" cx="256" cy="256" r="4.351"/><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G></Svg>
-                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4)}}> +91 </Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}> +91 </Text>
                     <TextInput style={{ height: 30, width: wp(50), marginLeft: 10, fontFamily: 'sf', fontSize: wp(4), borderBottomWidth: 1, borderBottomColor: '#f0f0f0' }} placeholder={'Mobile number'} 
                     onChangeText={(text) => setPhone(text)} keyboardType={'numeric'} maxLength={10} />               
                 </View>
                 {phone.length <= 9 || phone === 0 || disabled ? 
                     <TouchableOpacity disabled={true} style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}: {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}} >
-                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5)}}>&#x27F6;</Text>
+                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5)}}>&#x27F6;</Text>
                     </TouchableOpacity>:
                     <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}: {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}} onPress={Register} activeOpacity={0.8} >
-                        <Text style={{opacity: 1, fontFamily: 'sofia-bold', fontSize: wp(5), textAlign: 'center'}}>&#x27F6;</Text>
+                        <Text style={{opacity: 1, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center'}}>&#x27F6;</Text>
                     </TouchableOpacity>
                 }
         </View>

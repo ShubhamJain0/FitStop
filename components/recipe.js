@@ -272,102 +272,9 @@ function Recipe(props){
 
     if (loading === 'true') {
       return (
-        <SafeAreaView style={{backgroundColor: '#fafafa', flex: 1, paddingTop: 50}}>
-          <SkeletonPlaceholder>
-            <SkeletonPlaceholder.Item height={hp(99)}>
-              <SkeletonPlaceholder.Item paddingLeft={25} paddingRight={25} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
-                <SkeletonPlaceholder.Item 
-                  width={wp(10)}
-                  height={wp(10)}
-                  borderRadius={10}
-                />
-                <SkeletonPlaceholder.Item 
-                  width={wp(10)}
-                  height={wp(10)}
-                  borderRadius={10}
-                />
-              </SkeletonPlaceholder.Item>
-              <SkeletonPlaceholder.Item 
-                width={wp(60)}
-                height={wp(5)}
-                borderRadius={5}
-                margin={25}
-                marginBottom={0}
-              />
-              <SkeletonPlaceholder.Item padding={25} flexDirection={'row'} justifyContent={'space-between'}>
-                <SkeletonPlaceholder.Item marginTop={hp(5)} marginLeft={15}>
-                  <SkeletonPlaceholder.Item 
-                    width={wp(5)}
-                    height={wp(20)}
-                    borderRadius={5}
-                    marginBottom={hp(8)}
-                  />
-                  <SkeletonPlaceholder.Item 
-                    width={wp(5)}
-                    height={wp(20)}
-                    borderRadius={5}
-                    marginBottom={hp(8)}
-                  />
-                  <SkeletonPlaceholder.Item 
-                    width={wp(5)}
-                    height={wp(20)}
-                    borderRadius={5}
-                    marginBottom={100}
-                  />
-                </SkeletonPlaceholder.Item>
-                <SkeletonPlaceholder.Item marginTop={hp(5)}>
-                  <SkeletonPlaceholder.Item  
-                    width={wp(50)}
-                    height={wp(70)}
-                    borderRadius={10}
-                  />
-                  <SkeletonPlaceholder.Item  
-                    width={wp(50)}
-                    height={wp(70)}
-                    borderRadius={10}
-                    marginTop={50}
-                  />
-                  <SkeletonPlaceholder.Item  
-                    width={wp(50)}
-                    height={wp(70)}
-                    borderRadius={10}
-                    marginTop={50}
-                  />
-                  <SkeletonPlaceholder.Item  
-                    width={wp(50)}
-                    height={wp(70)}
-                    borderRadius={10}
-                    marginTop={50}
-                  />
-                </SkeletonPlaceholder.Item>
-              </SkeletonPlaceholder.Item>
-            </SkeletonPlaceholder.Item>
-          </SkeletonPlaceholder>
-          <View style={{position: 'absolute', bottom: 0, backgroundColor: '#fafafa', width: '100%'}}>
-            <SkeletonPlaceholder>
-              <SkeletonPlaceholder.Item paddingTop={15} padding={10} flexDirection={'row'} alignItems={'center'}>
-                  <SkeletonPlaceholder.Item 
-                    width={wp(9)}
-                    height={wp(9)}
-                    marginLeft={wp(10)}
-                    borderRadius={10}
-                  />
-                  <SkeletonPlaceholder.Item 
-                    width={wp(9)}
-                    height={wp(9)}
-                    marginLeft={wp(25)}
-                    borderRadius={10}
-                  />
-                  <SkeletonPlaceholder.Item 
-                    width={wp(9)}
-                    height={wp(9)}
-                    marginLeft={wp(25)}
-                    borderRadius={10}
-                  />
-              </SkeletonPlaceholder.Item>
-            </SkeletonPlaceholder>
-          </View>
-        </SafeAreaView>
+        <View style={{flex: 1, backgroundColor: '#fafafa', justifyContent: 'center', alignItems: 'center'}}>
+          <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
+        </View>
       )
     }
 
@@ -396,22 +303,22 @@ function Recipe(props){
               <Text style={{fontFamily: 'sofia-black', fontSize: wp(7)}}>{category} Recipes</Text>
             </View>
             <View style={{flex: 1, flexDirection: 'row'}}>
-              <View style={{flex: 0.5, marginTop: 75, justifyContent: 'center'}}>
+              <View style={{flex: 0.5, marginTop: hp(13)}}>
                 <CopilotStep text={'Start you day with healthy and delicious breakfast !'} order={1} name={'Breakfast'}>
                   <CoPilotTouchableOpacity style={{marginBottom: 100, transform: [{rotate: '-90deg'}]}} onPress={() => setCategory('Break Fast')} activeOpacity={0.8}>
-                    <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4.5), textAlign: 'center', opacity: category === 'Break Fast' ? 1 : 0.2}}>Break Fast</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', opacity: category === 'Break Fast' ? 1 : 0.2}}>Break Fast</Text>
                     {category === 'Break Fast' ? <Text style={{backgroundColor: '#249C86', height: 2, width: '50%', marginTop: 5, alignSelf: 'center'}}></Text> : <Text style={{ height: 2, marginTop: 5}}></Text>}
                   </CoPilotTouchableOpacity>
                 </CopilotStep>
                 <CopilotStep text={'Never miss your mid-day meal !'} order={2} name={'Lunch'}>
                   <CoPilotTouchableOpacity style={{marginBottom: 100, transform: [{rotate: '-90deg'}]}} onPress={() => setCategory('Lunch')} activeOpacity={0.8}>
-                    <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4.5), textAlign: 'center', opacity: category === 'Lunch' ? 1 : 0.2}}>Lunch</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', opacity: category === 'Lunch' ? 1 : 0.2}}>Lunch</Text>
                     {category === 'Lunch' ? <Text style={{backgroundColor: '#249C86', height: 2, width: '35%', marginTop: 5, alignSelf: 'center'}}></Text> : <Text style={{ height: 2, marginTop: 5}}></Text>}
                   </CoPilotTouchableOpacity>
                 </CopilotStep>
                 <CopilotStep text={'End your day with a healthy dinner !'} order={3} name={'Dinner'}>
                   <CoPilotTouchableOpacity style={{marginBottom: 100, transform: [{rotate: '-90deg'}]}} onPress={() => setCategory('Dinner')} activeOpacity={0.8}>
-                    <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4.5), textAlign: 'center', opacity: category === 'Dinner' ? 1 : 0.2}}>Dinner</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', opacity: category === 'Dinner' ? 1 : 0.2}}>Dinner</Text>
                     {category === 'Dinner' ? <Text style={{backgroundColor: '#249C86', height: 2, width: '35%', marginTop: 5, alignSelf: 'center'}}></Text> : <Text style={{ height: 2, marginTop: 5}}></Text>}
                   </CoPilotTouchableOpacity>
                 </CopilotStep>
@@ -422,7 +329,7 @@ function Recipe(props){
                     data={filteredList}
                     keyExtractor={(item, index) => index.toString()}
                     contentContainerStyle={{paddingLeft: 20, paddingBottom: 100}}
-                    ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
+                    ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
                     renderItem={({ item, index }) => (
                       item.category === 'Breakfast' ?
                         <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}} >
@@ -431,16 +338,16 @@ function Recipe(props){
                             </View>
                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
                               <MaterialIcons name="local-fire-department" size={wp(4.5)} color="#249C86" />
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
                               <Ionicons name="ios-people" size={wp(4)} color="#249c86" />
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings}</Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings}</Text>
                             </View>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 5}}>
                               <View style={{ flex: 1, alignItems: 'flex-end'}}>
                                 <MaterialIcons name="favorite" size={wp(4)} color="#249C86" />
                               </View>
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                             </View>
                             <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15}}>{item.name}</Text>
                             <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 15, color: '#525252'}} numberOfLines={5} ellipsizeMode={'tail'}>{item.description}</Text>
@@ -467,7 +374,7 @@ function Recipe(props){
                                 }
                               </View>
                               <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('RecipeDetails', {recipe_id: item.id, recipe_ingredients: ingredients})}>
-                                <Text style={{textAlign: 'right', fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
+                                <Text style={{textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
                               </TouchableOpacity>
                             </View>
                         </View>
@@ -479,7 +386,7 @@ function Recipe(props){
                     data={filteredList}
                     keyExtractor={(item, index) => index.toString()}
                     contentContainerStyle={{paddingLeft: 20, paddingBottom: 100}}
-                    ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
+                    ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
                     renderItem={({ item }) => (
                       item.category === 'Lunch' ?
                         <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}} >
@@ -488,16 +395,16 @@ function Recipe(props){
                             </View>
                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
                               <MaterialIcons name="local-fire-department" size={wp(4.5)} color="#249C86" />
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
                               <Ionicons name="ios-people" size={wp(4)} color="#249c86" />
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings} </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings} </Text>
                             </View>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 5}}>
                               <View style={{ flex: 1, alignItems: 'flex-end'}}>
                                 <MaterialIcons name="favorite" size={wp(4)} color="#249C86" />
                               </View>
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                             </View>
                             <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15}}>{item.name}</Text>
                             <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 15, color: '#525252'}} numberOfLines={5} ellipsizeMode={'tail'}>{item.description}</Text>
@@ -518,7 +425,7 @@ function Recipe(props){
                                 }
                               </View>
                               <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('RecipeDetails', {recipe_id: item.id, recipe_ingredients: ingredients})}>
-                                <Text style={{textAlign: 'right', fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
+                                <Text style={{textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
                               </TouchableOpacity>
                             </View>
                         </View>
@@ -529,7 +436,7 @@ function Recipe(props){
                     data={filteredList}
                     keyExtractor={(item, index) => index.toString()}
                     contentContainerStyle={{paddingLeft: 20, paddingBottom: 100}}
-                    ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'sf-semi', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
+                    ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
                     renderItem={({ item }) => (
                       item.category === 'Dinner' ?
                         <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}} >
@@ -538,16 +445,16 @@ function Recipe(props){
                             </View>
                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
                               <MaterialIcons name="local-fire-department" size={wp(4.5)} color="#249C86" />
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
                               <Ionicons name="ios-people" size={wp(4)} color="#249c86" />
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings} </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings} </Text>
                             </View>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 5}}>
                               <View style={{ flex: 1, alignItems: 'flex-end'}}>
                                 <MaterialIcons name="favorite" size={wp(4)} color="#249C86" />
                               </View>
-                              <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
+                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                             </View>
                             <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15}}>{item.name}</Text>
                             <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 15, color: '#525252'}} numberOfLines={5} ellipsizeMode={'tail'}>{item.description}</Text>
@@ -568,7 +475,7 @@ function Recipe(props){
                                 }
                               </View>
                               <TouchableOpacity style={{flex: 1}} onPress={() => navigation.navigate('RecipeDetails', {recipe_id: item.id, recipe_ingredients: ingredients})}>
-                                <Text style={{textAlign: 'right', fontFamily: 'sf-semi', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
+                                <Text style={{textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
                               </TouchableOpacity>
                             </View>
                         </View>
@@ -582,18 +489,18 @@ function Recipe(props){
                 <View style={{flex: 1}}>
                     <TouchableOpacity onPress={() => navigation.navigate('Home')} activeOpacity={1}>
                       <CustomIcon name="home-1" size={wp(6)} style={{color: 'black', alignSelf: 'center'}} />
-                      <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Home</Text>
+                      <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Home</Text>
                     </TouchableOpacity>         
                 </View>
                 <View style={{flex: 1}}>
                   <TouchableOpacity onPress={() => navigation.navigate('Fruits')} activeOpacity={1}>
                   <CustomIcon name="store-1" size={wp(6)} style={{color: 'black', alignSelf: 'center'}} />
-                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Store</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Store</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={{flex: 1}}>
                     <CustomIcon name="salad" size={wp(6.5)} style={{color: '#249c86', alignSelf: 'center'}} />
-                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: '#249c86', textAlign: 'center'}}>Recipes</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: '#249c86', textAlign: 'center'}}>Recipes</Text>
                 </View>          
             </View>
         </View>
@@ -642,24 +549,24 @@ const TooltipComponent = ({
       {
         !isLastStep ?
           <TouchableOpacity onPress={handleStop}>
-            <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.skip || 'Skip'}</Text>
+            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.skip || 'Skip'}</Text>
           </TouchableOpacity>
           : null
       }
       {
         !isFirstStep ?
           <TouchableOpacity onPress={handlePrev}>
-            <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.previous || 'Previous'}</Text>
+            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.previous || 'Previous'}</Text>
           </TouchableOpacity>
           : null
       }
       {
         !isLastStep ?
           <TouchableOpacity onPress={handleNext}>
-            <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.next || 'Next'}</Text>
+            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.next || 'Next'}</Text>
           </TouchableOpacity> :
           <TouchableOpacity onPress={handleStop}>
-            <Text style={{padding: 10, fontFamily: 'sf-semi', color: '#249c86'}}>{labels.finish || 'Done'}</Text>
+            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.finish || 'Done'}</Text>
           </TouchableOpacity>
       }
     </View>

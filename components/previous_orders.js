@@ -168,10 +168,10 @@ export default function PreviousOrders({ navigation, route }) {
                             <View style={{marginBottom: 50, backgroundColor: 'white', width: '85%', padding: 25, paddingTop: 15, paddingBottom: 15, borderRadius: 10, alignSelf: 'center', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}}>
                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                     <View style={{flex: 1}}>
-                                        <Text style={{fontFamily: 'sofia-black', fontSize: wp(4)}}>Order #{item.id}</Text>
-                                        <Text style={{fontFamily: 'sf-semi', fontSize: wp(3), color: 'grey', marginTop: 2}}>{item.ordereddate}</Text>
+                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Order #{item.id}</Text>
+                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'grey', marginTop: 2}}>{item.ordereddate}</Text>
                                     </View>
-                                    <Text style={{fontFamily: 'sofia-medium', fontSize: wp(4)}}>&#8377; {item.total_price}</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>&#8377; {item.total_price}</Text>
                                 </View>
                                 
                                 {items.map(item1 => {
@@ -188,7 +188,7 @@ export default function PreviousOrders({ navigation, route }) {
                                                     })
                                                 : null}
                                                 <View style={{marginLeft: 25, marginTop: 5}}>
-                                                    <Text style={{fontFamily: 'sf-semi', fontSize: wp(4), fontWeight: 'bold'}}>{x.item_name} </Text>
+                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>{x.item_name} </Text>
                                                     <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5}}>{x.item_weight}     x{x.item_count}</Text>
                                                 </View>
                                             </View>
@@ -203,9 +203,9 @@ export default function PreviousOrders({ navigation, route }) {
                                 <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 15}}></Text>
                                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10}}>
                                     <TouchableOpacity style={{alignSelf: 'flex-start', flex: 1}} onPress={repeatOrder(item)}>
-                                        <Text style={{fontSize: wp(4), color: '#249C86', fontFamily: 'sf-semi'}}> Repeat Order</Text>
+                                        <Text style={{fontSize: wp(4), color: '#249C86', fontFamily: 'Maison-bold'}}> Repeat Order</Text>
                                     </TouchableOpacity>
-                                    {getStatus(item) ? <Text style={{fontFamily: 'sf-semi', color: 'blue', backgroundColor: '#f0f0ff', padding: 3, fontSize: wp(3)}}>{getStatus(item)}</Text>: item.delivery_and_package_rating > 0 ? <View style={{flexDirection: 'row', alignItems: 'center'}}><Text style={{fontFamily: 'sf-semi', fontSize: wp(4)}}>{item.delivery_and_package_rating} </Text><FontAwesome name="star" size={wp(3.5)} color="#249C86" /></View>: <TouchableOpacity onPress={() => navigation.navigate('Reviews', {rateItem: item})}><Text style={{fontFamily: 'sf-semi', textDecorationLine: 'underline', fontSize: wp(3.5)}}>Rate Order</Text></TouchableOpacity>}
+                                    {getStatus(item) ? <Text style={{fontFamily: 'Maison-bold', color: 'blue', backgroundColor: '#f0f0ff', padding: 3, fontSize: wp(3)}}>{getStatus(item)}</Text>: item.delivery_and_package_rating > 0 ? <View style={{flexDirection: 'row', alignItems: 'center'}}><Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>{item.delivery_and_package_rating} </Text><FontAwesome name="star" size={wp(3.5)} color="#249C86" /></View>: <TouchableOpacity onPress={() => navigation.navigate('Reviews', {rateItem: item})}><Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline', fontSize: wp(3.5)}}>Rate Order</Text></TouchableOpacity>}
                                 </View>
                             </View>
                             
@@ -216,9 +216,9 @@ export default function PreviousOrders({ navigation, route }) {
             : status === 404 ? 
                     <View style={{flex: 1, justifyContent: 'center'}}>
                         <Image source={require('../assets/not-found.png')} style={{width: '85%', height: 2071*(screenWidth/3994), alignSelf: 'center'}} />
-                        <Text style={{marginTop: 50, fontFamily: 'sf-semi', fontSize: wp(5), textAlign: 'center'}}>You haven't placed any order yet.</Text>
-                        <TouchableOpacity activeOpacity={0.8} style={{marginTop: 5, alignSelf: 'center'}} onPress={() => (navigation.popToTop(), navigation.navigate('Fruits'))}>
-                            <Text style={{fontFamily: 'sf-semi', fontSize: wp(6), textAlign: 'center', color: '#99b898'}}>Place an order now!</Text>
+                        <Text style={{marginTop: 50, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center'}}>You haven't placed any order yet.</Text>
+                        <TouchableOpacity activeOpacity={0.8} style={{marginTop: 15, alignSelf: 'center'}} onPress={() => (navigation.popToTop(), navigation.navigate('Fruits'))}>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: '#249c86'}}>ORDER NOW</Text>
                         </TouchableOpacity>
                     </View>
                     
@@ -234,6 +234,7 @@ export default function PreviousOrders({ navigation, route }) {
                 animationInTiming={600}
                 animationOutTiming={600}
                 useNativeDriver={true}
+                useNativeDriverForBackdrop={true}
             >
                 <View style={{flex: 1, alignSelf: 'center', width: '90%', padding: 25, backgroundColor: 'white'}}>
                     <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
@@ -243,7 +244,7 @@ export default function PreviousOrders({ navigation, route }) {
                             return item1.items.map(x => {
                                 return x.id_of_order === details.id ?
                                 <View key={x.id} style={{flexDirection: 'row', alignItems: 'center', marginBottom: 3}}>
-                                    <Text style={{flex: 1, fontFamily: 'sf-semi', fontSize: wp(3.5)}}>{x.item_name} </Text>
+                                    <Text style={{flex: 1, fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>{x.item_name} </Text>
                                     <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5)}}>{x.item_weight}</Text>
                                     <Text style={{fontFamily: 'sf', fontSize: wp(3.5)}}>x{x.item_count}</Text>
                                 </View>: null
@@ -255,20 +256,20 @@ export default function PreviousOrders({ navigation, route }) {
                             <View>
                                 <View style={{flexDirection: 'row', marginBottom: 5}}>
                                     <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5)}}>Item subtotal</Text>
-                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sf-semi', fontSize: wp(3.5)}}>&#8377; {details.cart_total}</Text>
+                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {details.cart_total}</Text>
                                 </View>
                                 <View style={{flexDirection: 'row', marginBottom: 5}}>
                                     <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5)}}>Delivery Charges</Text>
-                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sf-semi', fontSize: wp(3.5)}}>&#8377; {details.delivery_charges}</Text>
+                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {details.delivery_charges}</Text>
                                 </View>
                                 <View style={{flexDirection: 'row', marginBottom: 5}}>
                                     <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5)}}>Taxes</Text>
-                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sf-semi', fontSize: wp(3.5)}}>&#8377; {details.taxes}</Text>
+                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {details.taxes}</Text>
                                 </View>
                                 {details.coupon !== 0 ? 
                                     <View style={{flexDirection: 'row', marginBottom: 5}}>
                                         <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5)}}>Offer Applied</Text>
-                                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sf-semi', fontSize: wp(3.5)}}>- &#8377; {details.coupon}</Text>
+                                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>- &#8377; {details.coupon}</Text>
                                     </View>: null
                                 }
                                 <View style={{flexDirection: 'row', marginBottom: 5}}>
@@ -280,17 +281,17 @@ export default function PreviousOrders({ navigation, route }) {
                         }
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
                         <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10}}>Status</Text>
-                        {details && getStatus(details) ? <Text style={{fontFamily: 'sf-semi', color: 'blue', backgroundColor: '#f0f0ff', padding: 3, fontSize: wp(3), alignSelf: 'flex-start'}}>{getStatus(details)}</Text>: <Text style={{fontFamily: 'sf-semi', color: 'green', backgroundColor: '#e8ffe8', padding: 3, fontSize: wp(3), alignSelf: 'flex-start'}}>&#10003; Delivered</Text>}
+                        {details && getStatus(details) ? <Text style={{fontFamily: 'Maison-bold', color: 'blue', backgroundColor: '#f0f0ff', padding: 3, fontSize: wp(3), alignSelf: 'flex-start'}}>{getStatus(details)}</Text>: <Text style={{fontFamily: 'Maison-bold', color: 'green', backgroundColor: '#e8ffe8', padding: 3, fontSize: wp(3), alignSelf: 'flex-start'}}>&#10003; Delivered</Text>}
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
                         <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10}}>{details && getStatus(details) ? 'Delivering to:': 'Delivered to:'}</Text>
-                        {details ? <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5)}}>{details.ordered_address}, {details.ordered_locality}, {details.ordered_city}</Text>: 'null'}
+                        {details ? <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>{details.ordered_address}, {details.ordered_locality}, {details.ordered_city}</Text>: 'null'}
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
                         <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10}}>Payment</Text>
-                        {details ? <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5)}}>{details.payment_mode === 'Cash On Delivery' ? 'Cash On Delivery' : details.payment_mode}</Text>: 'null'}
+                        {details ? <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>{details.payment_mode === 'Cash On Delivery' ? 'Cash On Delivery' : details.payment_mode}</Text>: 'null'}
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
                         <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10}}>Ordered Date</Text>
                         {details ? 
-                            <Text style={{fontFamily: 'sf-semi', fontSize: wp(3.5)}}>{details.ordereddate}</Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>{details.ordereddate}</Text>
                         : 'null'}
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
                     </ScrollView>
