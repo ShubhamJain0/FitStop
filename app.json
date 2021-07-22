@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "EatFrut",
-    "slug": "EatFrut",
+    "name": "FitStop",
+    "slug": "FitStop",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -24,20 +24,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.ShubhamJain.EatFrut",
+      "package": "com.ShubhamJain.FitStop",
       "versionCode": 1,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      [
-        "@stripe/stripe-react-native",
-        {
-          "enableGooglePay": true
-        }
-      ]
-    ]
+    }
   }
 }
