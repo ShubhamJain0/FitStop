@@ -6,7 +6,6 @@ import { AntDesign, FontAwesome, MaterialIcons, Entypo, Ionicons, EvilIcons, Mat
 import LottieView from 'lottie-react-native';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CardField, createPaymentMethod, createToken } from "@stripe/stripe-react-native";
 import { WebView } from 'react-native-webview';
 
 
@@ -16,27 +15,6 @@ export default function Payments({ navigation }){
         <View style={styles.container}>
             <WebView source={{uri: 'https://stripe.com/docs/payments/checkout/'}} style={{marginTop: hp(15)}} />
             <Text>lol</Text>
-            <CardField
-                postalCodeEnabled={true}
-                placeholder={{
-                    number: '4242 4242 4242 4242',
-                }}
-                cardStyle={{
-                    backgroundColor: '#FFFFFF',
-                    textColor: '#000000',
-                }}
-                style={{
-                    width: '100%',
-                    height: 50,
-                    marginVertical: 30,
-                }}
-                onCardChange={(cardDetails) => {
-                    console.log('cardDetails', cardDetails);
-                }}
-                onFocus={(focusedField) => {
-                    console.log('focusField', focusedField);
-                }}
-            />
         </View>
     )
 }
