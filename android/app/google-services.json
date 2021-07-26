@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "247581586007",
+    "project_id": "fitstop-3d777",
+    "storage_bucket": "fitstop-3d777.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:247581586007:android:6d7fb3eb6f367996146912",
+        "android_client_info": {
+          "package_name": "com.ShubhamJain.FitStop"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "247581586007-4dqvdbh3v0a6gltj0k2ikoooftr9sqvp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvoTLU_8gyleAb0gpjJZdGgAxJrgX-Jo4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "247581586007-4dqvdbh3v0a6gltj0k2ikoooftr9sqvp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "247581586007-j7jkefon5vrtp6cnj3seqb5v2lfajpdi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ShubhamJain.FitStop"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
