@@ -24,7 +24,6 @@ import ActiveOrders from './components/active-orders';
 import Recipe from './components/recipe';
 import RecipeDetails from './components/recipe-details';
 import FavRecipe from './components/fav-recipe';
-import Payments from './components/payments';
 import TermsandConditions from './components/terms_conditions';
 import NutritionCalculator from './components/nutrition-calculator';
 import { UserContext, PushTokenContext } from './components/context';
@@ -561,7 +560,6 @@ export default function App() {
             <Stack.Screen name="Reviews" component={Reviews} options={({ navigation }) => ({title: '', headerTransparent: true, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
             <Stack.Screen name="Register" component={Register} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
             <Stack.Screen name="OtpComponent" component={OtpComponent} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
-            <Stack.Screen name="Payments" component={Payments}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
             <Stack.Screen name="TermsandConditions" component={TermsandConditions}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
             <Stack.Screen name="NutritionCalculator" component={NutritionCalculator}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
           </Stack.Navigator>

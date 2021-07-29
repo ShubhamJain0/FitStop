@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext, PushTokenContext } from './context';
 import * as Location from 'expo-location';
 import MapView, {Marker, AnimatedRegion, Callout, MarkerAnimated} from 'react-native-maps';
+import RazorpayCheckout from 'react-native-razorpay';
 
 
 
@@ -35,13 +36,13 @@ export default function Cart({ navigation }) {
   const [inputCity, setInputCity] = useState('Hyderabad');
   const [inputAddressType, setInputAddressType] = useState('');
   const [paymentModal, setPaymentModal] = useState(false);
-  const [paymentType, setPaymentType] = useState('Cash On Delivery');
   const [couponModal, setCouponModal] = useState(false);
   const [couponList, setCouponList] = useState([]);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [animationModal, setAnimationModal] = useState(false);
   const [onPlace, setOnPlace] = useState(false);
   const [onPlaceLottieModal, setOnPlaceLottieModal] = useState(false);
+  const [afterPaymentModal, setAfterPaymentModal] = useState(false);
   const [indicPos, setIndicPos] = useState('relative');
 
 
@@ -53,6 +54,12 @@ export default function Cart({ navigation }) {
   const [error, setError] = useState('');
 
   const [conPushToken] = useContext(PushTokenContext);
+
+  //For prefill-razorpay-checkout
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
 
 
     useEffect(() => {
@@ -161,6 +168,27 @@ export default function Cart({ navigation }) {
             setMounted(false);
         }
 
+    }, [])
+
+
+    useEffect(() => {
+        (async () => {
+            const token = await AsyncStorage.getItem('USER_TOKEN')
+            if (token) {
+              fetch('http://192.168.0.105:8000/api/me/',{
+                    method: 'GET',
+                    headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-type': 'application/json'
+                    }
+                })
+                .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => {if (mounted) {setName(resp.json.name), setEmail(resp.json.email), setPhone(resp.json.phone)}})
+                .catch(error => console.log(error));
+            } else {
+              return;
+            }
+          })().catch(error => console.log(error))
     }, [])
 
 
@@ -292,25 +320,70 @@ export default function Cart({ navigation }) {
   }
 
 
-    const paymentMethod = () => {
-        if (paymentType === 'Cash On Delivery'){
-            console.log('Cash');
-            placeOrder();
-        } else if(paymentType === 'Card'){
-            console.log('Card');
-            placeOrder();
-        } else if(paymentType === 'Wallet'){
-            console.log('Wallet')
-            placeOrder();
-        }
+
+//Handling payments and place order
+
+const createPaymentOrder = async (payMethod) => {
+    setOnPlace(true);
+    const token = await AsyncStorage.getItem('USER_TOKEN')
+    if (token) {
+      fetch('http://192.168.0.105:8000/store/createpaymentorder/',{
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify({order_amount: appliedCoupon ? total + deliveryCharges + taxes - appliedCoupon.discount: total + deliveryCharges + taxes})
+      })
+      .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+      .then(resp => openRazorpayCheckout(resp.json.resp.id, payMethod))
+      .catch(error => console.log(error))
+    } else {
+        setOnPlace(false);
+    }
+  }
+
+
+  const openRazorpayCheckout = async (order_id, payMethod) => {
+    const token = await AsyncStorage.getItem('USER_TOKEN')
+    var options = {
+      description: 'Payment for order',
+      currency: 'INR',
+      key: 'rzp_test_n9ilrJg1PZ5pJf',
+      amount: appliedCoupon ? total + deliveryCharges + taxes - appliedCoupon.discount: total + deliveryCharges + taxes,
+      name: 'FitStop',
+      order_id: order_id,//Replace this with an order_id created using Orders API.
+      prefill: {
+        email: email !== '' ? email : 'abc@abc.com',
+        contact: phone,
+        name: name,
+        method: payMethod
+      },
+      theme: {color: '#249c86', hide_topbar: true},
+      retry: {
+          enabled: true,
+          max_count: 1
+      },
+      modal: {
+          ondismiss: () => {
+              setOnPlace(false);
+              alert('Payment cancelled');
+          },
+          confirm_close: true
+      },
+      remember_customer: true,
+      method: {
+        netbanking: true,
+        upi: true,
+        card: true,
+        wallet: false,
+      },
+      timeout: 300
     }
 
-
-
-  const placeOrder = async () => {
-    setOnPlace(true);
-    try {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+    RazorpayCheckout.open(options).then((data) => {
+      // handle success
+        setAfterPaymentModal(true);
         if (token) {
             fetch('http://192.168.0.105:8000/store/order/',{
                 method: 'POST',
@@ -318,25 +391,59 @@ export default function Cart({ navigation }) {
                 'Authorization': `Token ${token}`,
                 'Content-type': 'application/json'
                 },
-                body: JSON.stringify({pushToken: conPushToken === null ? null: conPushToken.data, total_price: appliedCoupon ? total + deliveryCharges + taxes - appliedCoupon.discount: total + deliveryCharges + taxes, cart_total: total, coupon: appliedCoupon ? appliedCoupon.discount: 0, delivery_charges: deliveryCharges, taxes: taxes, payment: paymentType})
+                body: JSON.stringify({pushToken: conPushToken === null ? null: conPushToken.data, total_price: appliedCoupon ? total + deliveryCharges + taxes - appliedCoupon.discount: total + deliveryCharges + taxes, 
+                    cart_total: total, coupon: appliedCoupon ? appliedCoupon.discount: 0, delivery_charges: deliveryCharges, taxes: taxes, 
+                    payment: payMethod, payment_order_id: order_id, razorpay_payment_id: data.razorpay_payment_id, razorpay_signature: data.razorpay_signature})
             })
             .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => {
                 if (resp.status === 201) {
-                    setOnPlaceLottieModal(true);
-                } else {
+                    setAfterPaymentModal(false);
+                    setTimeout(() => setOnPlaceLottieModal(true), 700);
+                } else if (resp.status === 401) {
                     setOnPlace(false);
+                    setAfterPaymentModal(false);
+                    alert('We could not verify the source of payment. If any amount is debited, it will be refunded at the earliest.')
                 }
             })
-            .catch(error => (console.log(error), setOnPlace(false)))
+            .catch(error => (console.log(error), setOnPlace(false), setAfterPaymentModal(false)))
         } else {
             navigation.navigate('Register')
         }
-    } catch(error) {
-        if (error) {
-            setOnPlace(false);
-            console.log(error);
-        }
+    }).catch((error) => {
+      // handle failure
+      alert('Payment Failed');
+      setOnPlace(false);
+      setAfterPaymentModal(false);
+    });
+  }
+
+
+  const placeOrder = async () => {
+    setOnPlace(true);
+    const token = await AsyncStorage.getItem('USER_TOKEN')
+    if (token) {
+        fetch('http://192.168.0.105:8000/store/orderCOD/',{
+            method: 'POST',
+            headers: {
+            'Authorization': `Token ${token}`,
+            'Content-type': 'application/json'
+            },
+            body: JSON.stringify({pushToken: conPushToken === null ? null: conPushToken.data, total_price: appliedCoupon ? total + deliveryCharges + taxes - appliedCoupon.discount: total + deliveryCharges + taxes, 
+                cart_total: total, coupon: appliedCoupon ? appliedCoupon.discount: 0, delivery_charges: deliveryCharges, taxes: taxes, payment: 'Cash On Delivery'})
+        })
+        .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
+        .then(resp => {
+            if (resp.status === 201) {
+                setOnPlaceLottieModal(true);
+            } else if (resp.status === 404) {
+                setOnPlace(false);
+                alert('Cart is empty')
+            }
+        })
+        .catch(error => (console.log(error), setOnPlace(false)))
+    } else {
+        navigation.navigate('Register')
     }
   }
 
@@ -540,7 +647,7 @@ export default function Cart({ navigation }) {
 
                 {onPlace ? <ActivityIndicator color="#99b898" size={50} />
                  : myAddressesStatus === 200 && deliveryAddressStatus === 200 && cartStatus === 200 ? 
-                    <TouchableOpacity onPress={paymentMethod} style={{flex: 1, opacity: 1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
+                    <TouchableOpacity onPress={() => setPaymentModal(true)} style={{flex: 1, opacity: 1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
                         <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}>Place Order &raquo;</Text>
                     </TouchableOpacity>:
                     <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
@@ -640,31 +747,37 @@ export default function Cart({ navigation }) {
 
                 <Modal 
                     isVisible={paymentModal}
-                    backdropColor={'white'}
-                    backdropOpacity={1} 
+                    backdropColor={'black'}
+                    backdropOpacity={0.2} 
                     backdropTransitionInTiming={600}
                     backdropTransitionOutTiming={600}
                     animationInTiming={600}
                     animationOutTiming={600}
                     useNativeDriver={true}
+                    useNativeDriverForBackdrop={true}
+                    onBackButtonPress={() => setPaymentModal(false)}
+                    onBackdropPress={() => setPaymentModal(false)}
+                    style={{margin: 0}}
                 >
-                    <View style={{flex: 1}}>
-                        <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: hp(4), marginBottom: hp(4)}}>Choose payment method</Text>
-                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center'}} onPress={() => (setPaymentType('Cash On Delivery'), setPaymentModal(false))}>
-                            <MaterialCommunityIcons name="cash" size={20} color="green"/>
-                            <Text style={{fontFamily: 'sf', fontSize: wp(4)}}> Cash On Delivery</Text>
+                    <View style={{flex: 1, backgroundColor: 'white', height: '50%', position: 'absolute', bottom: 0, width: '100%', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, padding: 25, paddingBottom: 5}}>
+                        <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginBottom: 5, color: 'black'}}>Choose payment method</Text>
+                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, alignSelf: 'flex-start'}} onPress={() => (setPaymentModal(false), createPaymentOrder('card'))}>
+                            <Entypo name="credit-card" size={15} color="black" />
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black', marginLeft: 10}}>Card</Text>
                         </TouchableOpacity>
-                        <Text style={{borderTopWidth: 2, borderColor: '#f0f0f0', marginTop: 25}}></Text>
-                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center'}} onPress={() => (setPaymentType('Card'), setPaymentModal(false))}>
-                            <Entypo name="credit-card" size={20} color="black" />
-                            <Text style={{fontFamily: 'sf', fontSize: wp(4)}}> Card</Text>
+                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, alignSelf: 'flex-start'}} onPress={() => (setPaymentModal(false), createPaymentOrder('upi'))}>
+                            <FontAwesome name="google-wallet" size={15} color="black" />
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black', marginLeft: 10}}>Upi</Text>
                         </TouchableOpacity>
-                        <Text style={{borderTopWidth: 2, borderColor: '#f0f0f0', marginTop: 25}}></Text>
-                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center'}} onPress={() => (setPaymentType('Wallet'), setPaymentModal(false))}>
-                            <FontAwesome name="google-wallet" size={20} color="blue" />
-                            <Text style={{fontFamily: 'sf', fontSize: wp(4)}}> Wallet</Text>
+                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, alignSelf: 'flex-start'}} onPress={() => (setPaymentModal(false), createPaymentOrder('netbanking'))}>
+                            <FontAwesome name="bank" size={15} color="black" />
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black', marginLeft: 10}}>Net banking</Text>
                         </TouchableOpacity>
-                        <Text style={{borderTopWidth: 2, borderColor: '#f0f0f0', marginTop: 25}}></Text>
+                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, alignSelf: 'flex-start'}} onPress={() => (setPaymentModal(false), placeOrder())}>
+                            <MaterialCommunityIcons name="cash" size={20} color="black"/>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black', marginLeft: 10}}>Cash On Delivery</Text>
+                        </TouchableOpacity>
+                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3)}}>(Note: If selected Cash On Delivery you won't be able to choose another method as order will be placed. We recommend paying online to ensure safety in these tough times !)</Text>
                     </View>
                     
                 </Modal>
@@ -713,6 +826,14 @@ export default function Cart({ navigation }) {
                 >
                     <LottieView style={{alignSelf: 'center', width: 300}} source={require('../assets/animations/order-placed.json')} autoPlay={true} loop={false} onAnimationFinish={() => navigation.pop()} />
                     <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), marginTop: 50, textAlign: 'center'}}>Order Placed !</Text>
+                </Modal>
+
+                <Modal
+                    isVisible={afterPaymentModal}
+                    backdropColor={'white'}
+                    backdropOpacity={0.2}
+                >
+                    <ActivityIndicator color="#249c86" size={50} />
                 </Modal>
             </View>
         </ScrollView>
