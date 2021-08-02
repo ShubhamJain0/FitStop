@@ -31,8 +31,8 @@ const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
   }),
 });
 
@@ -55,7 +55,7 @@ function Home(props){
 
 
   const [location, setLocation] = useState(null);
-  const [errormsg, setErrormsg] = useState(null);
+  const [error, setError] = useState(null);
   const [reversegeolocation, setReversegeolocation] = useState(null);
   const [mapDefLocation, setMapDefLocation] = useState({latitude: 17.4217697, longitude: 78.4749875, latitudeDelta: 0.1, longitudeDelta: 0.1});
   const [markerData, setMarkerData] = useState({latitude: 17.4217697, longitude: 78.4749875 });
@@ -130,7 +130,7 @@ function Home(props){
         await AsyncStorage.setItem('isFirstTimeHome', 'false')
         props.start();
       }
-    })().catch(error => console.log(error))
+    })().catch(error => setError(error))
 
     return () => {
       setMounted(false);
@@ -149,7 +149,7 @@ function Home(props){
     })
     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
     .then(resp => {if (mounted) {setbannerImages(resp.json)}})
-    .catch(error => console.log(error))
+    .catch(error => setError(error))
 
     return () => {
       setMounted(false);
@@ -167,7 +167,7 @@ function Home(props){
     })
     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
     .then(resp => {if (mounted) {setHomeProductImages(resp.json)}})
-    .catch(error => console.log(error))
+    .catch(error => setError(error))
 
     return () => {
       setMounted(false);
@@ -189,7 +189,7 @@ function Home(props){
           })
           .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
           .then(resp => {if (mounted) {setPreviousOrderList(resp.json.qs), setPreviousOrderItems(resp.json.data), setImages(resp.json.images), setPreviousOrderStatus(resp.status)}})
-          .catch(error => console.log(error))
+          .catch(error => setError(error))
         } else {
           setPreviousOrderList([]);
           setPreviousOrderItems([]);
@@ -226,11 +226,11 @@ function Home(props){
               setActiveOrderRespStatus(404);
             }
           }) 
-          .catch(error => console.log(error))
+          .catch(error => setError(error))
         } else {
           setActiveOrderLen(0);
         }
-      })().catch(error => console.log(error))
+      })().catch(error => setError(error))
     });
 
     return () => {
@@ -249,7 +249,7 @@ function Home(props){
     })
     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
     .then(resp => {if (mounted) {setRecipesList(resp.json.qs), setIngredients(resp.json.ingredients)}})
-    .catch(error => console.log(error))
+    .catch(error => setError(error))
 
     return () => {
       setMounted(false);
@@ -275,11 +275,11 @@ function Home(props){
             .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => {if (mounted) {setUserData(resp.json)}})
             .then(() => {if (mounted) {setIsLogin(true)}})
-            .catch(error => console.log(error));
+            .catch(error => setError(error));
         } else {
           return setIsLogin(false);
         }
-      })().catch(error => console.log(error))
+      })().catch(error => setError(error))
     });
 
   }, [navigation])
@@ -315,7 +315,7 @@ function Home(props){
     // Get the token that uniquely identifies this device
     pushToken = await Notifications.getExpoPushTokenAsync()
     .then((pushToken) => (savePushToken(pushToken), setConPushToken(pushToken)))
-    .catch(error => console.log(error))
+    .catch(error => setError(error))
   }
 
 
@@ -334,7 +334,7 @@ function Home(props){
       .then(() => setLoading('false'))
       .then(() => setIsOffline(false))
       .then(() => setShowInidc(false))
-      .catch(error => console.log(error))
+      .catch(error => setError(error))
     } else {
       fetch('http://192.168.0.105:8000/store/pushnotificationtoken/',{
               method: 'POST',
@@ -347,7 +347,7 @@ function Home(props){
       .then(() => setLoading('false'))
       .then(() => setIsOffline(false)) 
       .then(() => setShowInidc(false))
-      .catch(error => console.log(error))
+      .catch(error => setError(error))
     }
   }
 
@@ -425,7 +425,7 @@ function Home(props){
     .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
     .then(resp => setbannerImages(resp.json))
     .then(() => setLoading('false'))
-    .catch(error => console.log(error))
+    .catch(error => setError(error))
 
     
   }, []);
@@ -465,7 +465,7 @@ function Home(props){
       setmodalVisible(false);
       setMarkerData(location.coords)
       setMapDefLocation({latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006})
-    })().catch(error => setErrormsg(error))
+    })().catch(error => setError(error))
         .then(() => {setConfirmDisabled(false); setLocationModal(false);});
   }
 
@@ -498,7 +498,7 @@ function Home(props){
       setReversegeolocation(geolocation);
 
       setmodalVisible(false);      
-    })().catch(error => setErrormsg(error));
+    })().catch(error => setError(error));
 
   }
 
@@ -567,7 +567,7 @@ function Home(props){
           .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
           .then(resp => {if (resp.status === 404) {alert('Some items are out of stock, sorry for inconvenience!')}})
           .then(() => navigation.navigate('cart'))
-          .catch(error => console.log(error))
+          .catch(error => setError(error))
         } else {
           navigation.navigate('Register')
         }
@@ -590,7 +590,7 @@ function Home(props){
       })
       .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
       .then(resp => setbannerImages(resp.json))
-      .catch(error => console.log(error))
+      .catch(error => setError(error))
 
       //Home Products
       fetch('http://192.168.0.105:8000/store/homeproducts/',{
@@ -601,7 +601,7 @@ function Home(props){
       })
       .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
       .then(resp => setHomeProductImages(resp.json))
-      .catch(error => console.log(error))
+      .catch(error => setError(error))
 
       //Recipes
       fetch('http://192.168.0.105:8000/store/recipes/',{
@@ -612,7 +612,7 @@ function Home(props){
       })
       .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
       .then(resp => (setRecipesList(resp.json.qs), setIngredients(resp.json.ingredients)))
-      .catch(error => console.log(error))
+      .catch(error => setError(error))
 
       
       if (token) {
@@ -627,7 +627,7 @@ function Home(props){
         })
         .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => (setPreviousOrderList(resp.json.qs), setPreviousOrderItems(resp.json.data), setImages(resp.json.images), setPreviousOrderStatus(resp.status)))
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
 
         //Active orders
         fetch('http://192.168.0.105:8000/store/activeorders/',{
@@ -650,7 +650,7 @@ function Home(props){
             setActiveOrderRespStatus(404);
           }
         }) 
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
 
 
         //Profile
@@ -664,7 +664,7 @@ function Home(props){
         .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => setUserData(resp.json))
         .then(() => setIsLogin(true))
-        .catch(error => console.log(error));
+        .catch(error => setError(error));
 
         registerPushNotificationPermissions();
       } else {
@@ -673,7 +673,7 @@ function Home(props){
       }
 
     } catch (error) {
-      console.log(error)
+      setError(error)
     } finally {
       NetInfo.fetch().then(state => {
         if (!state.isConnected) {
@@ -698,6 +698,7 @@ function Home(props){
   if (isOffline) {
     return (
       <View style={{flex: 1, backgroundColor: '#fafafa'}}>
+        <StatusBar style="inverted" />
         <Image source={require('../assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
         <View style={{width: '80%', alignSelf: 'center'}}>
           <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: 50, textAlign: 'center'}}>Uh oh! Seems like you are disconnected !</Text>
@@ -714,6 +715,7 @@ function Home(props){
     if (loading == 'true') return (
 
       <View style={{flex: 1, backgroundColor: '#fafafa'}}>
+        <StatusBar style="inverted" />
         <SkeletonPlaceholder>
           <SkeletonPlaceholder.Item height={hp(99)}>
             <SkeletonPlaceholder.Item marginTop={25} padding={25} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
@@ -840,12 +842,12 @@ function Home(props){
             
           )}
           >
-          <StatusBar style="auto" />
+          <StatusBar style="inverted" />
           
           <View style={styles.container}>
             <View style={{flexDirection: 'row', alignItems: 'center', padding: 25, paddingTop: 15}}>
               <View style={{flex: 1}}>
-                <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), color: '#228f7b'}}> {isLogin ? userData.name ? 'Hello, ' + userData.name + ' !' : 'Hello !': 'Login to place order!'}</Text>
+                <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), color: '#228f7b'}}> {isLogin ? userData.name ? 'Hello, ' + userData.name + '.' : 'Hello !': 'Hello !'}</Text>
               </View>
               <CopilotStep text={isLogin ? "Manage your profile" : 'Login Here'} order={4} name={'Profile'}>
                 <CoPilotTouchableOpacity onPress={() => navigation.navigate('Profile')}>
@@ -964,7 +966,7 @@ function Home(props){
                     </View>
                     <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                   </View>
-                  <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15}}>{item.name}</Text>
+                  <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15, color: 'black'}}>{item.name}</Text>
                   <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
                     <View style={{flex: 1}}>
                       <TouchableOpacity style={{alignSelf: 'center'}} onPress={() => navigation.navigate('RecipeDetails', {recipe_id: item.id, recipe_ingredients: ingredients})}>
@@ -1004,8 +1006,8 @@ function Home(props){
                                                   })
                                               : null}
                                               <View style={{marginLeft: 25, marginTop: 5}}>
-                                                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), fontWeight: 'bold'}}>{x.item_name} </Text>
-                                                  <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5}}>{x.item_weight}     x{x.item_count}</Text>
+                                                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>{x.item_name} </Text>
+                                                  <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5, color: 'black'}}>{x.item_weight}     x{x.item_count}</Text>
                                               </View>
                                           </View>
                                       </View>: null
@@ -1021,7 +1023,7 @@ function Home(props){
                               </View>
                               <View>
                                 <TouchableOpacity  onPress={() => navigation.navigate('PreviousOrders', {index: index})}>
-                                    <Text style={{fontFamily: 'sofia-medium', fontSize: wp(3.5) }}>View &rarr;</Text>
+                                    <Text style={{fontFamily: 'sofia-medium', fontSize: wp(3.5), color: 'black' }}>View &rarr;</Text>
                                 </TouchableOpacity>
                               </View>
                             </View>
@@ -1041,7 +1043,7 @@ function Home(props){
           animationOut={'slideOutRight'}        
         >
           <LottieView source={require('../assets/animations/23211-receive-order.json')} autoPlay={true} loop={false} style={{alignSelf: 'center', width: '100%'}} onAnimationFinish={() => setOrderReceivedModal(false)} />
-          <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), textAlign: 'center', position: 'absolute', bottom: 100, alignSelf: 'center'}}>Order delivered successfully !</Text>
+          <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), textAlign: 'center', position: 'absolute', bottom: 100, alignSelf: 'center', color: 'black'}}>Order delivered successfully !</Text>
         </Modal>
         <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 15, paddingLeft: 0, position: 'absolute', bottom: 50, width: '100%', transform: [{translateY: activeOrderLen > 0 ? slideUp : 150}]}}>
           <View>
@@ -1062,7 +1064,7 @@ function Home(props){
                         : getStatus(item) === 'Out for delivery' ? 
                           <LottieView source={require('../assets/animations/delivery.json')} loop={true} autoPlay={true} style={{width: 70}} />
                         : null}
-                      <Text style={{fontFamily: 'sf', textAlign: 'center', fontSize: wp(3), flex: 1, marginLeft: 5, marginRight: 10}}>
+                      <Text style={{fontFamily: 'sf', textAlign: 'center', fontSize: wp(3), flex: 1, marginLeft: 5, marginRight: 10, color: 'black'}}>
                         {getStatus(item) === 'Order Placed' ? 
                           'Order placed successfully ! Please bear with us while we confirm your order !'
                           : getStatus(item) === 'Order Confirmed' ? 
@@ -1361,7 +1363,7 @@ const TooltipComponent = ({
   return (
     <View>
     <View style={{flex: 1}}>
-      <Text testID="stepDescription" style={{fontFamily: 'sofia-medium', fontSize: wp(4)}}>{currentStep.text}</Text>
+      <Text testID="stepDescription" style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{currentStep.text}</Text>
     </View>
     <View style={{marginTop: 10, flexDirection: 'row', justifyContent: 'flex-end'}}>
       {

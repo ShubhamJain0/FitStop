@@ -11,6 +11,7 @@ import NetInfo from "@react-native-community/netinfo";
 import LottieView from 'lottie-react-native';
 import { copilot, walkthroughable, CopilotStep } from "react-native-copilot";
 import icoMoonConfig from '../selection.json';
+import { StatusBar } from 'expo-status-bar';
 
 
 function Recipe(props){
@@ -36,6 +37,8 @@ function Recipe(props){
     const [isOffline, setIsOffline] = useState(false);
     const [showIndic, setShowInidc] = useState(false);
 
+    const [error, setError] = useState(null);
+
     //Copilot Variables
   
     const CoPilotTouchableOpacity = walkthroughable(TouchableOpacity)
@@ -50,7 +53,7 @@ function Recipe(props){
             await AsyncStorage.setItem('isFirstTimeRecipe', 'false')
             props.start();
         }
-        })().catch(error => console.log(error))
+        })().catch(error => setError(error))
 
         return () => {
           setMounted(false);
@@ -89,7 +92,7 @@ function Recipe(props){
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => {if (mounted) {setRecipesList(resp.json.qs), setFilteredList(resp.json.qs), setIngredients(resp.json.ingredients)}})
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
     
         return () => {
           setMounted(false);
@@ -114,14 +117,14 @@ function Recipe(props){
             .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => {if (mounted) {setFavRecipes(resp.json.data)}})
             .then(() => {if (mounted) {setLoading('false'); setIsOffline(false);}})
-            .catch(error => console.log(error))
+            .catch(error => setError(error))
           } else {
             if (mounted) {
               setLoading('false'); 
               setIsOffline(false);
             }
           }
-        })().catch(error => console.log(error))
+        })().catch(error => setError(error))
     
         return () => {
           setMounted(false);
@@ -142,7 +145,7 @@ function Recipe(props){
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => {if (mounted) {setFavRecipes(resp.json.data); setRecipesList(resp.json.data1); setFilteredList(resp.json.data1)}})
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
       }
     }
 
@@ -160,7 +163,7 @@ function Recipe(props){
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => {if (mounted) {setFavRecipes(resp.json.data); setRecipesList(resp.json.data1); setFilteredList(resp.json.data1)}})
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
       }
     }
 
@@ -220,7 +223,7 @@ function Recipe(props){
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => (setRecipesList(resp.json.qs), setFilteredList(resp.json.qs), setIngredients(resp.json.ingredients)))
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
 
         //Fav Recipes
         if (token) {
@@ -234,7 +237,7 @@ function Recipe(props){
           .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
           .then(resp => setFavRecipes(resp.json.data))
           .then(() => (setLoading('false'), setIsOffline(false), setShowInidc(false)))
-          .catch(error => console.log(error))
+          .catch(error => setError(error))
         } else {
           setLoading('false');
           setIsOffline(false);
@@ -242,7 +245,7 @@ function Recipe(props){
         }
 
       } catch (error) {
-          console.log(error)
+          setError(error)
       } finally {
         NetInfo.fetch().then(state => {
           if (!state.isConnected) {
@@ -259,7 +262,7 @@ function Recipe(props){
         <View style={{flex: 1, backgroundColor: '#fafafa'}}>
           <Image source={require('../assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
           <View style={{width: '80%', alignSelf: 'center'}}>
-            <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: 50, textAlign: 'center'}}>Uh oh! Seems like you are disconnected !</Text>
+            <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: 50, textAlign: 'center', color: 'black'}}>Uh oh! Seems like you are disconnected !</Text>
             {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={retry}>
               <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
             </TouchableOpacity>: <LottieView source={require('../assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
@@ -280,6 +283,7 @@ function Recipe(props){
 
     return (
         <View style={styles.container}>
+          <StatusBar style="inverted" />
             <View style={{flexDirection: 'row', alignItems: 'center', padding: 25, paddingBottom: 0}}>
               <View style={{flex: 1}}>
                 <CopilotStep text={'You can find your favorite recipes here.'} order={5} name={'Favorites'}>
@@ -295,30 +299,30 @@ function Recipe(props){
                   </CoPilotTouchableOpacity>
                 </CopilotStep>
               </View>
-              <View style={{width: '50%', display: tiDisplay, height: 25, marginLeft: 10}}>
+              <View style={{width: '50%', display: tiDisplay, marginLeft: 10}}>
                 <TextInput ref={searchRef} style={{ }} placeholder="search" value={query} onChangeText={(text) => searchFilterFunction(text)} />
               </View>
             </View>
             <View style={{padding: 25, paddingLeft: 25, paddingTop: 20}}>
-              <Text style={{fontFamily: 'sofia-black', fontSize: wp(7)}}>{category} Recipes</Text>
+              <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), color: 'black'}}>{category} Recipes</Text>
             </View>
             <View style={{flex: 1, flexDirection: 'row'}}>
               <View style={{flex: 0.5, marginTop: hp(13)}}>
                 <CopilotStep text={'Start you day with healthy and delicious breakfast !'} order={1} name={'Breakfast'}>
                   <CoPilotTouchableOpacity style={{marginBottom: 100, transform: [{rotate: '-90deg'}]}} onPress={() => setCategory('Break Fast')} activeOpacity={0.8}>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', opacity: category === 'Break Fast' ? 1 : 0.2}}>Break Fast</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', opacity: category === 'Break Fast' ? 1 : 0.2, color: 'black'}}>Break Fast</Text>
                     {category === 'Break Fast' ? <Text style={{backgroundColor: '#249C86', height: 2, width: '50%', marginTop: 5, alignSelf: 'center'}}></Text> : <Text style={{ height: 2, marginTop: 5}}></Text>}
                   </CoPilotTouchableOpacity>
                 </CopilotStep>
                 <CopilotStep text={'Never miss your mid-day meal !'} order={2} name={'Lunch'}>
                   <CoPilotTouchableOpacity style={{marginBottom: 100, transform: [{rotate: '-90deg'}]}} onPress={() => setCategory('Lunch')} activeOpacity={0.8}>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', opacity: category === 'Lunch' ? 1 : 0.2}}>Lunch</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', opacity: category === 'Lunch' ? 1 : 0.2, color: 'black'}}>Lunch</Text>
                     {category === 'Lunch' ? <Text style={{backgroundColor: '#249C86', height: 2, width: '35%', marginTop: 5, alignSelf: 'center'}}></Text> : <Text style={{ height: 2, marginTop: 5}}></Text>}
                   </CoPilotTouchableOpacity>
                 </CopilotStep>
                 <CopilotStep text={'End your day with a healthy dinner !'} order={3} name={'Dinner'}>
                   <CoPilotTouchableOpacity style={{marginBottom: 100, transform: [{rotate: '-90deg'}]}} onPress={() => setCategory('Dinner')} activeOpacity={0.8}>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', opacity: category === 'Dinner' ? 1 : 0.2}}>Dinner</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', opacity: category === 'Dinner' ? 1 : 0.2, color: 'black'}}>Dinner</Text>
                     {category === 'Dinner' ? <Text style={{backgroundColor: '#249C86', height: 2, width: '35%', marginTop: 5, alignSelf: 'center'}}></Text> : <Text style={{ height: 2, marginTop: 5}}></Text>}
                   </CoPilotTouchableOpacity>
                 </CopilotStep>
@@ -349,7 +353,7 @@ function Recipe(props){
                               </View>
                               <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                             </View>
-                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15}}>{item.name}</Text>
+                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15, color: 'black'}}>{item.name}</Text>
                             <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 15, color: '#525252'}} numberOfLines={5} ellipsizeMode={'tail'}>{item.description}</Text>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
                               <View style={{flex: 1}}>
@@ -406,7 +410,7 @@ function Recipe(props){
                               </View>
                               <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                             </View>
-                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15}}>{item.name}</Text>
+                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15, color: 'black'}}>{item.name}</Text>
                             <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 15, color: '#525252'}} numberOfLines={5} ellipsizeMode={'tail'}>{item.description}</Text>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
                               <View style={{flex: 1}}>
@@ -456,7 +460,7 @@ function Recipe(props){
                               </View>
                               <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                             </View>
-                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15}}>{item.name}</Text>
+                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15, color: 'black'}}>{item.name}</Text>
                             <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 15, color: '#525252'}} numberOfLines={5} ellipsizeMode={'tail'}>{item.description}</Text>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
                               <View style={{flex: 1}}>
@@ -543,7 +547,7 @@ const TooltipComponent = ({
   return (
     <View>
     <View style={{flex: 1}}>
-      <Text testID="stepDescription" style={{fontFamily: 'sofia-medium', fontSize: wp(4)}}>{currentStep.text}</Text>
+      <Text testID="stepDescription" style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{currentStep.text}</Text>
     </View>
     <View style={{marginTop: 10, flexDirection: 'row', justifyContent: 'flex-end'}}>
       {

@@ -1,12 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { Button } from 'react-native';
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import Modal from 'react-native-modal';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottieView from 'lottie-react-native';
-import Svg, { Path, Rect, Circle, G, Polygon, LinearGradient, Defs, Stop, Ellipse } from 'react-native-svg';
 import StepIndicator from 'react-native-step-indicator';
 import { Feather } from '@expo/vector-icons';
 
@@ -21,6 +19,8 @@ export default function ActiveOrders({ navigation, route }) {
     const [respStatus, setRespStatus] = useState(0);
 
     const [showModal, setShowModal] = useState(false);
+
+    const [error, setError] = useState(null);
 
 
     useEffect(() => {
@@ -40,7 +40,7 @@ export default function ActiveOrders({ navigation, route }) {
                     setOrderStatus(resp.json.orderstatus);
                     setRespStatus(resp.status);
                 }})
-                .catch(error => console.log(error))
+                .catch(error => setError(error))
             } else {
                 navigation.navigate('Register');
             }
@@ -65,11 +65,12 @@ export default function ActiveOrders({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar style="inverted" />
                 {respStatus === 200 ? 
                     activeOrders.map((item) => {
                         return item.id === activeOrder ? (
                             <View key={item.id} style={{width: '85%', alignSelf: 'center', flex: 1, justifyContent: 'center'}} >
-                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 25, marginBottom: 25}}>Order Details</Text>
+                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 25, marginBottom: 25, color: 'black'}}>Order Details</Text>
                                 <StepIndicator
                                     stepCount={3}
                                     direction='vertical'
@@ -137,13 +138,13 @@ export default function ActiveOrders({ navigation, route }) {
                                 >
                                     <View style={{backgroundColor: 'white', height: '50%', position: 'absolute', bottom: 0, width: '100%', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, padding: 25, paddingBottom: 5}}>
                                         <ScrollView showsVerticalScrollIndicator={false}>
-                                            <Text style={{fontFamily: 'Maison-bold', marginTop: 25, fontSize: wp(4)}}>Ordered Items -</Text>
-                                            <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5}}>{item.ordereditems.replace(/', '/g, '').replace(/, ']/g, '').replace(/[[']/g, '').replace(/w/g, ' ').replace(/, /g, '\n')}</Text>
-                                            <Text style={{fontFamily: 'Maison-bold', marginTop: 50, fontSize: wp(4)}}>Delivering to - </Text>
-                                            <Text style={{fontFamily: 'sf', marginTop: 5, fontSize: wp(3.5)}}>{item.ordered_address}, {item.ordered_locality}, {item.ordered_city}</Text>   
+                                            <Text style={{fontFamily: 'Maison-bold', marginTop: 25, fontSize: wp(4), color: 'black'}}>Ordered Items -</Text>
+                                            <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5, color: 'black'}}>{item.ordereditems.replace(/', '/g, '').replace(/, ']/g, '').replace(/[[']/g, '').replace(/w/g, ' ').replace(/, /g, '\n')}</Text>
+                                            <Text style={{fontFamily: 'Maison-bold', marginTop: 50, fontSize: wp(4), color: 'black'}}>Delivering to - </Text>
+                                            <Text style={{fontFamily: 'sf', marginTop: 5, fontSize: wp(3.5), color: 'black'}}>{item.ordered_address}, {item.ordered_locality}, {item.ordered_city}</Text>   
                                             
                                             <View style={{ marginTop: 50}}>
-                                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), marginBottom: 5}}>Total - &#8377; {item.total_price}</Text>
+                                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), marginBottom: 5, color: 'black'}}>Total - &#8377; {item.total_price}</Text>
                                                 {item.payment_mode === 'Cash On Delivery' ? <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), color: '#FF847C'}}>Cash On Delivery</Text> : <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), color: 'green'}}>Paid with {item.payment_mode}</Text>}
                                             </View>
                                         </ScrollView>

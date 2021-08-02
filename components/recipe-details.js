@@ -2,11 +2,10 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { TouchableOpacity } from 'react-native';
 import { StyleSheet, Text, View, RefreshControl, ScrollView, SafeAreaView, Image, Button, Animated, Dimensions, FlatList, TextInput } from 'react-native';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { useIsFocused } from '@react-navigation/native';
 import { Ionicons, FontAwesome, FontAwesome5, MaterialCommunityIcons, MaterialIcons, Entypo } from "@expo/vector-icons";
-import Svg, { Path, G, Rect, Circle } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import SkeletonPlaceholder from "react-native-skeleton-placeholder";
+import { StatusBar } from 'expo-status-bar';
+import LottieView from 'lottie-react-native';
 
 
 const {width: screenWidth} = Dimensions.get('window');
@@ -19,6 +18,8 @@ export default function RecipeDetails({ navigation, route }){
     const [loading, setLoading] = useState('true');
     const [mounted, setMounted] = useState(true);
 
+    const [error, setError] = useState(null);
+
     useEffect(() => {
         fetch(`http://192.168.0.105:8000/store/recipedetail/${recipe_id}/`,{
           method: 'GET',
@@ -29,7 +30,7 @@ export default function RecipeDetails({ navigation, route }){
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => {if (mounted) {setRecipeDetails(resp.json)}})
         .then(() => {if (mounted) setLoading('false')})
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
     
         return () => {
           setMounted(false);
@@ -51,7 +52,8 @@ export default function RecipeDetails({ navigation, route }){
             })
             .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => {if (resp.status === 404) {alert('Some items are out of stock, sorry for inconvenience!')}})
-            .catch(error => console.log(error))
+            .then(() => navigation.navigate('cart'))
+            .catch(error => setError(error))
         } else {
             navigation.navigate('Register')
         }
@@ -59,18 +61,26 @@ export default function RecipeDetails({ navigation, route }){
     }
 
 
-    if (loading === 'true') return null;
+    if (loading === 'true') {
+      return (
+        <View style={[styles.container, {justifyContent: 'center', alignItems: 'center'}]}>
+            <StatusBar style="inverted" />
+            <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
+        </View>
+      )
+    }
 
     return (
         <View style={styles.container}>
+          <StatusBar style="inverted" />
           <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{padding: 25}}>
-          <Text style={{fontFamily: 'sofia-black', fontSize: wp(7)}}>{recipeDetails.name}</Text>
+          <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), color: 'black'}}>{recipeDetails.name}</Text>
             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 1}}>
               <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" />
-              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 2}}>{recipeDetails.value1}</Text>
+              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 2, color: 'grey'}}>{recipeDetails.value1}</Text>
               <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'grey'}}>  |  </Text>
               <Ionicons name="ios-people" size={wp(5)} color="#249c86" />
-              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center'}}>   Serves {recipeDetails.servings} </Text>
+              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>   Serves {recipeDetails.servings} </Text>
             </View>
             <View style={{flexDirection: 'row', marginTop: 50, alignItems:'center'}}>
               <View style={{flex: 1}}>
@@ -81,7 +91,7 @@ export default function RecipeDetails({ navigation, route }){
                       recipeDetails.name2 === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                       recipeDetails.name2 === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                       recipeDetails.name2 === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: null}
-                      <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 2}}>{recipeDetails.name2}</Text>
+                      <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 2, color: 'black'}}>{recipeDetails.name2}</Text>
                     </View>
                     <Text style={{fontFamily: 'sf', fontSize: wp(3.5), textAlign: 'center', color: 'grey', marginTop: 2}}>{recipeDetails.value2}</Text>
                   </View>
@@ -91,7 +101,7 @@ export default function RecipeDetails({ navigation, route }){
                       recipeDetails.name3 === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                       recipeDetails.name3 === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                       recipeDetails.name3 === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: null}
-                      <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 2}}>{recipeDetails.name3}</Text>
+                      <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 2, color: 'black'}}>{recipeDetails.name3}</Text>
                     </View>
                     <Text style={{fontFamily: 'sf', fontSize: wp(3.5), textAlign: 'center', color: 'grey', marginTop: 2}}>{recipeDetails.value3}</Text>
                   </View>
@@ -103,7 +113,7 @@ export default function RecipeDetails({ navigation, route }){
                       recipeDetails.name4 === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                       recipeDetails.name4 === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                       recipeDetails.name4 === 'Fat' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: null}
-                      <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 2}}>{recipeDetails.name4}</Text>
+                      <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 2, color: 'black'}}>{recipeDetails.name4}</Text>
                     </View>
                     <Text style={{fontFamily: 'sf', fontSize: wp(3.5), textAlign: 'center', color: 'grey', marginTop: 2}}>{recipeDetails.value4}</Text>
                   </View>
@@ -113,7 +123,7 @@ export default function RecipeDetails({ navigation, route }){
                       recipeDetails.name5 === 'Carbs' ? <MaterialCommunityIcons name="barley" size={wp(4)} color="green" />:
                       recipeDetails.name5 === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                       recipeDetails.name5 === 'Fat (Sat.)' || recipeDetails.name5 === 'Fat (Unsat.)' || recipeDetails.name5 === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: null}
-                      <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 2}}>{recipeDetails.name5}</Text>
+                      <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 2, color: 'black'}}>{recipeDetails.name5}</Text>
                     </View>
                     <Text style={{fontFamily: 'sf', fontSize: wp(3.5), textAlign: 'center', color: 'grey', marginTop: 2}}>{recipeDetails.value5}</Text>
                   </View>
@@ -125,10 +135,10 @@ export default function RecipeDetails({ navigation, route }){
                 </View>
               </View>
             </View>
-            <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 55}}>{recipeDetails.description}</Text>
+            <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 55, color: 'black'}}>{recipeDetails.description}</Text>
             <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 35}}></Text>
             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 35, marginBottom: 20}}>
-              <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(6)}}>Ingredients</Text>
+              <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(6), color: 'black'}}>Ingredients</Text>
               <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'grey'}}>{recipeDetails.ingredient_count} items</Text>
             </View>
             <ScrollView horizontal={true} contentContainerStyle={{paddingRight: 25}}>
@@ -138,17 +148,17 @@ export default function RecipeDetails({ navigation, route }){
                     <View style={{backgroundColor: '#f9f9f9', padding: 15, borderRadius: 15, alignSelf: 'flex-start'}}>
                       <Image source={{uri: item.image}} style={{width: 30, height: 30}} />
                     </View>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), marginTop: 10}}>{item.name}</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), marginTop: 10, color: 'black'}}>{item.name}</Text>
                     <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'grey'}}>{item.show_weight_in_recipe}</Text>
                   </View>: null
               })}
             </ScrollView>
             <TouchableOpacity style={{marginTop: 50, backgroundColor: '#99b898', alignSelf: 'center', padding: 15, borderRadius: 10}} onPress={addCart(recipeDetails)} activeOpacity={0.8}>
-                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>Add Ingredients to cart  &rarr;</Text>
+                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>Add Ingredients to cart  &rarr;</Text>
             </TouchableOpacity>
             <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 35}}></Text>
-            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 35}}>Directions</Text>
-            <Text  style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 15}}>{recipeDetails.steps}</Text>
+            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 35, color: 'black'}}>Directions</Text>
+            <Text  style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 15, color: 'black'}}>{recipeDetails.steps}</Text>
           </ScrollView>
         </View>
     )

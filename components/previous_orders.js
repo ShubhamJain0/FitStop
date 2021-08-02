@@ -58,7 +58,7 @@ export default function PreviousOrders({ navigation, route }) {
               })
               .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
               .then(resp => {if (mounted) {setList(resp.json.qs), setItems(resp.json.data), setImages(resp.json.images), setStatus(resp.status)}})
-              .catch(error => console.log(error))
+              .catch(error => setError(error))
             } else {
               navigation.navigate('Register')
             }
@@ -80,11 +80,11 @@ export default function PreviousOrders({ navigation, route }) {
                 })
                 .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
                 .then(resp => {if (mounted) {setList(resp.json.qs)}})
-                .catch(error => console.log(error))
+                .catch(error => setError(error))
                 } else {
                 navigation.navigate('Register')
                 }
-            })().catch(error => console.log(error))
+            })().catch(error => setError(error))
         });
     }, [navigation])
 
@@ -105,7 +105,7 @@ export default function PreviousOrders({ navigation, route }) {
                     setOrderStatus(resp.json.orderstatus);
                     setRespStatus(resp.status);
                 }})
-                .catch(error => console.log(error))
+                .catch(error => setError(error))
             } else {
                 navigation.navigate('Register');
             }
@@ -130,9 +130,9 @@ export default function PreviousOrders({ navigation, route }) {
               })
               .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
               .then(resp => {if (resp.status === 404) {alert('Some items are out of stock, sorry for inconvenience!')}})
-              .then(() => navigation.navigate('Store'))
+              .then(() => navigation.navigate('Fruits'))
               .then(() => navigation.popToTop())
-              .catch(error => console.log(error))
+              .catch(error => setError(error))
             } else {
               navigation.navigate('Register')
             }
@@ -153,6 +153,7 @@ export default function PreviousOrders({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar style="inverted" />
             {status === 200 ? 
                 <View>
                     <FlatList 
@@ -162,7 +163,7 @@ export default function PreviousOrders({ navigation, route }) {
                         contentContainerStyle={{paddingTop: 15, paddingBottom: 50}}
                         onScrollToIndexFailed={(info) => console.log(info)}
                         ListHeaderComponent={() => (<View style={{width: '85%', alignSelf: 'center', marginBottom: 25}}>
-                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6)}}>Your Orders</Text>
+                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), color: 'black'}}>Previous orders</Text>
                     </View>)}
                         renderItem={({ item }) => (
                             <View style={{marginBottom: 50, backgroundColor: 'white', width: '85%', padding: 25, paddingTop: 15, paddingBottom: 15, borderRadius: 10, alignSelf: 'center', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}}>
@@ -171,7 +172,7 @@ export default function PreviousOrders({ navigation, route }) {
                                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Order #{item.id}</Text>
                                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'grey', marginTop: 2}}>{item.ordereddate}</Text>
                                     </View>
-                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>&#8377; {item.total_price}</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>&#8377; {item.total_price}</Text>
                                 </View>
                                 
                                 {items.map(item1 => {
@@ -188,8 +189,8 @@ export default function PreviousOrders({ navigation, route }) {
                                                     })
                                                 : null}
                                                 <View style={{marginLeft: 25, marginTop: 5}}>
-                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>{x.item_name} </Text>
-                                                    <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5}}>{x.item_weight}     x{x.item_count}</Text>
+                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>{x.item_name} </Text>
+                                                    <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5, color: 'black'}}>{x.item_weight}     x{x.item_count}</Text>
                                                 </View>
                                             </View>
                                         </View>: null
@@ -197,7 +198,7 @@ export default function PreviousOrders({ navigation, route }) {
                                 })}
                                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
                                     <TouchableOpacity style={{alignSelf: 'flex-start'}} onPress={() => (setDetailsModal(true), setDetails(item))}>
-                                        <Text style={{fontFamily: 'sofia-medium', fontSize: wp(3.5) }}>View Details &raquo;</Text>
+                                        <Text style={{fontFamily: 'sofia-medium', fontSize: wp(3.5), color: 'black'}}>View Details &raquo;</Text>
                                     </TouchableOpacity>
                                 </View>
                                 <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 15}}></Text>
@@ -205,7 +206,7 @@ export default function PreviousOrders({ navigation, route }) {
                                     <TouchableOpacity style={{alignSelf: 'flex-start', flex: 1}} onPress={repeatOrder(item)}>
                                         <Text style={{fontSize: wp(4), color: '#249C86', fontFamily: 'Maison-bold'}}> Repeat Order</Text>
                                     </TouchableOpacity>
-                                    {getStatus(item) ? <Text style={{fontFamily: 'Maison-bold', color: 'blue', backgroundColor: '#f0f0ff', padding: 3, fontSize: wp(3)}}>{getStatus(item)}</Text>: item.delivery_and_package_rating > 0 ? <View style={{flexDirection: 'row', alignItems: 'center'}}><Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>{item.delivery_and_package_rating} </Text><FontAwesome name="star" size={wp(3.5)} color="#249C86" /></View>: <TouchableOpacity onPress={() => navigation.navigate('Reviews', {rateItem: item})}><Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline', fontSize: wp(3.5)}}>Rate Order</Text></TouchableOpacity>}
+                                    {getStatus(item) ? <Text style={{fontFamily: 'Maison-bold', color: 'blue', backgroundColor: '#f0f0ff', padding: 3, fontSize: wp(3)}}>{getStatus(item)}</Text>: item.delivery_and_package_rating > 0 ? <View style={{flexDirection: 'row', alignItems: 'center'}}><Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>{item.delivery_and_package_rating} </Text><FontAwesome name="star" size={wp(3.5)} color="#249C86" /></View>: <TouchableOpacity onPress={() => navigation.navigate('Reviews', {rateItem: item})}><Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline', fontSize: wp(3.5), color: 'black'}}>Rate order</Text></TouchableOpacity>}
                                 </View>
                             </View>
                             
@@ -216,7 +217,7 @@ export default function PreviousOrders({ navigation, route }) {
             : status === 404 ? 
                     <View style={{flex: 1, justifyContent: 'center'}}>
                         <Image source={require('../assets/not-found.png')} style={{width: '85%', height: 2071*(screenWidth/3994), alignSelf: 'center'}} />
-                        <Text style={{marginTop: 50, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center'}}>You haven't placed any order yet.</Text>
+                        <Text style={{marginTop: 50, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'black'}}>You haven't placed any order yet.</Text>
                         <TouchableOpacity activeOpacity={0.8} style={{marginTop: 15, alignSelf: 'center'}} onPress={() => (navigation.popToTop(), navigation.navigate('Fruits'))}>
                             <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: '#249c86'}}>ORDER NOW</Text>
                         </TouchableOpacity>
@@ -238,60 +239,60 @@ export default function PreviousOrders({ navigation, route }) {
             >
                 <View style={{flex: 1, alignSelf: 'center', width: '90%', padding: 25, backgroundColor: 'white'}}>
                     <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-                        <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), marginBottom: 20}}>Details</Text>
-                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 10}}>Ordered Items</Text>
+                        <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), marginBottom: 20, color: 'black'}}>Details</Text>
+                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginBottom: 10, color: 'black'}}>Ordered Items</Text>
                         {details ? items.map(item1 => {
                             return item1.items.map(x => {
                                 return x.id_of_order === details.id ?
                                 <View key={x.id} style={{flexDirection: 'row', alignItems: 'center', marginBottom: 3}}>
-                                    <Text style={{flex: 1, fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>{x.item_name} </Text>
-                                    <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5)}}>{x.item_weight}</Text>
-                                    <Text style={{fontFamily: 'sf', fontSize: wp(3.5)}}>x{x.item_count}</Text>
+                                    <Text style={{flex: 1, fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{x.item_name} </Text>
+                                    <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5), color: 'black'}}>{x.item_weight}</Text>
+                                    <Text style={{fontFamily: 'sf', fontSize: wp(3.5), color: 'black'}}>x{x.item_count}</Text>
                                 </View>: null
                             })
                         }): 'null'}
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
-                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10}}>Bill Break-up</Text>
+                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10, color: 'black'}}>Bill Break-up</Text>
                         {details ? 
                             <View>
                                 <View style={{flexDirection: 'row', marginBottom: 5}}>
-                                    <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5)}}>Item subtotal</Text>
-                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {details.cart_total}</Text>
+                                    <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5), color: 'black'}}>Item subtotal</Text>
+                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {details.cart_total}</Text>
                                 </View>
                                 <View style={{flexDirection: 'row', marginBottom: 5}}>
-                                    <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5)}}>Delivery Charges</Text>
-                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {details.delivery_charges}</Text>
+                                    <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5), color: 'black'}}>Delivery Charges</Text>
+                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {details.delivery_charges}</Text>
                                 </View>
                                 <View style={{flexDirection: 'row', marginBottom: 5}}>
-                                    <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5)}}>Taxes</Text>
-                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {details.taxes}</Text>
+                                    <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5), color: 'black'}}>Taxes</Text>
+                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {details.taxes}</Text>
                                 </View>
                                 {details.coupon !== 0 ? 
                                     <View style={{flexDirection: 'row', marginBottom: 5}}>
-                                        <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5)}}>Offer Applied</Text>
-                                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>- &#8377; {details.coupon}</Text>
+                                        <Text style={{flex: 1, fontFamily: 'sf', fontSize: wp(3.5), color: 'black'}}>Offer Applied</Text>
+                                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>- &#8377; {details.coupon}</Text>
                                     </View>: null
                                 }
                                 <View style={{flexDirection: 'row', marginBottom: 5}}>
-                                    <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4.5)}}>Total</Text>
-                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4.5)}}>&#8377; {details.total_price}</Text>
+                                    <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4.5), color: 'black'}}>Total</Text>
+                                    <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4.5), color: 'black'}}>&#8377; {details.total_price}</Text>
                                 </View>
                             </View>
                         : 'null'
                         }
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
-                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10}}>Status</Text>
+                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10, color: 'black'}}>Status</Text>
                         {details && getStatus(details) ? <Text style={{fontFamily: 'Maison-bold', color: 'blue', backgroundColor: '#f0f0ff', padding: 3, fontSize: wp(3), alignSelf: 'flex-start'}}>{getStatus(details)}</Text>: <Text style={{fontFamily: 'Maison-bold', color: 'green', backgroundColor: '#e8ffe8', padding: 3, fontSize: wp(3), alignSelf: 'flex-start'}}>&#10003; Delivered</Text>}
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
-                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10}}>{details && getStatus(details) ? 'Delivering to:': 'Delivered to:'}</Text>
-                        {details ? <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>{details.ordered_address}, {details.ordered_locality}, {details.ordered_city}</Text>: 'null'}
+                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10, color: 'black'}}>{details && getStatus(details) ? 'Delivering to:': 'Delivered to:'}</Text>
+                        {details ? <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{details.ordered_address}, {details.ordered_locality}, {details.ordered_city}</Text>: 'null'}
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
-                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10}}>Payment</Text>
-                        {details ? <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>{details.payment_mode === 'Cash On Delivery' ? 'Cash On Delivery' : details.payment_mode}</Text>: 'null'}
+                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10, color: 'black'}}>Payment</Text>
+                        {details ? <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{details.payment_mode === 'Cash On Delivery' ? 'Cash On Delivery' : details.payment_mode}</Text>: 'null'}
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
-                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10}}>Ordered Date</Text>
+                        <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginTop: 10, marginBottom: 10, color: 'black'}}>Ordered Date</Text>
                         {details ? 
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>{details.ordereddate}</Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{details.ordereddate}</Text>
                         : 'null'}
                         <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 15}}></Text>
                     </ScrollView>

@@ -29,27 +29,28 @@ export default function TermsandConditions() {
 
     return (
         <View style={{flex: 1, backgroundColor: 'white', paddingTop: 100, padding: 50, paddingBottom: 10}}>
+            <StatusBar style="inverted" />
             <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(7)}}>Terms and Conditions</Text>
+                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(7), color: 'black'}}>Terms and Conditions</Text>
                 <TouchableOpacity style={{marginTop: 50}} onPress={() => setOption('Terms')} activeOpacity={1}>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Terms of use</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Terms of use</Text>
                 </TouchableOpacity>
-                {option === 'Terms' ? <Text style={{fontFamily: 'sf', fontSize: wp(4)}}>Terms of use sdnjbd sdksdnn sdijdibhd bnpaidadanhubd aadamd adoad nabdiadnowpkiqbd dqdknqdn qdoj </Text>: null}
+                {option === 'Terms' ? <Text style={{fontFamily: 'sf', fontSize: wp(4), color: 'black'}}>Terms of use sdnjbd sdksdnn sdijdibhd bnpaidadanhubd aadamd adoad nabdiadnowpkiqbd dqdknqdn qdoj </Text>: null}
                 <Text style={{backgroundColor: '#ebebeb', width: '100%', height: 1, marginTop: 25}}></Text>
                 <TouchableOpacity style={{marginTop: 25}} onPress={() => setOption('Privacy Policy')} activeOpacity={1}>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Privacy Policy</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Privacy Policy</Text>
                 </TouchableOpacity>
-                {option === 'Privacy Policy' ? <Text style={{fontFamily: 'sf', fontSize: wp(4)}}>adandabdb dnjbd sdksdnn sdijdibhd bnpaidadanhubd aadamd adoad nabdiadnowpkiqbd dqdknqdn qdoj </Text>: null}
+                {option === 'Privacy Policy' ? <Text style={{fontFamily: 'sf', fontSize: wp(4), color: 'black'}}>adandabdb dnjbd sdksdnn sdijdibhd bnpaidadanhubd aadamd adoad nabdiadnowpkiqbd dqdknqdn qdoj </Text>: null}
                 <Text style={{backgroundColor: '#ebebeb', width: '100%', height: 1, marginTop: 25}}></Text>
                 <TouchableOpacity style={{marginTop: 25}} onPress={() => setOption('Refund')} activeOpacity={1}>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Payments and Refunds</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Payments and Refunds</Text>
                 </TouchableOpacity>
-                {option === 'Refund' ? <Text style={{fontFamily: 'sf', fontSize: wp(4)}}>adandabdb dnjbd sdksdnn sdijdibhd bnpaidadanhubd aadamd adoad nabdiadnowpkiqbd dqdknqdn qdoj </Text>: null}
+                {option === 'Refund' ? <Text style={{fontFamily: 'sf', fontSize: wp(4), color: 'black'}}>adandabdb dnjbd sdksdnn sdijdibhd bnpaidadanhubd aadamd adoad nabdiadnowpkiqbd dqdknqdn qdoj </Text>: null}
                 <Text style={{backgroundColor: '#ebebeb', width: '100%', height: 1, marginTop: 25}}></Text>
                 <TouchableOpacity style={{marginTop: 25}} onPress={() => setOption('Attributions')} activeOpacity={1}>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Attributions</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Attributions</Text>
                 </TouchableOpacity>
-                {option === 'Attributions' ? <Text style={{fontFamily: 'sf', fontSize: wp(4)}}>adandabdb dnjbd sdksdnn sdijdibhd bnpaidadanhubd aadamd adoad nabdiadnowpkiqbd dqdknqdn qdoj </Text>: null}
+                {option === 'Attributions' ? <Text style={{fontFamily: 'sf', fontSize: wp(4), color: 'black'}}>adandabdb dnjbd sdksdnn sdijdibhd bnpaidadanhubd aadamd adoad nabdiadnowpkiqbd dqdknqdn qdoj </Text>: null}
                 <Text style={{backgroundColor: '#ebebeb', width: '100%', height: 1, marginTop: 25}}></Text>
             </ScrollView>
         </View>

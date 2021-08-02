@@ -7,6 +7,8 @@ import { Ionicons, FontAwesome, FontAwesome5, MaterialCommunityIcons, MaterialIc
 import Svg, { Path, G, Rect, Circle } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SkeletonPlaceholder from "react-native-skeleton-placeholder";
+import { StatusBar } from 'expo-status-bar';
+import LottieView from 'lottie-react-native';
 
 
 
@@ -19,6 +21,8 @@ export default function FavRecipe({ navigation }){
     const [loading, setLoading] = useState('true');
     const [mounted, setMounted] = useState(true);
 
+    const [error, setError] = useState(null);
+
     useEffect(() => {
         fetch('http://192.168.0.105:8000/store/recipes/',{
           method: 'GET',
@@ -28,7 +32,7 @@ export default function FavRecipe({ navigation }){
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => {if (mounted) {setRecipesList(resp.json.qs), setIngredients(resp.json.ingredients)}})
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
     
         return () => {
           setMounted(false);
@@ -53,9 +57,9 @@ export default function FavRecipe({ navigation }){
             .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => {if (mounted) {setFavRecipes(resp.json.data)}})
             .then(() => {if (mounted) setLoading('false')})
-            .catch(error => console.log(error))
+            .catch(error => setError(error))
           }
-        })().catch(error => console.log(error))
+        })().catch(error => setError(error))
     
         return () => {
           setMounted(false);
@@ -76,10 +80,18 @@ export default function FavRecipe({ navigation }){
 
 
 
-    if (loading === 'true') return null;
+    if (loading === 'true') {
+      return (
+        <View style={[styles.container, {justifyContent: 'center', alignItems: 'center'}]}>
+            <StatusBar style="inverted" />
+            <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
+        </View>
+      )
+    }
 
     return (
         <View style={styles.container}>
+          <StatusBar style="inverted" />
             {favRecipes && favRecipes.length > 0 ? 
                 <FlatList 
                 data={recipesList}
@@ -105,7 +117,7 @@ export default function FavRecipe({ navigation }){
                               </View>
                               <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                             </View>
-                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 15}}>{item.name}</Text>
+                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 15, color: 'black'}}>{item.name}</Text>
                             <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 15, color: '#525252'}} numberOfLines={5} ellipsizeMode={'tail'}>{item.description}</Text>
                             
                             <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={() => navigation.navigate('RecipeDetails', {recipe_id: item.id, recipe_ingredients: ingredients})}>
@@ -116,7 +128,7 @@ export default function FavRecipe({ navigation }){
                     )}
                 />:
                 <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5)}}>No favorites added !</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black'}}>No favorites added !</Text>
                 </View>
             }
             </View>

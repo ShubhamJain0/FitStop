@@ -44,7 +44,7 @@ function Fruits(props) {
 
     const animation = new Animated.Value(0);
     const [scrollY] = useState(new Animated.Value(0));
-    const screenHeight = Dimensions.get("window").height;
+    const screenWidth = Dimensions.get("window").width;
 
     const [error, setError] = useState('');
 
@@ -70,7 +70,7 @@ function Fruits(props) {
             await AsyncStorage.setItem('isFirstTimeStore', 'false')
             props.start();
         }
-        })().catch(error => console.log(error))
+        })().catch(error => setError(error))
 
         return () => {
             setMounted(false);
@@ -108,7 +108,7 @@ function Fruits(props) {
             })
             .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => {if (mounted) {setFruitsList(resp.json); setFilteredList(resp.json); dropDownRef.current = new Array(resp.json.length);}})
-            .catch(error => console.log(error))
+            .catch(error => setError(error))
 
         return () => {
             setMounted(false);
@@ -142,7 +142,7 @@ function Fruits(props) {
                     .then(() => {if (mounted) {setHideButton('none')}})
                     .then(() => {if (mounted) {setLoading('false')}})
                     .then(() => {if (mounted) {setIsOffline(false)}})
-                    .catch(error => console.log(error))
+                    .catch(error => setError(error))
                 } else {
                     if (mounted) {
                         setCartData([]);
@@ -153,7 +153,7 @@ function Fruits(props) {
                 }
                 
 
-            })().catch(error => console.log(error))
+            })().catch(error => setError(error))
         });
         
         return () => {
@@ -210,7 +210,7 @@ function Fruits(props) {
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => setFilteredList(resp.json))
         .then(() => setLoading('false'))
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
     
         
     }, []);
@@ -231,7 +231,7 @@ function Fruits(props) {
                     })
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                     .then(resp => setCartData(resp.json.cart))
-                    .catch(error => console.log(error))
+                    .catch(error => setError(error))
                 } else {
                     return fetch('http://192.168.0.105:8000/store/cart/',{
                         method: 'POST',
@@ -243,7 +243,7 @@ function Fruits(props) {
                     })
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                     .then(resp => setCartData(resp.json.cart))
-                    .catch(error => console.log(error))
+                    .catch(error => setError(error))
                     
                 }
             } else {
@@ -265,7 +265,7 @@ function Fruits(props) {
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => setCartData(resp.json.cart))
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
         } else {
             navigation.navigate('Register')
         }
@@ -367,7 +367,7 @@ function Fruits(props) {
             })
             .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => (setFruitsList(resp.json), setFilteredList(resp.json), dropDownRef.current = new Array(resp.json.length)))
-            .catch(error => console.log(error))
+            .catch(error => setError(error))
 
             //Cart
 
@@ -385,7 +385,7 @@ function Fruits(props) {
                 .then(() => setLoading('false'))
                 .then(() => setIsOffline(false))
                 .then(() => setShowInidc(false))
-                .catch(error => console.log(error))
+                .catch(error => setError(error))
             } else {
                 setCartData([]);
                 setHideButton('none');
@@ -394,7 +394,7 @@ function Fruits(props) {
                 setShowInidc(false)
             }
         } catch (error) {
-            console.log(error)
+            setError(error)
         } finally {
             NetInfo.fetch().then(state => {
                 if (!state.isConnected) {
@@ -409,9 +409,10 @@ function Fruits(props) {
       if (isOffline) {
         return (
             <View style={{flex: 1, backgroundColor: '#fcfcfc'}}>
+                <StatusBar style="inverted" />
                 <Image source={require('../assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
                 <View style={{width: '80%', alignSelf: 'center'}}>
-                <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: 50, textAlign: 'center'}}>Uh oh! Seems like you are disconnected !</Text>
+                <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: 50, textAlign: 'center', color: 'black'}}>Uh oh! Seems like you are disconnected !</Text>
                 {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={retry}>
                     <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
                 </TouchableOpacity>: <LottieView source={require('../assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
@@ -426,6 +427,7 @@ function Fruits(props) {
     if (loading == 'true') {
         return (
             <View style={{flex: 1, backgroundColor: '#fcfcfc', justifyContent: 'center', alignItems: 'center'}}>
+                <StatusBar style="inverted" />
                 <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
             </View>
         )
@@ -436,25 +438,25 @@ function Fruits(props) {
                 <View style={{flex: 0.4, marginTop: hp(30)}}>
                     <CopilotStep text={'Explore fruits !'} order={3} name={'fruits'}>
                         <CoPilotTouchableOpacity style={{alignItems: 'center', marginBottom: 100, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Fruits')} >
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Fruits</Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Fruits</Text>
                             <Text style={{backgroundColor: '#249C86', height: 2, width: '40%', marginTop: 5, alignSelf: 'center'}}></Text>
                         </CoPilotTouchableOpacity>
                     </CopilotStep>
                     <CopilotStep text={'Explore dried-fruits !'} order={4} name={'dried-fruits'}>
                         <CoPilotTouchableOpacity style={{alignItems: 'center', marginBottom: 100, opacity: 0.2, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Dried-Fruits')} >
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Dried{'\n'}Fruits</Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Dried{'\n'}Fruits</Text>
                             <Text style={{ height: 2, marginTop: 5}}></Text>
                         </CoPilotTouchableOpacity>
                     </CopilotStep>
                     <CopilotStep text={'Explore exotics !'} order={5} name={'exotics'}>
                         <CoPilotTouchableOpacity style={{alignItems: 'center', opacity: 0.2, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Exotics')} >
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Exotics</Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Exotics</Text>
                             <Text style={{ height: 2, marginTop: 5}}></Text>
                         </CoPilotTouchableOpacity>
                     </CopilotStep>
                 </View>
                 
-                    <StatusBar style="auto" />
+                    <StatusBar style="inverted" />
                     <View style={styles.container}>
                         <View
                             style={{
@@ -518,25 +520,25 @@ function Fruits(props) {
                                                         <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                                     </View>
                                                     <View style={{flex: 1}}>
-                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
+                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5, color: 'black'}}>{item.name}</Text>
                                                         {exists(item) ? 
                                                             item.detail.map((item2) => {
                                                                 return item2.quantity === exists(item) ?
                                                                 item2.previous_price > 0 ? 
                                                                 <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                                                                    <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
+                                                                    <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2), color: 'black'}}>&#8377; {item2.previous_price}</Text>
+                                                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item2.price}</Text>
                                                                 </View>:
-                                                                <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
+                                                                <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item2.price}</Text> : null
                                                                 
                                                             }):  
                                                             
                                                             item.detail[0].previous_price > 0 ?
                                                             <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                                                                <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
+                                                                <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2), color: 'black'}}>&#8377; {item.detail[0].previous_price}</Text>
+                                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item.detail[0].price}</Text>
                                                             </View>
-                                                            : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
+                                                            : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item.detail[0].price}</Text>
                                                         }
                                                         
                                                             {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -592,25 +594,25 @@ function Fruits(props) {
                                                     <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                                 </View>
                                                 <View style={{flex: 1}}>
-                                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
+                                                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5, color: 'black'}}>{item.name}</Text>
                                                     {exists(item) ? 
                                                         item.detail.map((item2) => {
                                                             return item2.quantity === exists(item) ?
                                                             item2.previous_price > 0 ? 
                                                             <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                                                                <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
+                                                                <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2), color: 'black'}}>&#8377; {item2.previous_price}</Text>
+                                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item2.price}</Text>
                                                             </View>:
-                                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
+                                                            <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item2.price}</Text> : null
                                                             
                                                         }):  
                                                         
                                                         item.detail[0].previous_price > 0 ?
                                                         <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2), color: 'black'}}>&#8377; {item.detail[0].previous_price}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item.detail[0].price}</Text>
                                                         </View>
-                                                        : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
+                                                        : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item.detail[0].price}</Text>
                                                     }
                                                     
                                                         {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -642,7 +644,7 @@ function Fruits(props) {
                                         <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: 10, paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                             
                                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
-                                                <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5)}}>Details</Text>
+                                                <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5), color: 'black'}}>Details</Text>
                                                 {item.avg_ratings > 0 ? 
                                                     <View style={{flex: 1}}>
                                                         <View style={{flexDirection:'row', justifyContent: 'center', alignItems: 'center'}}>
@@ -652,15 +654,15 @@ function Fruits(props) {
                                                             <AntDesign name="star" size={15} style={item.avg_ratings > 3 ? {color: '#249C86'}: {color: 'grey'}} />
                                                             <AntDesign name="star" size={15} style={item.avg_ratings > 4 ? {color: '#249C86'}: {color: 'grey'}} />
                                                             
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf'}}> (<FontAwesome name="user" size={wp(3)} color="black" /> {item.no_of_ratings}) </Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'sf', color: 'black'}}> (<FontAwesome name="user" size={wp(3)} color="black" /> {item.no_of_ratings}) </Text>
                                                         </View>
                                                     </View>
                                                 : null}
                                             </View>
-                                            <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1}}>{item.description}</Text>
+                                            <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1, color: 'black'}}>{item.description}</Text>
                                             <Text style={{backgroundColor: '#ebebeb', height: 1, width: '90%', alignSelf: 'center', marginTop: 10}}></Text>
                                             <View style={{flex: 1, marginTop: 5}}>
-                                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15}}>Nutrition per 100 g</Text>
+                                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15, color: 'black'}}>Nutrition per 100 g</Text>
                                                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15, marginRight: 5, marginLeft: 5}}>
                                                     {item.nutritional_values.slice(0, 3).map((x, index) => {
                                                         return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 2 ? 0: 1, borderColor: '#b5b5b5'}}>
@@ -670,7 +672,7 @@ function Fruits(props) {
                                                                         x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                                         x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                                         x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
+                                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}> {x.name}</Text>
                                                                     </View>
                                                                     <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey', marginTop: 3}}>{x.value}</Text>
                                                                 </View>
@@ -685,7 +687,7 @@ function Fruits(props) {
                                                                         x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                                         x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                                         x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
+                                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}> {x.name}</Text>
                                                                     </View>
                                                                     <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey'}}>{x.value}</Text>
                                                                 </View>
@@ -797,7 +799,7 @@ const StepNumberComponent = ({
     return (
       <View>
       <View style={{flex: 1}}>
-        <Text testID="stepDescription" style={{fontFamily: 'sofia-medium', fontSize: wp(4)}}>{currentStep.text}</Text>
+        <Text testID="stepDescription" style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{currentStep.text}</Text>
       </View>
       <View style={{marginTop: 10, flexDirection: 'row', justifyContent: 'flex-end'}}>
         {

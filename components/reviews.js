@@ -1,19 +1,30 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { StyleSheet, Text, View, RefreshControl, SafeAreaView, Image, Button, TouchableOpacity, TextInput, ActivityIndicator, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, RefreshControl, SafeAreaView, Image, Button, TouchableOpacity, TextInput, ActivityIndicator, ScrollView, Dimensions } from 'react-native';
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import Slider from '@react-native-community/slider';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path, Rect, Circle, G, Polygon, LinearGradient, Defs, Stop, Ellipse } from 'react-native-svg';
 import LottieView from 'lottie-react-native';
+import Carousel, {ParallaxImage, Pagination} from 'react-native-snap-carousel';
+import { StatusBar } from 'expo-status-bar';
 
-
+const {width: screenWidth} = Dimensions.get('window');
 
 export default function Reviews({ route, navigation }) {
 
     const [reviews, setReviews] = useState([]);
     const [storeData, setStoreData] = useState([]);
     const [respStatus, setRespStatus] = useState(0);
+
+    const [error, setError] = useState(null);
+
+    const carouselRef = useRef(null);
+    const emoji1 = useRef(null);
+    const emoji2 = useRef(null);
+    const emoji3 = useRef(null);
+    const emoji4 = useRef(null);
+    const emoji5 = useRef(null);
 
     const [ratingItems, setRatingItems] = useState([]);
     const [activeItem, setActiveItem] = useState('');
@@ -45,11 +56,11 @@ export default function Reviews({ route, navigation }) {
                 })
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                 .then(resp => (setReviews(resp.json.rating), setStoreData(resp.json.store_data) ))
-                .catch(error => console.log(error))
+                .catch(error => setError(error))
             } else {
                 navigation.navigate('Register')
             }
-        })().catch(error => console.log(error))
+        })().catch(error => setError(error))
           
       
   }, [])
@@ -69,16 +80,16 @@ export default function Reviews({ route, navigation }) {
               })
               .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
               .then(resp => (setRatingItems(resp.json.items), setRespStatus(resp.status), setActiveItem(resp.json.items[0])))
-              .catch(error => console.log(error))
+              .catch(error => setError(error))
             } else {
               navigation.navigate('Register')
             }
-          })().catch(error => console.log(error))
+          })().catch(error => setError(error))
     
   }, [])
 
 
-    const createRating = (item) => async evt => {
+    const createRating = async (item) => {
         const token = await AsyncStorage.getItem('USER_TOKEN')
             if (token) {
                 if (sliderValue > 0){
@@ -92,7 +103,7 @@ export default function Reviews({ route, navigation }) {
                     })
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                     .then(resp => {if (resp.status === 201)(setReviews(resp.json.rating)) })
-                    .catch(error => console.log(error))
+                    .catch(error => setError(error))
                 } else {
                     alert('Move the slider to rate the item')
                 }
@@ -101,7 +112,7 @@ export default function Reviews({ route, navigation }) {
             }
     }
 
-    const createDelPackRating = () => async evt => {
+    const createDelPackRating = async () => {
         const token = await AsyncStorage.getItem('USER_TOKEN')
             if (token) {
                 if (delPackRating > 0){
@@ -115,7 +126,7 @@ export default function Reviews({ route, navigation }) {
                     })
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                     .then(resp => {if (resp.status === 201){navigation.goBack()} })
-                    .catch(error => console.log(error))
+                    .catch(error => setError(error))
                 } else {
                     alert('Please provide a valid rating')
                 }
@@ -146,156 +157,123 @@ export default function Reviews({ route, navigation }) {
     if (respStatus === 200)
     return (
         <View style={styles.container}>
-            <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 50, paddingLeft: 25, paddingRight: 25}}>
-                <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), marginTop: 5}}>Share your experience{'\n'}with us !</Text>
-                <ScrollView bounces={false} horizontal={true} showsHorizontalScrollIndicator={false}>
-                    {ratingItems.map((item) => {
-                        return (
-                            <View key={item.item_name} style={{marginRight: 35, marginTop: 25}}>
-                                <TouchableOpacity onPress={() => (setActiveItem(item), setSliderValue(1), setSliderPosition(1))} activeOpacity={0.8}>
-                                    <Text style={{fontSize: wp(4.5), fontFamily: 'Maison-bold', color: activeItem.item_name === item.item_name ? '#249c86' : 'black', opacity: activeItem.item_name === item.item_name ? 1: 0.1, textDecorationLine: activeItem.item_name === item.item_name ? 'underline': 'none', fontWeight: 'bold'}}>{item.item_name}</Text>
-                                </TouchableOpacity>
+            <StatusBar style="inverted" />
+            <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), marginTop: 5, color: 'black', width: '90%', alignSelf: 'center'}}>Share your experience{'\n'}with us !</Text>
+            <Carousel 
+                ref={carouselRef}
+                data={['one', 'two']}
+                sliderWidth={screenWidth}
+                itemWidth={screenWidth}
+                inactiveSlideScale={1}
+                scrollEnabled={false}
+                containerCustomStyle={{alignSelf: 'center'}}
+                renderItem={({item, index}) => {
+                    return (
+                        index === 0 ? 
+                        <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 50, width: '90%', alignSelf: 'center'}}>
+                            <ScrollView bounces={false} horizontal={true} showsHorizontalScrollIndicator={false}>
+                                {ratingItems.map((item) => {
+                                    return (
+                                        <View key={item.item_name} style={{marginRight: 35, marginTop: 25}}>
+                                            <TouchableOpacity onPress={() => (setActiveItem(item), setSliderValue(1), setSliderPosition(1))} activeOpacity={0.8}>
+                                                <Text style={{fontSize: wp(4.5), fontFamily: 'Maison-bold', color: activeItem.item_name === item.item_name ? '#249c86' : 'black', opacity: activeItem.item_name === item.item_name ? 1: 0.1, textDecorationLine: activeItem.item_name === item.item_name ? 'underline': 'none', fontWeight: 'bold'}}>{item.item_name}</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )
+                                })}
+                            </ScrollView>
+                            <View style={{marginTop: 50}}>
+                                {exists() ? 
+                                    <View style={{alignItems: 'center'}}>
+                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), marginBottom: 25, color: 'black'}}>You have rated {activeItem.item_name} : </Text>
+                                        {exists() === 1 ? emojis[0]: exists() === 2 ? emojis[1]: exists() === 3 ? emojis[2]: exists() === 4 ? emojis[3]: exists() === 5 ? emojis[4] : null } 
+                                        <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5), color: 'black'}}>{exists() === 1 ? 'Ugh ! Terrible !': exists() === 2 ? 'Bad': exists() === 3 ? 'Could have been better !' : exists() === 4 ? 'Good': exists() === 5 ? 'Awesome': null}</Text>
+                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
+                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Next</Text>
+                                        </TouchableOpacity>
+                                    </View> :
+                                    <View>
+                                        <View style={{alignItems: 'center'}}>
+                                            {sliderValue === 1 ? emojis[0]: sliderValue === 2 ? emojis[1]: sliderValue === 3 ? emojis[2]: sliderValue === 4 ? emojis[3]: sliderValue === 5 ? emojis[4]:  null}
+                                        </View>
+                                        <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5), color: 'black'}}>{sliderValue === 1 ? 'Ugh ! Terrible !': sliderValue === 2 ? 'Bad': sliderValue === 3 ? 'Could have been better !' : sliderValue === 4 ? 'Good': sliderValue === 5 ? 'Awesome': null}</Text>
+                                        <Slider style={{marginTop: 25, width: '60%', alignSelf: 'center'}} minimumValue={1} maximumValue={5} onValueChange={(value) => (setSliderValue(value), setSliderPosition(value))} step={1} value={sliderPosition} thumbTintColor={'#99b898'} minimumTrackTintColor={'#99b898'} />
+                                        <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 45}}>
+                                            <Ionicons name="ios-chatbox-ellipses" size={wp(4.5)} color="#99b898" />
+                                            <View style={{marginLeft: 5}}>
+                                                <Text style={{fontSize: wp(4.5), fontFamily: 'Maison-bold', color: 'black'}}>Wanna leave a comment?</Text>
+                                            </View>
+                                        </View>
+                                        <TextInput style={{fontFamily: 'sf', fontSize: wp(4), width: wp(50), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} onChangeText={(text) => setComment(text)} />
+                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
+                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Next</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                }
                             </View>
-                        )
-                    })}
-                </ScrollView>
-                <View style={{marginTop: 50}}>
-                    {exists() ? 
-                        <View style={{alignItems: 'center'}}>
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), marginBottom: 25}}>You have rated {activeItem.item_name} : </Text>
-                             {exists() === 1 ? emojis[0]: exists() === 2 ? emojis[1]: exists() === 3 ? emojis[2]: exists() === 4 ? emojis[3]: exists() === 5 ? emojis[4] : null } 
-                             <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5)}}>{exists() === 1 ? 'Ugh ! Terrible !': exists() === 2 ? 'Bad': exists() === 3 ? 'Could have been better !' : exists() === 4 ? 'Good': exists() === 5 ? 'Awesome': null}</Text>
-                        </View> :
-                        <View>
-                            <View style={{alignItems: 'center'}}>
-                                {sliderValue === 1 ? emojis[0]: sliderValue === 2 ? emojis[1]: sliderValue === 3 ? emojis[2]: sliderValue === 4 ? emojis[3]: sliderValue === 5 ? emojis[4]:  null}
-                            </View>
-                            <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5)}}>{sliderValue === 1 ? 'Ugh ! Terrible !': sliderValue === 2 ? 'Bad': sliderValue === 3 ? 'Could have been better !' : sliderValue === 4 ? 'Good': sliderValue === 5 ? 'Awesome': null}</Text>
-                            <Slider style={{marginTop: 25, width: '60%', alignSelf: 'center'}} minimumValue={1} maximumValue={5} onValueChange={(value) => (setSliderValue(value), setSliderPosition(value))} step={1} value={sliderPosition} thumbTintColor={'#99b898'} minimumTrackTintColor={'#99b898'} />
-                            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 45}}>
-                                <Ionicons name="ios-chatbox-ellipses" size={wp(4.5)} color="#99b898" />
-                                <View style={{marginLeft: 5}}>
-                                    <Text style={{fontSize: wp(4.5), fontFamily: 'Maison-bold'}}>Wanna leave a comment?</Text>
-                                </View>
-                            </View>
-                            <TextInput style={{fontFamily: 'sf', fontSize: wp(4), width: wp(50), marginTop: 10}} placeholder={'Write Here...'} multiline={true} onChangeText={(text) => setComment(text)} />
-                            <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={createRating(activeItem.item_name)} activeOpacity={0.8}>
-                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold'}}>Submit Rating</Text>
-                            </TouchableOpacity>
-                        </View>
-                    }
-                    <Text style={{backgroundColor: '#cccccc', height: 1, marginTop: 40}}></Text>
-                        <View style={{marginTop: 40}}>
-                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6)}}>Rate Packaging and delivery</Text>
-                            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
-                                <TouchableOpacity style={{marginRight: 15}} onPress={() => setDelPackRating(1)} activeOpacity={0.8}>
-                                    <Svg style={{opacity: delPackRating === 1 ? 1 : 0.4}} viewBox="0 0 65.441 65.441" width={50} height={40}>
-                                        <G>
-                                            <G>
-                                                <Path fill="#EDC951" d="M65.441,34.881c0,16.616-13.472,30.086-30.09,30.086S5.262,51.497,5.262,34.881    S18.733,4.795,35.351,4.795S65.441,18.265,65.441,34.881z"/>
-                                                <Path id="path-2_22_" fill="#53ECF4" d="M26.017,14.879c0.48,4.098-1.519,5.949-5.646,5.949s-5.913-1.862-5.342-5.949    c0.61-4.352,5.342-9.299,5.342-9.299S25.533,10.756,26.017,14.879z"/>
-                                                <Path fill="black" id="path-3_22_" d="M44.76,51.039c-0.828,0-1.5-0.671-1.5-1.5c0-4.659-3.717-8.308-8.462-8.308h-4.982    c-4.745,0-8.462,3.582-8.462,8.155c0,0.828-0.671,1.5-1.5,1.5c-0.828,0-1.5-0.672-1.5-1.5c0-6.255,5.036-11.154,11.462-11.154    h4.982c6.32,0,11.462,5.072,11.462,11.307C46.26,50.368,45.588,51.039,44.76,51.039z"/>
-                                                <Path fill="black" id="path-4_22_" d="M15.738,19.549c-2.599,0-4.436-0.66-5.617-2.017c-1.143-1.314-1.549-3.211-1.209-5.64    c0.668-4.776,5.535-9.911,5.742-10.127c0.28-0.292,0.664-0.459,1.069-0.463c0.37-0.013,0.792,0.154,1.078,0.441    c0.565,0.567,5.544,5.673,6.074,10.182c0.277,2.371-0.175,4.24-1.346,5.555C20.307,18.853,18.359,19.549,15.738,19.549z     M15.769,5.049c-1.338,1.632-3.519,4.634-3.886,7.258c-0.214,1.532-0.046,2.627,0.502,3.256c0.569,0.654,1.697,0.986,3.353,0.986    c1.728,0,2.922-0.357,3.55-1.063c0.576-0.647,0.781-1.728,0.606-3.212C19.622,9.95,17.366,6.896,15.769,5.049z"/>
-                                                <Path fill="black" id="path-5_22_" d="M31.147,62.754C13.973,62.754,0,48.783,0,31.611c0-8.546,3.393-16.517,9.553-22.444    c0.596-0.575,1.545-0.557,2.121,0.041c0.574,0.597,0.555,1.546-0.041,2.121C6.065,16.685,3,23.888,3,31.611    c0,15.518,12.627,28.143,28.147,28.143c15.521,0,28.147-12.625,28.147-28.143c0-15.519-12.626-28.144-28.147-28.144    c-4.243,0-8.32,0.92-12.119,2.735c-0.747,0.355-1.642,0.04-2-0.707c-0.357-0.748-0.041-1.643,0.707-2    c4.205-2.009,8.718-3.028,13.412-3.028c17.174,0,31.147,13.971,31.147,31.144C62.294,48.783,48.321,62.754,31.147,62.754z"/>
-                                                <Path fill="black" id="path-6_17_" d="M23.269,31.385c-0.828,0-1.5-0.671-1.5-1.5c0-2.01-1.626-3.708-3.553-3.708c-0.828,0-1.5-0.671-1.5-1.5    c0-0.828,0.672-1.5,1.5-1.5c3.552,0,6.553,3.072,6.553,6.708C24.769,30.714,24.098,31.385,23.269,31.385z"/>
-                                                <Path fill="black" id="path-7_16_" d="M38.543,31.308c-0.828,0-1.5-0.671-1.5-1.5c0-3.552,3.072-6.553,6.708-6.553c0.828,0,1.5,0.671,1.5,1.499    c0,0.829-0.672,1.5-1.5,1.5c-2.01,0-3.708,1.627-3.708,3.554C40.043,30.637,39.371,31.308,38.543,31.308z"/>
-                                            </G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G>
-                                    </Svg>
+                        </ScrollView>
+                        : 
+                        <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{marginTop: 40, width: '90%', alignSelf: 'center'}}>
+                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), color: 'black'}}>Rate packaging and delivery</Text>
+                            <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, justifyContent: 'space-between'}}>
+                                <TouchableOpacity onPress={() => (setDelPackRating(1), emoji1.current.play())} activeOpacity={0.8}>
+                                    <LottieView source={require('../assets/animations/42754-angry-face-with-horns.json')} style={{height: 45, opacity: delPackRating === 1 ? 1 : 0.4}} ref={emoji1} loop={false} />
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{marginRight: 15}} onPress={() => setDelPackRating(2)} activeOpacity={0.8}>
-                                <Svg style={{opacity: delPackRating === 2 ? 1: 0.4}} viewBox="0 0 65.441 65.441" width={50} height={40}>
-                                    <G>
-                                        <G>
-                                            <Path fill="#EDC951" d="M65.441,34.881c0,16.616-13.472,30.086-30.09,30.086S5.262,51.497,5.262,34.881    S18.733,4.795,35.351,4.795S65.441,18.265,65.441,34.881z"/>
-                                            <Path fill="black" id="path-2_21_" d="M45.647,23.775c0,2.01-1.63,3.639-3.64,3.639c-2.01,0-3.64-1.629-3.64-3.639s1.63-3.639,3.64-3.639    C44.017,20.136,45.647,21.765,45.647,23.775z"/>
-                                            <Path fill="black" id="path-3_21_" d="M24.717,23.775c0,2.01-1.629,3.639-3.639,3.639c-2.011,0-3.64-1.629-3.64-3.639s1.629-3.639,3.64-3.639    C23.088,20.136,24.717,21.765,24.717,23.775z"/>
-                                            <Path fill="black" id="path-4_21_" d="M19.207,50.977c-0.829,0-1.5-0.672-1.5-1.5c0-6.473,5.209-11.739,11.611-11.739h5.055    c6.403,0,11.611,5.237,11.611,11.674c0,0.829-0.671,1.5-1.5,1.5c-0.829,0-1.5-0.671-1.5-1.5c0-4.783-3.863-8.674-8.611-8.674    h-5.055c-4.748,0-8.611,3.92-8.611,8.739C20.707,50.305,20.036,50.977,19.207,50.977z"/>
-                                            <Path fill="black" id="path-5_21_" d="M31.589,63.645C14.171,63.645,0,49.476,0,32.059C0,14.643,14.171,0.474,31.589,0.474    c17.419,0,31.59,14.169,31.59,31.585C63.179,49.476,49.008,63.645,31.589,63.645z M31.589,3.474C15.825,3.474,3,16.297,3,32.059    c0,15.763,12.825,28.587,28.589,28.587c15.765,0,28.59-12.824,28.59-28.587C60.179,16.297,47.354,3.474,31.589,3.474z"/>
-                                        </G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G>
-                                    </Svg>
+                                <TouchableOpacity onPress={() => (setDelPackRating(2), emoji2.current.play())} activeOpacity={0.8}>
+                                    <LottieView source={require('../assets/animations/42753-angry-face.json')} style={{height: 50, opacity: delPackRating === 2 ? 1 : 0.4}} ref={emoji2} loop={false} />
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{marginRight: 15}} onPress={() => setDelPackRating(3)} activeOpacity={0.8}>
-                                    <Svg style={{opacity: delPackRating === 3 ? 1: 0.4}} viewBox="0 0 65.441 65.441" width={50} height={40}>
-                                        <G>
-                                            <G>
-                                                <Path fill="#EDC951" d="M65.441,34.881c0,16.616-13.472,30.086-30.09,30.086S5.262,51.497,5.262,34.881    S18.733,4.795,35.351,4.795S65.441,18.265,65.441,34.881z"/>
-                                                <Path fill="black" id="path-2_49_" d="M45.778,43.768h-28c-0.828,0-1.5-0.672-1.5-1.5c0-0.829,0.672-1.5,1.5-1.5h28c0.828,0,1.5,0.671,1.5,1.5    C47.278,43.096,46.606,43.768,45.778,43.768z"/>
-                                                <Path fill="black" id="path-3_49_" d="M44.998,22.984c0,1.981-1.607,3.586-3.587,3.586c-1.98,0-3.586-1.605-3.586-3.586    c0-1.98,1.606-3.585,3.586-3.585C43.391,19.399,44.998,21.004,44.998,22.984z"/>
-                                                <Path fill="black" id="path-4_49_" d="M24.376,22.984c0,1.981-1.606,3.586-3.586,3.586c-1.981,0-3.586-1.605-3.586-3.586    c0-1.98,1.605-3.585,3.586-3.585C22.77,19.399,24.376,21.004,24.376,22.984z"/>
-                                                <Path fill="black" id="path-5_49_" d="M31.147,62.29C13.973,62.29,0,48.319,0,31.147S13.973,0.004,31.147,0.004s31.147,13.971,31.147,31.143    S48.321,62.29,31.147,62.29z M31.147,3.004C15.627,3.004,3,15.628,3,31.147s12.627,28.144,28.147,28.144    c15.521,0,28.147-12.625,28.147-28.144S46.668,3.004,31.147,3.004z"/>
-                                            </G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G>
-                                    </Svg>
+                                <TouchableOpacity onPress={() => (setDelPackRating(3), emoji3.current.play())} activeOpacity={0.8}>
+                                    <LottieView source={require('../assets/animations/43008-expressionless-face.json')} style={{height: 50, opacity: delPackRating === 3 ? 1 : 0.4}} ref={emoji3} loop={false} />
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{marginRight: 15}} onPress={() => (setDelPackRating(4), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''))} activeOpacity={0.8}>
-                                    <Svg style={{opacity: delPackRating === 4 ? 1: 0.4}} viewBox="0 0 65.441 65.441" width={50} height={40}>
-                                        <G>
-                                            <G>
-                                                <Path fill="#EDC951" d="M65.441,34.881c0,16.616-13.472,30.086-30.09,30.086S5.262,51.497,5.262,34.881    S18.733,4.795,35.351,4.795S65.441,18.265,65.441,34.881z"/>
-                                                <Path fill="#8B71B5" id="path-2_32_" style="fill:#8B71B5;" d="M50.098,41.768c0,6.999-5.393,10.999-12.047,10.999h-6.023    c-6.652,0-12.045-4-12.045-10.999H50.098z"/>
-                                                <Path fill="black" id="path-3_32_" d="M34.346,51.767h-6.023c-7.47,0-13.547-5.607-13.547-12.499c0-0.828,0.672-1.5,1.5-1.5h30.116    c0.828,0,1.5,0.672,1.5,1.5C47.892,46.16,41.815,51.767,34.346,51.767z M17.908,40.768c0.801,4.528,5.166,7.999,10.415,7.999    h6.023c5.248,0,9.614-3.471,10.414-7.999H17.908z"/>
-                                                <Path fill="black" id="path-4_32_" d="M44.997,22.985c0,1.98-1.605,3.586-3.586,3.586c-1.981,0-3.587-1.606-3.587-3.586    c0-1.981,1.606-3.586,3.587-3.586C43.392,19.399,44.997,21.004,44.997,22.985z"/>
-                                                <Path fill="black" id="path-5_32_" d="M24.376,22.985c0,1.98-1.606,3.586-3.586,3.586c-1.981,0-3.587-1.606-3.587-3.586    c0-1.981,1.606-3.586,3.587-3.586C22.77,19.399,24.376,21.004,24.376,22.985z"/>
-                                                <Path fill="black" id="path-6_27_" d="M31.147,62.29C13.972,62.29,0,48.319,0,31.147S13.972,0.004,31.147,0.004    c17.174,0,31.147,13.971,31.147,31.143S48.321,62.29,31.147,62.29z M31.147,3.004C15.626,3.004,3,15.629,3,31.147    c0,15.519,12.626,28.144,28.147,28.144c15.52,0,28.147-12.625,28.147-28.144C59.294,15.629,46.667,3.004,31.147,3.004z"/>
-                                            </G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G>
-                                    </Svg>
+                                <TouchableOpacity onPress={() => (setDelPackRating(4), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''), emoji4.current.play())} activeOpacity={0.8}>
+                                    <LottieView source={require('../assets/animations/42762-beaming-face-with-smiling-eyes.json')} style={{height: 50, opacity: delPackRating === 4 ? 1 : 0.4}} ref={emoji4} loop={false} />
                                 </TouchableOpacity>
-                                <TouchableOpacity style={{marginRight: 15}} onPress={() => (setDelPackRating(5), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''))} activeOpacity={0.8}>
-                                    <Svg style={{opacity: delPackRating === 5 ? 1: 0.4}} viewBox="0 0 65.441 65.441" width={50} height={40}>
-                                        <G>
-                                            <G>
-                                                <Path fill="#EDC951" d="M65.441,34.881c0,16.616-13.472,30.086-30.09,30.086S5.262,51.497,5.262,34.881    S18.733,4.795,35.351,4.795S65.441,18.265,65.441,34.881z"/>
-                                                <Path id="path-2_27_" fill="#8B71B5" d="M53.644,43.229c0,6.999-5.473,11.998-12.226,11.998h-6.113    c-6.752,0-12.226-4.999-12.226-11.998H53.644z"/>
-                                                <Path id="path-3_27_" fill="#E56A77" d="M53.836,22.015c-0.947,0-1.819,1.176-2.524,1.701    c-0.706-0.525-1.577-1.701-2.525-1.701c-2.34,0-4.237,1.897-4.237,4.237s6.056,9.249,6.762,8.724    c0.705,0.525,6.761-6.384,6.761-8.724S56.176,22.015,53.836,22.015z"/>
-                                                <Path id="path-4_27_" fill="#E56A77" d="M29.747,22.015c-0.947,0-1.818,1.176-2.524,1.701    c-0.706-0.525-1.577-1.701-2.524-1.701c-2.341,0-4.238,1.897-4.238,4.237s6.056,9.249,6.762,8.724    c0.706,0.525,6.761-6.384,6.761-8.724S32.087,22.015,29.747,22.015z"/>
-                                                <Path fill="black" id="path-5_27_" d="M34.836,53.227h-6.113c-7.568,0-13.726-5.606-13.726-12.498c0-0.829,0.672-1.5,1.5-1.5h30.565    c0.829,0,1.5,0.671,1.5,1.5C48.562,47.621,42.405,53.227,34.836,53.227z M18.131,42.229c0.814,4.527,5.254,7.999,10.592,7.999    h6.113c5.339,0,9.779-3.472,10.593-7.999H18.131z"/>
-                                                <Path fill="black" id="path-6_22_" d="M44.838,33.684c-0.038,0.001-0.073-0.001-0.108-0.003c-0.032,0.002-0.065,0.003-0.098,0.003    c-0.436,0-1.595,0-4.891-4.09c-1.493-1.854-3.273-4.428-3.273-6.163c0-3.163,2.574-5.737,5.737-5.737    c1.05,0,1.878,0.608,2.525,1.186c0.646-0.578,1.474-1.186,2.524-1.186c3.163,0,5.737,2.574,5.737,5.737    c0,1.735-1.78,4.309-3.273,6.163C46.45,33.651,45.283,33.684,44.838,33.684z M42.143,20.688c-1.447,0.006-2.675,1.234-2.675,2.743    c0.046,1.248,3.689,5.925,5.262,7.125c1.573-1.2,5.215-5.878,5.261-7.128c0-1.506-1.228-2.734-2.737-2.734    c-0.137,0.051-0.604,0.492-0.855,0.73c-0.272,0.255-0.532,0.496-0.774,0.675c-0.531,0.395-1.259,0.396-1.79,0    c-0.242-0.179-0.503-0.42-0.775-0.676C42.809,21.187,42.342,20.746,42.143,20.688z"/>
-                                                <Path fill="black" id="path-7_21_" d="M20.749,33.684c-0.037,0.001-0.072-0.001-0.108-0.003c-0.032,0.002-0.065,0.003-0.098,0.003    c-0.436,0-1.595,0-4.89-4.09c-1.494-1.854-3.274-4.428-3.274-6.163c0-3.163,2.574-5.737,5.738-5.737    c1.049,0,1.877,0.608,2.524,1.186c0.646-0.579,1.475-1.186,2.524-1.186c3.163,0,5.737,2.574,5.737,5.737    c0,1.735-1.78,4.309-3.273,6.163C22.361,33.651,21.194,33.684,20.749,33.684z M18.054,20.688    c-1.447,0.006-2.675,1.234-2.675,2.743c0.047,1.248,3.689,5.925,5.262,7.125c1.573-1.2,5.215-5.878,5.261-7.128    c0-1.506-1.228-2.734-2.737-2.734c-0.136,0.051-0.604,0.492-0.855,0.73c-0.272,0.255-0.532,0.496-0.774,0.675    c-0.531,0.395-1.258,0.396-1.79,0c-0.242-0.179-0.503-0.42-0.774-0.676C18.72,21.187,18.253,20.746,18.054,20.688z"/>
-                                                <Path fill="black" id="path-8_14_" d="M31.589,64.587C14.171,64.587,0,50.417,0,33C0,15.584,14.171,1.414,31.589,1.414    c17.419,0,31.59,14.17,31.59,31.586C63.179,50.417,49.008,64.587,31.589,64.587z M31.589,4.414C15.825,4.414,3,17.238,3,33    c0,15.763,12.825,28.586,28.589,28.586S60.179,48.763,60.179,33C60.179,17.238,47.353,4.414,31.589,4.414z"/>
-                                            </G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G>
-                                    </Svg>
+                                <TouchableOpacity onPress={() => (setDelPackRating(5), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''), emoji5.current.play())} activeOpacity={0.8}>
+                                    <LottieView source={require('../assets/animations/43010-kissing.json')} style={{height: 50, opacity: delPackRating === 5 ? 1 : 0.4}} ref={emoji5} loop={false} />
                                 </TouchableOpacity>
                             </View>
                             {delPackRating >0 && delPackRating <=3 ? 
                                 <View style={{marginTop: 30}}>
-                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Sorry to hear that! Please tell us what went wrong</Text>
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Sorry to hear that! Please tell us what went wrong</Text>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
                                         <TouchableOpacity style={{flex: 1, marginRight: 25, backgroundColor: problem1 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem1 !== '' ? setProblem1(''): setProblem1('Items were damaged ')} activeOpacity={0.8}>
-                                            <Text style={{fontFamily: 'sf', textAlign: 'center'}}>Items were damaged</Text>
+                                            <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Items were damaged</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity style={{flex: 1, backgroundColor: problem2 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem2 !== '' ? setProblem2(''): setProblem2('Delivery man was impolite ')} activeOpacity={0.8}>
-                                            <Text style={{fontFamily: 'sf', textAlign: 'center'}}>Delivery man was impolite</Text>
+                                            <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Delivery man was impolite</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
                                         <TouchableOpacity style={{flex: 1, marginRight: 15, backgroundColor: problem3 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem3 !== '' ? setProblem3(''): setProblem3("Packing wasn't up-to mark ")} activeOpacity={0.8}>
-                                            <Text style={{fontFamily: 'sf', textAlign: 'center'}}>Packing wasn't up-to mark</Text>
+                                            <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Packing wasn't up-to mark</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity style={{flex: 1, backgroundColor: problem4 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem4 !== '' ?(setProblem4(''), setProblem5('')): setProblem4('other ')} activeOpacity={0.8}>
-                                            <Text style={{fontFamily: 'sf', textAlign: 'center'}}>Other</Text>
+                                            <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Other</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <View style={{display: problem4 === '' ? 'none': 'flex', marginTop: 25}}>
-                                        <Text style={{fontFamily: 'Maison-bold'}}>Please specify the reason</Text>
-                                        <TextInput style={{fontFamily: 'sf', fontSize: wp(4), marginTop: 10}} placeholder={'Write Here...'} multiline={true} value={problem5} onChangeText={(text) => setProblem5(text)} />
+                                        <Text style={{fontFamily: 'Maison-bold', color: 'black'}}>Please specify the reason</Text>
+                                        <TextInput style={{fontFamily: 'sf', fontSize: wp(4), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} value={problem5} onChangeText={(text) => setProblem5(text)} />
                                     </View>
                                 </View>
                                 : 
                                 delPackRating === 4 ?
                                 <View style={{marginTop: 30}}>
-                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Glad to hear that! Tell us what we can improve. (optional)</Text>
-                                    <TextInput style={{fontFamily: 'sf', fontSize: wp(4), marginTop: 10}} placeholder={'Write Here...'} multiline={true} value={problem5} onChangeText={(text) => setProblem5(text)} />
+                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Glad to hear that! Tell us what we can improve. (optional)</Text>
+                                    <TextInput style={{fontFamily: 'sf', fontSize: wp(4), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} value={problem5} onChangeText={(text) => setProblem5(text)} />
                                 </View>
                                 : 
                                 delPackRating === 5 ?
-                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 30}}>Awesome ! We will do our best to continue this experience with you !</Text>
+                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 30, color: 'black'}}>Awesome ! We will do our best to continue this experience with you !</Text>
                                 : null
                             }
-                            <TouchableOpacity style={{marginTop: 50, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={createDelPackRating()} activeOpacity={0.8}>
-                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold'}}>Done</Text>
+                            <TouchableOpacity style={{marginTop: 50, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={() => (createDelPackRating(), createRating(activeItem.item_name))} activeOpacity={0.8}>
+                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Done</Text>
                             </TouchableOpacity>
-                        </View>
-                </View>
-            </ScrollView>
+                        </ScrollView>
+                    )
+                }}
+            />
         </View>
     )
 

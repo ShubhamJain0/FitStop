@@ -37,6 +37,8 @@ export default function Exotics({ navigation }) {
   const [query, setQuery] = useState('');
   const searchInputRef = useRef(null);
 
+  const [error, setError] = useState(null);
+
 
     useEffect(() => {
             fetch('http://192.168.0.105:8000/store/exoticslist/',{
@@ -48,7 +50,7 @@ export default function Exotics({ navigation }) {
             .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => {if (mounted) {setExoticsList(resp.json); setFilteredList(resp.json); dropDownRef.current = new Array(resp.json.length);}})
             .then(() => {if (mounted) {setLoading('false')}})
-            .catch(error => console.log(error))
+            .catch(error => setError(error))
 
         return () => {
             setMounted(false);
@@ -80,7 +82,7 @@ export default function Exotics({ navigation }) {
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                     .then(resp => {if (mounted) {setCartData(resp.json); setCartStatus(resp.status)}})
                     .then(() => {if (mounted) {setHideButton('none')}})
-                    .catch(error => console.log(error))
+                    .catch(error => setError(error))
                 } else {
                     if (mounted) {
                         setCartData([]);
@@ -88,7 +90,7 @@ export default function Exotics({ navigation }) {
                     }
                 }
 
-            })().catch(error => console.log(error))
+            })().catch(error => setError(error))
         });
 
         return () => {
@@ -146,7 +148,7 @@ export default function Exotics({ navigation }) {
       .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
       .then(resp => setFilteredList(resp.json))
       .then(() => setLoading('false'))
-      .catch(error => console.log(error))
+      .catch(error => setError(error))
   
       
   }, []);
@@ -167,7 +169,7 @@ export default function Exotics({ navigation }) {
                 })
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                 .then(resp => setCartData(resp.json.cart))
-                .catch(error => console.log(error))
+                .catch(error => setError(error))
             } else {
                 return fetch('http://192.168.0.105:8000/store/cart/',{
                     method: 'POST',
@@ -179,7 +181,7 @@ export default function Exotics({ navigation }) {
                 })
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                 .then(resp => setCartData(resp.json.cart))
-                .catch(error => console.log(error))
+                .catch(error => setError(error))
                 
             }
         } else {
@@ -201,7 +203,7 @@ export default function Exotics({ navigation }) {
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => setCartData(resp.json.cart))
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
         } else {
             navigation.navigate('Register')
         }
@@ -282,17 +284,18 @@ export default function Exotics({ navigation }) {
   if (loading == 'true') {
       return (
         <SafeAreaView style={styles.refreshcontainer}>
+            <StatusBar style="inverted" />
             <View style={{flex: 0.4, marginTop: hp(30)}}>
                 <TouchableOpacity style={{alignItems: 'center', marginBottom: 100, transform: [{rotate: '-90deg'}], opacity: 0.2}} onPress={() => navigation.navigate('Fruits')} >
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Fruits</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Fruits</Text>
                     <Text style={{ height: 2, marginTop: 5}}></Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={{alignItems: 'center', marginBottom: 100, transform: [{rotate: '-90deg'}], opacity: 0.2}} onPress={() => navigation.navigate('Dried-Fruits')} >
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Dried{'\n'}Fruits</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Dried{'\n'}Fruits</Text>
                     <Text style={{ height: 2, marginTop: 5}}></Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={{alignItems: 'center', transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Exotics')} >
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Exotics</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Exotics</Text>
                     <Text style={{backgroundColor: '#249C86', height: 2, width: '40%', marginTop: 5, alignSelf: 'center'}}></Text>
                 </TouchableOpacity>     
                 
@@ -333,21 +336,21 @@ export default function Exotics({ navigation }) {
             <View style={{flexDirection: 'row', backgroundColor: '#fcfcfc', flex: 1}}>
                 <View style={{flex: 0.4, marginTop: hp(30)}}>
                     <TouchableOpacity style={{alignItems: 'center', marginBottom: 100, transform: [{rotate: '-90deg'}], opacity: 0.2}} onPress={() => navigation.navigate('Fruits')} >
-                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Fruits</Text>
+                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Fruits</Text>
                         <Text style={{ height: 2, marginTop: 5}}></Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={{alignItems: 'center', marginBottom: 100, transform: [{rotate: '-90deg'}], opacity: 0.2}} onPress={() => navigation.navigate('Dried-Fruits')} >
-                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Dried{'\n'}Fruits</Text>
+                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Dried{'\n'}Fruits</Text>
                         <Text style={{ height: 2, marginTop: 5}}></Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={{alignItems: 'center', transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Exotics')} >
-                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Exotics</Text>
+                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Exotics</Text>
                         <Text style={{backgroundColor: '#249C86', height: 2, width: '40%', marginTop: 5, alignSelf: 'center'}}></Text>
                     </TouchableOpacity>    
                     
                 </View>
                 
-                    <StatusBar style="auto" />
+                    <StatusBar style="inverted" />
                     <View style={styles.container}>
                         <View
                             style={{
@@ -407,25 +410,25 @@ export default function Exotics({ navigation }) {
                                                 <Image source={{uri: item.image}} style={{width: 100, height: 80, borderRadius: 5}}  />
                                             </View>
                                             <View style={{flex: 1}}>
-                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5}}>{item.name}</Text>
+                                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 5, color: 'black'}}>{item.name}</Text>
                                                 {exists(item) ? 
                                                     item.detail.map((item2) => {
                                                         return item2.quantity === exists(item) ?
                                                         item2.previous_price > 0 ? 
                                                         <View key={item2.id} style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item2.previous_price}</Text>
-                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2), color: 'black'}}>&#8377; {item2.previous_price}</Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item2.price}</Text>
                                                         </View>:
-                                                        <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item2.price}</Text> : null
+                                                        <Text key={item2.id} style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item2.price}</Text> : null
                                                         
                                                     }):  
                                                     
                                                     item.detail[0].previous_price > 0 ?
                                                     <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                                                        <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2)}}>&#8377; {item.detail[0].previous_price}</Text>
-                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
+                                                        <Text style={{textAlign: 'center', fontFamily: 'sf', textDecorationLine: 'line-through', marginRight: wp(2), color: 'black'}}>&#8377; {item.detail[0].previous_price}</Text>
+                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item.detail[0].price}</Text>
                                                     </View>
-                                                    : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5)}}>&#8377; {item.detail[0].price}</Text>
+                                                    : <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>&#8377; {item.detail[0].price}</Text>
                                                 }
                                                 
                                                     {hideButton === 'none' ? item.availability === 'In stock' ? 
@@ -456,7 +459,7 @@ export default function Exotics({ navigation }) {
                                         <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: 10, paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                             
                                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
-                                                <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5)}}>Details</Text>
+                                                <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5), color: 'black'}}>Details</Text>
                                                 {item.avg_ratings > 0 ? 
                                                     <View style={{flex: 1}}>
                                                         <View style={{flexDirection:'row', justifyContent: 'center', alignItems: 'center'}}>
@@ -466,15 +469,15 @@ export default function Exotics({ navigation }) {
                                                             <AntDesign name="star" size={15} style={item.avg_ratings > 3 ? {color: '#249C86'}: {color: 'grey'}} />
                                                             <AntDesign name="star" size={15} style={item.avg_ratings > 4 ? {color: '#249C86'}: {color: 'grey'}} />
                                                             
-                                                            <Text style={{textAlign: 'center', fontFamily: 'sf'}}> (<FontAwesome name="user" size={wp(3)} color="black" /> {item.no_of_ratings}) </Text>
+                                                            <Text style={{textAlign: 'center', fontFamily: 'sf', color: 'black'}}> (<FontAwesome name="user" size={wp(3)} color="black" /> {item.no_of_ratings}) </Text>
                                                         </View>
                                                     </View>
                                                 : null}
                                             </View>
-                                            <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1}}>{item.description}</Text>
+                                            <Text style={{marginLeft: 15, fontFamily: 'sf', fontSize: wp(3.5), flex: 1, color: 'black'}}>{item.description}</Text>
                                             <Text style={{backgroundColor: '#ebebeb', height: 1, width: '90%', alignSelf: 'center', marginTop: 10}}></Text>
                                             <View style={{flex: 1, marginTop: 5}}>
-                                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15}}>Nutrition per 100 g</Text>
+                                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 15, color: 'black'}}>Nutrition per 100 g</Text>
                                                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15}}>
                                                     {item.nutritional_values.slice(0, 3).map((x, index) => {
                                                         return  <View key={x.id} style={{flex: 1, borderRightWidth: index === 2 ? 0: 1, borderColor: '#b5b5b5'}}>
@@ -484,7 +487,7 @@ export default function Exotics({ navigation }) {
                                                                         x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                                         x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                                         x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
+                                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}> {x.name}</Text>
                                                                     </View>
                                                                     <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey', marginTop: 3}}>{x.value}</Text>
                                                                 </View>
@@ -499,7 +502,7 @@ export default function Exotics({ navigation }) {
                                                                         x.name === 'Sugar' ? <FontAwesome name="cubes" size={wp(4)} color="grey" />:
                                                                         x.name === 'Fat (Sat.)' || x.name === 'Fat (Unsat.)' || x.name === 'Fat (trans)' ? <Entypo name="drop" size={wp(4)} color="#8B8000" />: 
                                                                         x.name === 'Calories' ? <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" /> : null}
-                                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}> {x.name}</Text>
+                                                                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}> {x.name}</Text>
                                                                     </View>
                                                                     <Text style={{textAlign: 'center', fontFamily: 'sf', fontSize: wp(3.5), color: 'grey'}}>{x.value}</Text>
                                                                 </View>

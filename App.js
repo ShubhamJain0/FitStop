@@ -19,7 +19,6 @@ import Register from './components/register';
 import OtpComponent from './components/otp-component';
 import PreviousOrders from './components/previous_orders';
 import Reviews from './components/reviews';
-import Details from './components/details';
 import ActiveOrders from './components/active-orders';
 import Recipe from './components/recipe';
 import RecipeDetails from './components/recipe-details';
@@ -209,12 +208,11 @@ export default function App() {
   const saveToken = async (token) => {
       let mounted = true;
       await AsyncStorage.setItem('USER_TOKEN', token);
+      setTimeout(() => setVerifyOTPDisabled(false), 1500)
       if (action === 'create' && mounted) {
-        setVerifyOTPDisabled(false)
-        carouselRef.current.snapToNext();
+        setTimeout(() => carouselRef.current.snapToNext(), 1500);
       } else if (action === 'Login' && mounted){
-        setVerifyOTPDisabled(false)
-        setIsLogin(true);
+        setTimeout(() => setIsLogin(true), 1500);
       }
   }
 
@@ -353,9 +351,10 @@ export default function App() {
   if (isOffline) {
     return (
       <View style={{flex: 1, backgroundColor: 'white'}}>
+        <StatusBar style="inverted" />
         <Image source={require('./assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
         <View style={{width: '80%', alignSelf: 'center'}}>
-          <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: 50, textAlign: 'center'}}>Uh oh! Seems like you are disconnected !</Text>
+          <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: 50, textAlign: 'center', color: 'black'}}>Uh oh! Seems like you are disconnected !</Text>
           {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={check}>
             <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
           </TouchableOpacity>: <LottieView source={require('./assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
@@ -377,9 +376,10 @@ export default function App() {
           renderItem={({item, index}) => {
             return (
               <View style={{paddingTop: 50, flex: 1, backgroundColor: '#f9f9f9'}}>
+                <StatusBar style="inverted" />
                 <Image source={item.image} style={{width: '90%', height: index === 0 ? 2130*(screenWidth/3420) : 2236*(screenWidth/3766), alignSelf: 'center', marginTop: 50}} />
-                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(7), textAlign: 'center', marginTop: 50}}>{item.title}</Text>
-                <Text style={{fontFamily: 'sf', fontSize: wp(4), textAlign: 'center', marginTop: 25}}>{item.text}</Text>
+                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(7), textAlign: 'center', marginTop: 50, color: 'black'}}>{item.title}</Text>
+                <Text style={{fontFamily: 'sf', fontSize: wp(4), textAlign: 'center', marginTop: 25, color: 'black'}}>{item.text}</Text>
               </View>
             )
           }}
@@ -391,6 +391,7 @@ export default function App() {
   if (!isLogin) {
     return (
       <View style={{flex: 1, backgroundColor: '#fafafa'}}>
+        <StatusBar style="inverted" />
         <Carousel 
           ref={carouselRef}
           itemWidth={screenWidth}
@@ -404,8 +405,8 @@ export default function App() {
               <View style={{flex: 1, paddingTop: hp(15)}}>
                 <Image source={require('./assets/register.png')} style={{width: '100%', height: 2185*(screenWidth/3505), alignSelf: 'center'}} />
                 <View style={{backgroundColor: 'white', width: '100%', height: '100%', position: 'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 5, shadowOpacity: 0.3}}>
-                    <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), paddingTop: wp(8), paddingLeft: wp(15)}} >Enter your{'\n'}mobile number.</Text>
-                    <Text style={{fontFamily: 'sf', marginBottom: 35, paddingLeft: wp(15), fontSize: wp(4)}}>We will send you a verification code.</Text>
+                    <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), paddingTop: wp(8), paddingLeft: wp(15), color: 'black'}} >Enter your{'\n'}mobile number.</Text>
+                    <Text style={{fontFamily: 'sf', marginBottom: 35, paddingLeft: wp(15), fontSize: wp(4), color: 'black'}}>We will send you a verification code.</Text>
                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: hp(5), paddingLeft: wp(15)}}>
                     <Svg width={wp(8)} height={wp(8)} viewBox="0 0 512 512"><Path fill="#FAB446" d="M473.655,88.276H38.345C17.167,88.276,0,105.443,0,126.621v73.471h512v-73.471  C512,105.443,494.833,88.276,473.655,88.276z"/><Path fill="#73AF00" d="M0,385.379c0,21.177,17.167,38.345,38.345,38.345h435.31c21.177,0,38.345-17.167,38.345-38.345  v-73.471H0V385.379z"/><Rect y="200.09" style="fill:#F5F5F5;" width="512" height="111.81"/><G><Path style="fill:#41479B;" d="M256,303.448c-26.164,0-47.448-21.284-47.448-47.448s21.284-47.448,47.448-47.448   s47.448,21.284,47.448,47.448S282.164,303.448,256,303.448z M256,217.379c-21.298,0-38.621,17.323-38.621,38.621   s17.323,38.621,38.621,38.621s38.621-17.323,38.621-38.621S277.298,217.379,256,217.379z"/><Circle fill="#41479B" cx="256" cy="256" r="5.379"/>
                         <Polygon fill="#41479B" points="256,256.807 242.33,258.187 212.966,256.807 212.966,255.193 242.33,253.813 256,255.193     "/>
@@ -424,16 +425,16 @@ export default function App() {
                         <Polygon fill="#41479B"  points="255.691,256.746 267.793,263.252 295.449,273.214 296.067,271.723 269.466,259.211    256.309,255.254  "/>
                         <Polygon fill="#41479B"  points="255.254,255.691 259.211,242.534 271.723,215.933 273.214,216.551 263.252,244.207    256.746,256.309  "/>
                         <Polygon fill="#41479B"  points="255.254,255.691 248.748,267.793 238.786,295.449 240.277,296.067 252.789,269.466    256.746,256.309  "/></G><Circle fill="#F5F5F5" cx="256" cy="256" r="7.256"/><Circle fill="#41479B" cx="256" cy="256" r="4.351"/><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G><G></G></Svg>
-                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}> +91 </Text>
-                        <TextInput style={{ height: 30, width: wp(50), marginLeft: 10, fontFamily: 'sf', fontSize: wp(4), borderBottomWidth: 1, borderBottomColor: '#f0f0f0' }} placeholder={'Mobile number'} 
+                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}> +91 </Text>
+                        <TextInput style={{ color: 'black', width: wp(50), marginLeft: 10, fontFamily: 'sf', fontSize: wp(4), borderBottomWidth: 1, borderBottomColor: '#f0f0f0', color: 'black' }} placeholder={'Mobile number'} 
                         onChangeText={(text) => setPhone(text)} keyboardType={'numeric'} maxLength={10} />               
                     </View>
                     {phone.length <= 9 || phone === 0 || !(/\d{10}/g.test(phone)) || disabled ? 
                         <TouchableOpacity disabled={true} style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}: {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}} >
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5)}}>&#x27F6;</Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black'}}>&#x27F6;</Text>
                         </TouchableOpacity>:
                         <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}: {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}} onPress={SignUp} activeOpacity={0.8} >
-                            <Text style={{opacity: 1, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center'}}>&#x27F6;</Text>
+                            <Text style={{opacity: 1, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'black'}}>&#x27F6;</Text>
                         </TouchableOpacity>
                     }
                 </View>
@@ -445,40 +446,40 @@ export default function App() {
               <View style={{flex: 1, paddingTop: hp(15)}}>
                 <Image source={require('./assets/message-sent.png')} style={{width: '100%', height: 2073*(screenWidth/3381), alignSelf: 'center'}} />
                 <View style={{width: '100%', height: '100%', backgroundColor: 'white', position:'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 5, shadowOpacity: 0.3}}>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), paddingTop: wp(8), textAlign: 'center'}} >We have sent the verification code to{'\n'}+91 {phone}.</Text>
+                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), paddingTop: wp(8), textAlign: 'center', color: 'black'}} >We have sent the verification code to{'\n'}+91 {phone}.</Text>
                     <View style={{flexDirection: 'row', marginTop: 40, alignSelf: 'center', alignItems: 'center'}}>
-                    <TextInput ref={ti1} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                    <TextInput ref={ti1} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP1} onChangeText={(text) => {setOTP1(text); if (text) {copyFromClipboard(text), ti2.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}} />
-                        <TextInput ref={ti2} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                        <TextInput ref={ti2} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP2} onChangeText={(text) => {setOTP2(text); if (text) {ti3.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}}
                             onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti1.current.focus(): null}} />
-                        <TextInput ref={ti3} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                        <TextInput ref={ti3} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP3} onChangeText={(text) => {setOTP3(text); if (text) {ti4.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}}
                             onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti2.current.focus(): null}} />
-                        <TextInput ref={ti4} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                        <TextInput ref={ti4} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP4} onChangeText={(text) => {setOTP4(text); if (text) {ti5.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}}
                             onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti3.current.focus(): null}} />
-                        <TextInput ref={ti5} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                        <TextInput ref={ti5} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP5} onChangeText={(text) => {setOTP5(text); if (text) {ti6.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}}
                             onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti4.current.focus(): null}} />
-                        <TextInput ref={ti6} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                        <TextInput ref={ti6} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP6} onChangeText={(text) => (setOTP6(text), setOTP(OTP1 + OTP2 + OTP3 + OTP4 + OTP5 + text))} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}}
                             onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti5.current.focus(): null}} />
                     </View>
                     <View style={{flexDirection: 'row', alignItems: 'center', alignSelf: 'center', marginTop: 40}}>
-                        <Text style={{fontFamily: 'sf', fontSize: wp(4)}}>Didn't received code? </Text>
+                        <Text style={{fontFamily: 'sf', fontSize: wp(4), color: 'black'}}>Didn't received code? </Text>
                         <TouchableOpacity disabled={counter === 0 ? false: true} style={counter === 0 ? {opacity: 1}: {opacity: 0.3}} onPress={resendOTP}>
-                            <Text style={{fontFamily: 'Maison-bold', color: '#99b898', textDecorationLine: 'underline', fontSize: wp(3.5)}}> Resend code </Text>
+                            <Text style={{fontFamily: 'Maison-bold', color: '#249c86', textDecorationLine: 'underline', fontSize: wp(3.5)}}> Resend code </Text>
                         </TouchableOpacity>
                     </View>
-                    <Text style={{fontFamily: 'sf', fontSize: wp(4), textAlign: 'center'}}> in {counter}s</Text>
+                    <Text style={{fontFamily: 'sf', fontSize: wp(4), textAlign: 'center', color: 'black'}}> in {counter}s</Text>
                 </View>
                 
                 <Modal isVisible={verifyOTPDisabled} backdropOpacity={0.1} animationIn={'lightSpeedIn'} animationOut={'lightSpeedOut'}>
                     <View style={{alignSelf: 'center', backgroundColor: 'white', padding: 25}}>
                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
                             <ActivityIndicator size={40} color={'#99b898'}  />
-                            <Text style={{fontFamily: 'Maison-bold', marginLeft: 20}}>Verifying code...</Text>
+                            <Text style={{fontFamily: 'Maison-bold', marginLeft: 20, color: 'black'}}>Verifying code...</Text>
                         </View>
                     </View>
                 </Modal>
@@ -488,19 +489,19 @@ export default function App() {
 
               <View style={{flex: 1, backgroundColor: '#fafafa', justifyContent: 'center', padding: 25}}>
                   <TouchableOpacity style={{alignSelf: 'flex-end'}} onPress={() => setIsLogin(true)}>
-                      <Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline', fontSize: wp(3)}}>Do it later &#187;</Text>
+                      <Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline', fontSize: wp(3), color: 'black'}}>Do it later &#187;</Text>
                   </TouchableOpacity>
-                  <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), marginBottom: 50}}>Enter your{'\n'}Personal Information.</Text>
-                  <TextInput style={{ height: 30, borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%' }} 
+                  <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), marginBottom: 50, color: 'black'}}>Enter your{'\n'}Personal Information.</Text>
+                  <TextInput style={{ height: 30, borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%', color: 'black', fontFamily: 'Maison-bold' }} 
                       placeholder={'Name'} onChangeText={(text) => setChangeName(text)} />
-                  <TextInput style={{ height: 30, borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%' }} 
+                  <TextInput style={{ height: 30, borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%', color: 'black', fontFamily: 'Maison-bold' }} 
                       placeholder={'Email'} onChangeText={(text) => setChangeEmail(text)} keyboardType={'email-address'} />
                   {changeName === '' && changeEmail === '' ?
                       <TouchableOpacity disabled={true} style={{opacity: 0.2, backgroundColor: '#99b898', padding: 10, paddingLeft: 20, paddingRight: 20, borderRadius: 10, alignSelf: 'flex-start'}}>
-                      <Text style={{fontFamily: 'sf'}}>Save</Text>
+                      <Text style={{fontFamily: 'sf', color: 'black'}}>Save</Text>
                       </TouchableOpacity> :
                       <TouchableOpacity disabled={false} style={{opacity: 1, backgroundColor: '#99b898', padding: 10, paddingLeft: 20, paddingRight: 20, borderRadius: 10, alignSelf: 'flex-start'}} onPress={editProfile}>
-                      <Text style={{fontFamily: 'sf'}}>Save</Text>
+                      <Text style={{fontFamily: 'sf', color: 'black'}}>Save</Text>
                       </TouchableOpacity>
                   }
               </View>
@@ -520,12 +521,12 @@ export default function App() {
           <UserContext.Provider value={[conLocation, setConLocation]} >
           <Stack.Navigator>
             <Stack.Screen name="Home" component={Home} options={{headerShown: false}} />
-            <Stack.Screen name="ActiveOrders" component={ActiveOrders} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="ActiveOrders" component={ActiveOrders} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
             <Stack.Screen name="HomeProducts" component={HomeProducts} options={({ navigation }) => ({
               title: '',
               headerTransparent: true,
               headerLeft: () => {
-                return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>
+                return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>
               },
               cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
             })} />
@@ -548,20 +549,20 @@ export default function App() {
               title: '',
               headerTransparent: true,
               headerLeft: () => {
-                return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7),  fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>
+                return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7),  fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>
               },
               cardStyleInterpolator: CardStyleInterpolators.forRevealFromBottomAndroid
             })} />
             <Stack.Screen name="Recipes" component={Recipe} options={{headerShown: false, animationEnabled: false}} />
-            <Stack.Screen name="RecipeDetails" component={RecipeDetails}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
-            <Stack.Screen name="FavRecipe" component={FavRecipe} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
-            <Stack.Screen name="Profile" component={Profile} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
-            <Stack.Screen name="PreviousOrders" component={PreviousOrders} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
-            <Stack.Screen name="Reviews" component={Reviews} options={({ navigation }) => ({title: '', headerTransparent: true, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
-            <Stack.Screen name="Register" component={Register} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
-            <Stack.Screen name="OtpComponent" component={OtpComponent} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
-            <Stack.Screen name="TermsandConditions" component={TermsandConditions}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
-            <Stack.Screen name="NutritionCalculator" component={NutritionCalculator}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="RecipeDetails" component={RecipeDetails}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="FavRecipe" component={FavRecipe} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="Profile" component={Profile} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="PreviousOrders" component={PreviousOrders} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="Reviews" component={Reviews} options={({ navigation }) => ({title: '', headerTransparent: true, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="Register" component={Register} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="OtpComponent" component={OtpComponent} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="TermsandConditions" component={TermsandConditions}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
+            <Stack.Screen name="NutritionCalculator" component={NutritionCalculator}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
           </Stack.Navigator>
           </UserContext.Provider>
         </PushTokenContext.Provider>

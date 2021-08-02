@@ -75,7 +75,7 @@ export default function Cart({ navigation }) {
                     })
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                     .then(resp => {if (mounted) {setCartList(resp.json.items), setTotal(resp.json.total), setCartStatus(resp.status), setItemPhotos(resp.json.photos), setTest(resp.json.custom_count)}})
-                    .catch(error => console.log(error))
+                    .catch(error => setError(error))
                 } else {
                     setCartStatus(401);
                 }
@@ -102,7 +102,7 @@ export default function Cart({ navigation }) {
                 })
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                 .then(resp => {if (mounted) {setMyAddresses(resp.json), setMyAddressesStatus(resp.status)}})
-                .catch(error => console.log(error))
+                .catch(error => setError(error))
             } else {
                 setCartStatus(401);
             }
@@ -130,7 +130,7 @@ export default function Cart({ navigation }) {
                 })
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                 .then(resp => {if (mounted) {setDeliveryAddress(resp.json.address), setDeliveryAddressStatus(resp.status)}})
-                .catch(error => console.log(error))
+                .catch(error => setError(error))
             } else {
                 setCartStatus(401);
             }
@@ -158,7 +158,7 @@ export default function Cart({ navigation }) {
                 })
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                 .then(resp => {if (mounted) {setCouponList(resp.json.data)}})
-                .catch(error => console.log(error))
+                .catch(error => setError(error))
             } else {
                 setCartStatus(401);
             }
@@ -184,11 +184,11 @@ export default function Cart({ navigation }) {
                 })
                 .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
                 .then(resp => {if (mounted) {setName(resp.json.name), setEmail(resp.json.email), setPhone(resp.json.phone)}})
-                .catch(error => console.log(error));
+                .catch(error => setError(error));
             } else {
               return;
             }
-          })().catch(error => console.log(error))
+          })().catch(error => setError(error))
     }, [])
 
 
@@ -227,7 +227,7 @@ export default function Cart({ navigation }) {
             .then(() => (setInputAddress(''), setInputLocality(''), setInputAddressType('')))
             .then(() => setAddressModal(false))
             .then(() => setIndicPos('relative'))
-            .catch(error => console.log(error))
+            .catch(error => setError(error))
         } else {
             navigation.navigate('Register')
         }
@@ -248,7 +248,7 @@ export default function Cart({ navigation }) {
         })
         .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => (setMyAddresses(resp.json.data),  setMyAddressesStatus(resp.status), setDeliveryAddressStatus(resp.json.deliveryaddstatus)))
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
     } else {
         navigation.navigate('Register')
     }
@@ -271,7 +271,7 @@ export default function Cart({ navigation }) {
             .then(() => setDeliveryAddressStatus(200))
             .then(() => setAddressModal(false))
             .then(() => (setInputAddress(''), setInputLocality(''), setInputAddressType('')))
-            .catch(error => console.log(error))
+            .catch(error => setError(error))
         } else {
             navigation.navigate('Register')
         }
@@ -337,7 +337,7 @@ const createPaymentOrder = async (payMethod) => {
       })
       .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
       .then(resp => openRazorpayCheckout(resp.json.resp.id, payMethod))
-      .catch(error => console.log(error))
+      .catch(error => setError(error))
     } else {
         setOnPlace(false);
     }
@@ -406,7 +406,7 @@ const createPaymentOrder = async (payMethod) => {
                     alert('We could not verify the source of payment. If any amount is debited, it will be refunded at the earliest.')
                 }
             })
-            .catch(error => (console.log(error), setOnPlace(false), setAfterPaymentModal(false)))
+            .catch(error => (setError(error), setOnPlace(false), setAfterPaymentModal(false)))
         } else {
             navigation.navigate('Register')
         }
@@ -441,7 +441,7 @@ const createPaymentOrder = async (payMethod) => {
                 alert('Cart is empty')
             }
         })
-        .catch(error => (console.log(error), setOnPlace(false)))
+        .catch(error => (setError(error), setOnPlace(false)))
     } else {
         navigation.navigate('Register')
     }
@@ -461,7 +461,7 @@ const createPaymentOrder = async (payMethod) => {
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => {if (mounted && resp.status === 200) {setCartStatus(404)}})
-        .catch(error => console.log(error))
+        .catch(error => setError(error))
     }
 
 
@@ -489,7 +489,7 @@ const createPaymentOrder = async (payMethod) => {
                 }
             })
             .then(() => {})
-            .catch(error => console.log(error))
+            .catch(error => setError(error))
     }
 
 
@@ -504,6 +504,7 @@ const createPaymentOrder = async (payMethod) => {
   if (cartStatus === 0) {
       return (
           <View style={[styles.container, {justifyContent: 'center', alignItems: 'center'}]}>
+              <StatusBar style="inverted" />
               <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
           </View>
       )
@@ -513,6 +514,7 @@ const createPaymentOrder = async (payMethod) => {
   if (cartStatus === 404){
       return (
           <View style={{flex: 1, backgroundColor: 'white', justifyContent: 'center'}}>
+              <StatusBar style="inverted" />
               <LottieView source={require('../assets/animations/empty-cart.json')} autoPlay={true} style={{width: 225, alignSelf: 'center'}} />
               <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(5), marginTop: 25}}>Your cart is empty!</Text>
               <TouchableOpacity style={{alignSelf: 'center', marginTop: 15}} onPress={() => navigation.goBack()}>
@@ -537,6 +539,7 @@ const createPaymentOrder = async (payMethod) => {
 
   return (
       <View style={styles.container}>
+          <StatusBar style="inverted" />
         <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 50}}>
             <TouchableOpacity style={{marginRight: hp(5), marginBottom: hp(5), alignSelf: 'flex-end'}} disabled={cartStatus === 200 ? false: true} onPress={deleteCart()}>
                 <Text style={{fontFamily: 'Maison-bold', color: "#F67280", fontSize: wp(4)}}>Empty cart</Text>
@@ -553,22 +556,22 @@ const createPaymentOrder = async (payMethod) => {
                                 </View>
                                 : null
                             })}
-                            <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', marginTop: 5, fontSize: wp(4)}}>{item.ordereditem}</Text>
+                            <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', marginTop: 5, fontSize: wp(4), color: 'black'}}>{item.ordereditem}</Text>
                             {test.map(w => {
                                 return w.get_count.map(x => {
                                     return x.ordereditem === item.ordereditem ?
                                     <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}} key={x.weight}>
-                                        <Text style={{fontFamily: 'sf', textAlign: 'center', marginTop: 5, fontSize: wp(3.5)}}>{x.weight}  x{x.cou}</Text>
+                                        <Text style={{fontFamily: 'sf', textAlign: 'center', marginTop: 5, fontSize: wp(3.5), color: 'black'}}>{x.weight}  x{x.cou}</Text>
                                     </View>: null
                                 })
                             })}
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), position: 'absolute', bottom: 5, alignSelf: 'center', marginTop: 10}}> &#8377; {item.items_price['price__sum']} </Text>
+                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), position: 'absolute', bottom: 5, alignSelf: 'center', marginTop: 10, color: 'black'}}> &#8377; {item.items_price['price__sum']} </Text>
                             <TouchableOpacity style={{position: 'absolute', top: 2, right: 2}} onPress={() => deleteItem(item)}>
                                 <Entypo name="circle-with-cross" size={15} color="#F67280" />
                             </TouchableOpacity>
                         </View>
                     )
-                }): cartStatus === 404 ? <Text style={{textAlign: 'center', fontFamily: 'sofia-medium'}}>Your cart is empty!</Text>: <Text>Please Login to build your cart!</Text>}
+                }): cartStatus === 404 ? <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: 'black'}}>Your cart is empty!</Text>: <Text>Please Login to build your cart!</Text>}
                 </ScrollView>
             </View>
             <View style={{flex: 1, marginTop: 20, width: '85%', alignSelf: 'center'}}>
@@ -577,9 +580,9 @@ const createPaymentOrder = async (payMethod) => {
                         <View key={item.id}>
                             <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                 <Ionicons name="location-sharp" size={wp(4.5)} color="#249c86" />
-                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 5}}>Order will be delivered at:</Text>
+                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 5, color: 'black'}}>Order will be delivered at:</Text>
                             </View>
-                            <Text style={{flex: 1, fontFamily: 'Maison-bold', fontSize: wp(3.5), marginTop: 5, marginLeft: 25}}>{item.address}, {item.locality}, {item.city}</Text>
+                            <Text style={{flex: 1, fontFamily: 'Maison-bold', fontSize: wp(3.5), marginTop: 5, marginLeft: 25, color: 'black'}}>{item.address}, {item.locality}, {item.city}</Text>
                             <TouchableOpacity style={{marginTop: 5, alignSelf: 'flex-start', marginLeft: 25}} onPress={() => setAddressModal(true)}>
                                 <Text style={{fontFamily: 'Maison-bold', color: '#249c86', fontSize: wp(3.5)}}>Change delivery address</Text>
                             </TouchableOpacity>
@@ -600,9 +603,9 @@ const createPaymentOrder = async (payMethod) => {
                         <View style={{flex: 1}}>
                             <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                 <LottieView source={require('../assets/animations/48974-offer-animation.json')} autoPlay={true} loop={true} style={{width: 30, height: 30}} />
-                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5)}}>Offers</Text>
+                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), color: 'black'}}>Offers</Text>
                             </View>
-                            {appliedCoupon ? <Text style={{fontFamily: 'Maison-bold', flex: 1, fontSize: wp(3.5), marginLeft: 25}}>&#8377; {appliedCoupon.discount} off applied on your order!</Text> : <Text style={{fontFamily: 'Maison-bold', flex: 1, marginLeft: 25, fontSize: wp(3.5)}}>No offer applied!</Text>}
+                            {appliedCoupon ? <Text style={{fontFamily: 'Maison-bold', flex: 1, fontSize: wp(3.5), marginLeft: 25, color: 'black'}}>&#8377; {appliedCoupon.discount} off applied on your order!</Text> : <Text style={{fontFamily: 'Maison-bold', flex: 1, marginLeft: 25, fontSize: wp(3.5), color: 'black'}}>No offer applied!</Text>}
                         </View>
                         {appliedCoupon ? 
                             <TouchableOpacity style={{flex: 0.2, justifyContent: 'center', marginTop: 5}} onPress={() => setAppliedCoupon(null)}>
@@ -616,18 +619,18 @@ const createPaymentOrder = async (payMethod) => {
                 </View>
                 <View style={{marginTop: 40, borderRadius: 10, marginBottom: 50}}>
                     <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
-                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4)}}>Item subtotal</Text>
-                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4)}}>&#8377; {total}</Text>
+                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>Item subtotal</Text>
+                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>&#8377; {total}</Text>
                     </View>
                     <Text style={{backgroundColor: 'white', height: 1, marginBottom: 10}}></Text>
                     <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
-                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4)}}>Delivery Charges</Text>
-                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4)}}>&#8377; {deliveryCharges}</Text>
+                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>Delivery Charges</Text>
+                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>&#8377; {deliveryCharges}</Text>
                     </View>
                     <Text style={{backgroundColor: 'white', height: 1, marginBottom: 10}}></Text>
                     <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
-                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4)}}>Taxes</Text>
-                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4)}}>&#8377; {taxes}</Text>
+                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>Taxes</Text>
+                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>&#8377; {taxes}</Text>
                     </View>
                     <Text style={{backgroundColor: 'white', height: 1, marginBottom: 10}}></Text>
                     {appliedCoupon ? 
@@ -640,18 +643,18 @@ const createPaymentOrder = async (payMethod) => {
                         </View>: null
                     }
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <Text style={{flex: 1, fontFamily: 'sofia-black', fontSize: wp(4.5)}}>Grand Total</Text>
-                        {appliedCoupon ? <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-black', fontSize: wp(4.5)}}>&#8377; {total + deliveryCharges + taxes - appliedCoupon.discount}</Text>: <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-black', fontSize: wp(4.5)}}>&#8377; {total + deliveryCharges + taxes}</Text>}
+                        <Text style={{flex: 1, fontFamily: 'sofia-black', fontSize: wp(4.5), color: 'black'}}>Grand Total</Text>
+                        {appliedCoupon ? <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-black', fontSize: wp(4.5), color: 'black'}}>&#8377; {total + deliveryCharges + taxes - appliedCoupon.discount}</Text>: <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-black', fontSize: wp(4.5), color: 'black'}}>&#8377; {total + deliveryCharges + taxes}</Text>}
                     </View>
                 </View>
 
                 {onPlace ? <ActivityIndicator color="#99b898" size={50} />
                  : myAddressesStatus === 200 && deliveryAddressStatus === 200 && cartStatus === 200 ? 
                     <TouchableOpacity onPress={() => setPaymentModal(true)} style={{flex: 1, opacity: 1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
-                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4)}}>Place Order &raquo;</Text>
+                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Place Order &raquo;</Text>
                     </TouchableOpacity>:
                     <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
-                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold'}}>Place Order &raquo;</Text>
+                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Place Order &raquo;</Text>
                     </TouchableOpacity>
                 }
 
@@ -686,7 +689,7 @@ const createPaymentOrder = async (payMethod) => {
                         </MapView>
                         
                         <TouchableOpacity style={{position: 'absolute', top: 5, left: 15}} onPress={() => (setAddressModal(false), setInputAddress(''), setInputLocality(''), setInputAddressType(''))}>
-                            <Text style={{fontSize: wp(7), fontWeight:'bold'}}>&#x27F5;</Text>
+                            <Text style={{fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={{position: 'absolute', top: 15, right: 15, backgroundColor: '#f0f0f0', padding: wp(2), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58}} onPress={getLocation}>
                         {Platform.OS === 'android' ? <MaterialIcons name="my-location" size={wp(8)} color="black" />: <Ionicons name="ios-location" size={wp(6.5)} color="black" />}
@@ -695,7 +698,7 @@ const createPaymentOrder = async (payMethod) => {
                     <View style={{backgroundColor: '#fafafa', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, borderTopLeftRadius: 50, borderTopRightRadius: 50, flex: 1, paddingTop: 5}}>
                         <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{padding: 35, paddingBottom: 50}} >
                             <View>
-                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginBottom: 25}}>Choose delivery address</Text>
+                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginBottom: 25, color: 'black'}}>Choose delivery address</Text>
                                 {myAddressesStatus === 200 ? myAddresses.map((item, index) => {
                                     return (
                                         <View key={item.id}>
@@ -705,7 +708,7 @@ const createPaymentOrder = async (payMethod) => {
                                                     <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}> {item.type_of_address}</Text>
                                                 </View>
                                                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10}}>
-                                                    <Text style={{fontFamily: 'sf', flex: 1, fontSize: wp(3.5)}}>{item.address}, {item.locality}, {item.city}</Text>
+                                                    <Text style={{fontFamily: 'sf', flex: 1, fontSize: wp(3.5), color: 'black'}}>{item.address}, {item.locality}, {item.city}</Text>
                                                     <TouchableOpacity onPress={deleteAddress(item)}>
                                                         <Text style={{fontFamily: 'sf', color: 'red'}}>Remove</Text>
                                                     </TouchableOpacity>
@@ -714,16 +717,16 @@ const createPaymentOrder = async (payMethod) => {
                                             {myAddresses && index !== (myAddresses.length - 1) ?<Text style={{borderBottomWidth: 1, marginBottom: 20, borderBottomColor: '#f0f0f0'}}></Text> : null}
                                         </View>
                                     )
-                                }):<Text style={{fontFamily: 'sf'}}>You don't have any saved addresses. Add one now!</Text>}
+                                }):<Text style={{fontFamily: 'sf', color: 'black'}}>You don't have any saved addresses. Add one now!</Text>}
                             </View>
                             <Text style={{borderBottomWidth: 1, borderBottomColor: '#ebebeb', marginTop: 25}}></Text>
                             <View style={{marginTop: 25}} >
-                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5)}}>Add an address</Text>
-                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), marginBottom: 25}}>(Use the map to auto-fill)</Text>
+                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), color: 'black'}}>Add an address</Text>
+                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), marginBottom: 25, color: 'black'}}>(Use the map to auto-fill)</Text>
                                 <ActivityIndicator size={50} color="#99b898" style={{position: indicPos, display: 'none', alignSelf: 'center', top: 0, bottom: 0}} />
-                                <TextInput style={{ height: 30, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'House/Colony'} value={inputAddress} onChangeText={(text) => setInputAddress(text)} />
-                                <TextInput style={{ height: 30, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'Road Number, Road Name'} value={inputLocality} onChangeText={(text) => setInputLocality(text)} />
-                                <TextInput style={{ height: 30, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'City'} value={inputCity} onChangeText={(text) => setInputCity(text)} />
+                                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'House/Colony'} value={inputAddress} onChangeText={(text) => setInputAddress(text)} />
+                                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'Road Number, Road Name'} value={inputLocality} onChangeText={(text) => setInputLocality(text)} />
+                                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'City'} value={inputCity} onChangeText={(text) => setInputCity(text)} />
                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                     <TouchableOpacity style={{backgroundColor: inputAddressType === 'Home' ? '#249c86' :'white', padding: 10, borderRadius: 5, borderWidth: 0.3, borderColor: inputAddressType === 'Home' ? '#249c86': 'black'}} onPress={() => setInputAddressType('Home')} activeOpacity={1}>
                                         <Text style={{fontFamily: 'sf', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Home' ? 'white': 'black'}}>Home</Text>
@@ -734,10 +737,10 @@ const createPaymentOrder = async (payMethod) => {
                                 </View>
                                 {inputAddress === '' || inputLocality === '' || inputCity === '' || inputAddressType === '' ? 
                                     <TouchableOpacity style={{marginTop: 25, opacity: 0.2, backgroundColor: '#99b898', padding: 10, borderRadius: 10}} disabled={true}>
-                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center'}}>Save address</Text>
+                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
                                     </TouchableOpacity>:
                                     <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#99b898', padding: 10, borderRadius: 10}} disabled={false} onPress={addAddress}>
-                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center'}}>Save address</Text>
+                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
                                     </TouchableOpacity>
                                 }
                             </View>
@@ -794,20 +797,20 @@ const createPaymentOrder = async (payMethod) => {
                     useNativeDriver={true}
                 >
                     <View style={{backgroundColor: 'white', padding: 20, maxHeight: '30%', borderRadius: 10, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowOpacity: 0.58, shadowRadius: 16.00}}>
-                        {couponList.length > 0 ? <Text style={{fontFamily: 'sofia-black', marginBottom: 25, fontSize: wp(5), textAlign: 'center'}}>Available Offers</Text>: <LottieView source={require('../assets/animations/823-crying.json')} autoPlay={true} loop={true} style={{width: 80, height: 80, alignSelf: 'center'}} />}
+                        {couponList.length > 0 ? <Text style={{fontFamily: 'sofia-black', marginBottom: 25, fontSize: wp(5), textAlign: 'center', color: 'black'}}>Available Offers</Text>: <LottieView source={require('../assets/animations/823-crying.json')} autoPlay={true} loop={true} style={{width: 80, height: 80, alignSelf: 'center'}} />}
                         <FlatList 
                             data={couponList}
                             keyExtractor={(item, index) => index.toString()}
                             showsVerticalScrollIndicator={false}
-                            ListEmptyComponent={() => (!couponList.length ? <Text style={{textAlign: 'center', fontFamily: 'Maison-bold'}}>No offers available right now!</Text>: null)}
+                            ListEmptyComponent={() => (!couponList.length ? <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>No offers available right now!</Text>: null)}
                             renderItem={({ item }) => (
                                 <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 20, borderWidth: 0.7, borderStyle: 'dashed', borderRadius: 1, padding: 10}}>
                                     <View style={{flex: 1}}>
-                                        <Text style={{fontFamily: 'sf'}}>{item.name}</Text>
-                                        <Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline'}}>{item.description}</Text>
+                                        <Text style={{fontFamily: 'sf', color: 'black'}}>{item.name}</Text>
+                                        <Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline', color: 'black'}}>{item.description}</Text>
                                     </View>
                                     <TouchableOpacity disabled={total > item.min_items_price ? false : true} onPress={() => (setAppliedCoupon(item), setCouponModal(false), animationModalShow())}>
-                                        <Text style={total > item.min_items_price ? {opacity: 1, fontFamily: 'Maison-bold', color: '#99b898'}: {opacity: 0.2, fontFamily: 'Maison-bold', color: '#99b898'}}>Apply</Text>
+                                        <Text style={total > item.min_items_price ? {opacity: 1, fontFamily: 'Maison-bold', color: '#249c86'}: {opacity: 0.2, fontFamily: 'Maison-bold', color: '#249c86'}}>Apply</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -825,7 +828,7 @@ const createPaymentOrder = async (payMethod) => {
                     backdropOpacity={1}
                 >
                     <LottieView style={{alignSelf: 'center', width: 300}} source={require('../assets/animations/order-placed.json')} autoPlay={true} loop={false} onAnimationFinish={() => navigation.pop()} />
-                    <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), marginTop: 50, textAlign: 'center'}}>Order Placed !</Text>
+                    <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), marginTop: 50, textAlign: 'center', color: 'black'}}>Order Placed !</Text>
                 </Modal>
 
                 <Modal
