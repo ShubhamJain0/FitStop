@@ -6,6 +6,7 @@ import Modal from 'react-native-modal';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path, Rect, Circle, G, Polygon, LinearGradient, Defs, Stop, Ellipse } from 'react-native-svg';
+import { showMessage } from 'react-native-flash-message';
 
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -51,11 +52,31 @@ export default function Register({ navigation }) {
                         if (resp.status === 200) {
                             navigation.navigate('OtpComponent', {phone: phone, action: resp.json.action})
                         } else if (resp.status === 500) {
-                            alert('Provided number is not valid or there was an error in sending OTP. Please check the number.')
+                            showMessage({
+                                message: 'Provided number is not valid or there was an error in sending OTP. Please check the number.',
+                                position: 'top',
+                                floating: true,
+                                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                                style: {alignItems: 'center'},
+                                icon: 'auto',
+                                type: 'danger',
+                                statusBarHeight: hp(3),
+                                duration: 4000
+                            })
                             setDisabled(false);
                         }
                     })
-        .catch(error => (setError(error), alert('Provided number is not valid or there was an error in sending OTP. Please check the number.'), setDisabled(false)))
+        .catch(error => (setError(error), showMessage({
+            message: 'Provided number is not valid or there was an error in sending OTP. Please check the number.',
+            position: 'top',
+            floating: true,
+            titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+            style: {alignItems: 'center'},
+            icon: 'auto',
+            type: 'danger',
+            statusBarHeight: hp(3),
+            duration: 4000
+          }), setDisabled(false)))
     }
 
 
@@ -65,7 +86,7 @@ export default function Register({ navigation }) {
         <View style={styles.container}>
             <StatusBar style="inverted" />
             <Image source={require('../assets/register.png')} style={{width: '100%', height: 2185*(screenWidth/3505), alignSelf: 'center'}} />
-            <View style={{backgroundColor: 'white', width: '100%', height: '100%', position: 'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 5, shadowOpacity: 0.3}}>
+            <View style={{backgroundColor: 'white', width: '100%', height: '100%', position: 'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
                 <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), paddingTop: wp(8), paddingLeft: wp(15), color: 'black'}} >Enter your{'\n'}mobile number.</Text>
                 <Text style={{fontFamily: 'sf', marginBottom: 35, paddingLeft: wp(15), fontSize: wp(4), color: 'black'}}>We will send you a verification code.</Text>
                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: hp(5), paddingLeft: wp(15)}}>
@@ -91,10 +112,10 @@ export default function Register({ navigation }) {
                     onChangeText={(text) => setPhone(text)} keyboardType={'numeric'} maxLength={10} />               
                 </View>
                 {phone.length <= 9 || phone === 0 || disabled ? 
-                    <TouchableOpacity disabled={true} style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}: {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}} >
+                    <TouchableOpacity disabled={true} style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} >
                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black'}}>&#x27F6;</Text>
                     </TouchableOpacity>:
-                    <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}: {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}} onPress={Register} activeOpacity={0.8} >
+                    <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} onPress={Register} activeOpacity={0.8} >
                         <Text style={{opacity: 1, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'black'}}>&#x27F6;</Text>
                     </TouchableOpacity>
                 }

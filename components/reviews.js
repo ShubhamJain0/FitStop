@@ -8,6 +8,8 @@ import Svg, { Path, Rect, Circle, G, Polygon, LinearGradient, Defs, Stop, Ellips
 import LottieView from 'lottie-react-native';
 import Carousel, {ParallaxImage, Pagination} from 'react-native-snap-carousel';
 import { StatusBar } from 'expo-status-bar';
+import Modal from 'react-native-modal';
+import { showMessage, hideMessage } from "react-native-flash-message";
 
 const {width: screenWidth} = Dimensions.get('window');
 
@@ -18,6 +20,7 @@ export default function Reviews({ route, navigation }) {
     const [respStatus, setRespStatus] = useState(0);
 
     const [error, setError] = useState(null);
+    const [showModal, setShowModal] = useState(false);
 
     const carouselRef = useRef(null);
     const emoji1 = useRef(null);
@@ -125,10 +128,19 @@ export default function Reviews({ route, navigation }) {
                         body: JSON.stringify({id: rateItem.id, rating: delPackRating, review: problem1 + problem2 + problem3 + problem4 + problem5})
                     })
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-                    .then(resp => {if (resp.status === 201){navigation.goBack()} })
-                    .catch(error => setError(error))
+                    .then(resp => {if (resp.status === 201){setShowModal(true)} })
+                    .catch(error => (setError(error), setShowModal(false)))
                 } else {
-                    alert('Please provide a valid rating')
+                    showMessage({
+                        message: 'Please provide a valid rating',
+                        position: 'top',
+                        floating: true,
+                        titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                        style: {alignItems: 'center'},
+                        icon: 'auto',
+                        type: 'warning',
+                        statusBarHeight: hp(3)
+                    })
                 }
         } else {
             navigation.navigate('Register')
@@ -188,7 +200,7 @@ export default function Reviews({ route, navigation }) {
                                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), marginBottom: 25, color: 'black'}}>You have rated {activeItem.item_name} : </Text>
                                         {exists() === 1 ? emojis[0]: exists() === 2 ? emojis[1]: exists() === 3 ? emojis[2]: exists() === 4 ? emojis[3]: exists() === 5 ? emojis[4] : null } 
                                         <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5), color: 'black'}}>{exists() === 1 ? 'Ugh ! Terrible !': exists() === 2 ? 'Bad': exists() === 3 ? 'Could have been better !' : exists() === 4 ? 'Good': exists() === 5 ? 'Awesome': null}</Text>
-                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
+                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
                                             <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Next</Text>
                                         </TouchableOpacity>
                                     </View> :
@@ -205,7 +217,7 @@ export default function Reviews({ route, navigation }) {
                                             </View>
                                         </View>
                                         <TextInput style={{fontFamily: 'sf', fontSize: wp(4), width: wp(50), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} onChangeText={(text) => setComment(text)} />
-                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
+                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
                                             <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Next</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -213,7 +225,7 @@ export default function Reviews({ route, navigation }) {
                             </View>
                         </ScrollView>
                         : 
-                        <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{marginTop: 40, width: '90%', alignSelf: 'center'}}>
+                        <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{marginTop: 40, width: '90%', alignSelf: 'center', paddingBottom: 25}}>
                             <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), color: 'black'}}>Rate packaging and delivery</Text>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, justifyContent: 'space-between'}}>
                                 <TouchableOpacity onPress={() => (setDelPackRating(1), emoji1.current.play())} activeOpacity={0.8}>
@@ -267,9 +279,30 @@ export default function Reviews({ route, navigation }) {
                                 <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 30, color: 'black'}}>Awesome ! We will do our best to continue this experience with you !</Text>
                                 : null
                             }
-                            <TouchableOpacity style={{marginTop: 50, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%'}} onPress={() => (createDelPackRating(), createRating(activeItem.item_name))} activeOpacity={0.8}>
+                            <TouchableOpacity style={{marginTop: 50, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => (createDelPackRating(), createRating(activeItem.item_name))} activeOpacity={0.8}>
                                 <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Done</Text>
                             </TouchableOpacity>
+                            <Modal
+                                isVisible={showModal}
+                                useNativeDriver={true}
+                                useNativeDriverForBackdrop={true}
+                                backdropColor={'white'}
+                                backdropOpacity={1}
+                            >
+                                {delPackRating === 1 ? 
+                                    <LottieView source={require('../assets/animations/42754-angry-face-with-horns.json')} style={{height: wp(30), alignSelf: 'center'}} autoPlay={true} loop={false} onAnimationFinish={() => (setShowModal(false), navigation.goBack())} />
+                                : delPackRating === 2 ?
+                                    <LottieView source={require('../assets/animations/42753-angry-face.json')} style={{height: wp(30), alignSelf: 'center'}} autoPlay={true} loop={false} onAnimationFinish={() => (setShowModal(false), navigation.goBack())} />
+                                : delPackRating === 3 ? 
+                                    <LottieView source={require('../assets/animations/43008-expressionless-face.json')} style={{height: wp(30), alignSelf: 'center'}} autoPlay={true} loop={false} onAnimationFinish={() => (setShowModal(false), navigation.goBack())} />
+                                : delPackRating === 4 ?
+                                    <LottieView source={require('../assets/animations/42762-beaming-face-with-smiling-eyes.json')} style={{height: wp(30), alignSelf: 'center'}} autoPlay={true} loop={false} onAnimationFinish={() => (setShowModal(false), navigation.goBack())} />
+                                : delPackRating === 5 ? 
+                                    <LottieView source={require('../assets/animations/43010-kissing.json')} style={{height: wp(30), alignSelf: 'center'}} autoPlay={true} loop={false} onAnimationFinish={() => (setShowModal(false), navigation.goBack())} />
+                                : <Text>null</Text>
+                                }
+                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black', marginTop: 100, textAlign: 'center'}}>Thank you for taking the time to leave a rating !</Text>
+                            </Modal>
                         </ScrollView>
                     )
                 }}

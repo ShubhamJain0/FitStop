@@ -96,12 +96,12 @@ export default function FavRecipe({ navigation }){
                 <FlatList 
                 data={recipesList}
                 keyExtractor={(item, index) => index.toString()}
-                contentContainerStyle={{paddingLeft: 50, paddingBottom: 100, paddingTop: 25}}
+                contentContainerStyle={{paddingLeft: 50, paddingBottom: 100}}
                 ListEmptyComponent={() => (!recipesList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
                 renderItem={({ item }) => (
                     search(item) ?
-                    <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58}} >
-                            <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}}>
+                    <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}} >
+                            <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43, shadowColor: '#000'}}>
                               <Image source={{uri: item.image}} style={{width: 125, height: 125, alignSelf: 'center', borderRadius: 100}} />
                             </View>
                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>

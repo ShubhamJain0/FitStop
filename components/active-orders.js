@@ -136,7 +136,7 @@ export default function ActiveOrders({ navigation, route }) {
                                     useNativeDriver={true}
                                     useNativeDriverForBackdrop={true}
                                 >
-                                    <View style={{backgroundColor: 'white', height: '50%', position: 'absolute', bottom: 0, width: '100%', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, padding: 25, paddingBottom: 5}}>
+                                    <View style={{backgroundColor: 'white', height: '50%', position: 'absolute', bottom: 0, width: '100%', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000', padding: 25, paddingBottom: 5}}>
                                         <ScrollView showsVerticalScrollIndicator={false}>
                                             <Text style={{fontFamily: 'Maison-bold', marginTop: 25, fontSize: wp(4), color: 'black'}}>Ordered Items -</Text>
                                             <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5, color: 'black'}}>{item.ordereditems.replace(/', '/g, '').replace(/, ']/g, '').replace(/[[']/g, '').replace(/w/g, ' ').replace(/, /g, '\n')}</Text>

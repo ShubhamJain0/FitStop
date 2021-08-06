@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import Svg, { Path, Rect, Circle, G, Polygon, LinearGradient, Defs, Stop, Ellipse } from 'react-native-svg';
 import LottieView from 'lottie-react-native';
+import { showMessage } from 'react-native-flash-message';
 
 
 const {width: screenWidth} = Dimensions.get('window');
@@ -129,9 +130,21 @@ export default function PreviousOrders({ navigation, route }) {
                   body: JSON.stringify({id: item.id})
               })
               .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
-              .then(resp => {if (resp.status === 404) {alert('Some items are out of stock, sorry for inconvenience!')}})
-              .then(() => navigation.navigate('Fruits'))
+              .then(resp => {if (resp.status === 404) {
+                showMessage({
+                    message: 'Some items are out of stock, sorry for inconvenience !',
+                    position: 'top',
+                    floating: true,
+                    titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                    style: {alignItems: 'center'},
+                    icon: 'auto',
+                    type: 'warning',
+                    statusBarHeight: hp(3),
+                    duration: 2500
+                })
+              }})
               .then(() => navigation.popToTop())
+              .then(() => navigation.navigate('cart'))
               .catch(error => setError(error))
             } else {
               navigation.navigate('Register')
@@ -160,13 +173,13 @@ export default function PreviousOrders({ navigation, route }) {
                         ref={flRef} 
                         data={list}
                         keyExtractor={(item, index) => index.toString()}
-                        contentContainerStyle={{paddingTop: 15, paddingBottom: 50}}
+                        contentContainerStyle={{paddingBottom: 50}}
                         onScrollToIndexFailed={(info) => console.log(info)}
                         ListHeaderComponent={() => (<View style={{width: '85%', alignSelf: 'center', marginBottom: 25}}>
                         <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), color: 'black'}}>Previous orders</Text>
                     </View>)}
                         renderItem={({ item }) => (
-                            <View style={{marginBottom: 50, backgroundColor: 'white', width: '85%', padding: 25, paddingTop: 15, paddingBottom: 15, borderRadius: 10, alignSelf: 'center', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}}>
+                            <View style={{marginBottom: 50, backgroundColor: 'white', width: '85%', padding: 25, paddingTop: 15, paddingBottom: 15, borderRadius: 10, alignSelf: 'center', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}}>
                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                     <View style={{flex: 1}}>
                                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Order #{item.id}</Text>
@@ -307,6 +320,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fafafa',
-        paddingTop: 75
+        paddingTop: 100
     },
 })

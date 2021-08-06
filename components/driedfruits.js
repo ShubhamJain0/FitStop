@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ModalDropdown from 'react-native-modal-dropdown';
 import FlipCard from 'react-native-flip-card';
 import icoMoonConfig from '../selection.json';
-import LottieView from 'lottie-react-native';
+import { showMessage } from 'react-native-flash-message';
 
 
 export default function DriedFruits({ navigation }) {
@@ -192,6 +192,17 @@ export default function DriedFruits({ navigation }) {
                 
             }
         } else {
+            showMessage({
+                message: 'You need to be logged-in to edit cart !',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'warning',
+                statusBarHeight: hp(3),
+                duration: 2500
+            })
             navigation.navigate('Register')
         }
     }
@@ -212,6 +223,17 @@ export default function DriedFruits({ navigation }) {
         .then(resp => setCartData(resp.json.cart))
         .catch(error => setError(error))
         } else {
+            showMessage({
+                message: 'You need to be logged-in to edit cart !',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'warning',
+                statusBarHeight: hp(3),
+                duration: 2500
+            })
             navigation.navigate('Register')
         }
     }
@@ -319,7 +341,7 @@ export default function DriedFruits({ navigation }) {
                             <Text style={{color: 'black', marginTop: 10, opacity: refreshOpacity}}>Pull down to refresh</Text>
                         </ScrollView>
                     </View>
-                    <View style={{width: '100%', position: 'absolute', bottom: 0, backgroundColor: '#fcfcfc', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51}}>
+                    <View style={{width: '100%', position: 'absolute', bottom: 0, backgroundColor: '#fcfcfc', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51, shadowColor: '#000'}}>
                         <View style={{flex: 1, alignItems: 'center'}}>
                             <TouchableOpacity onPress={() => navigation.navigate('Home')} activeOpacity={1}>
                                 <CustomIcon name="home-1" size={wp(6)} style={{color: 'black', alignSelf: 'center'}} />
@@ -394,13 +416,13 @@ export default function DriedFruits({ navigation }) {
                             ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                             renderItem={({ item }) => (
                                     <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true}>
-                                        <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: 10, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
+                                        <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, margin: 10, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10}}>
                                             <ModalDropdown 
                                                 ref={el => dropDownRef.current[item.id] = el}
                                                 defaultValue={item.detail[0].quantity}
                                                 options={item.detail.map(item1 => item1.quantity)} 
                                                 style={{alignSelf: 'center', marginTop: 5, position: 'absolute', bottom: 2, left: 20, padding: 5}}
-                                                dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}} 
+                                                dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} 
                                                 dropdownTextStyle={{fontSize: wp(4), fontFamily: 'sf', textAlign: 'center', color: 'black'}} 
                                                 renderSeparator={() => (<Text style={{backgroundColor: '#ebebeb', height: 1}}></Text>)}
                                                 onSelect={(value, index) => updateList(item, index) ? setCustom([...custom]): setCustom([...custom, {item: item.name, value: index}])}
@@ -445,7 +467,7 @@ export default function DriedFruits({ navigation }) {
                                                         search(item) ? cartData.map((item1) => {
                                                             return item1.ordereditem  === item.name ? 
                                                                 
-                                                            <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, height: 30, padding: wp(1), flex: 0.1}}>
+                                                            <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                                     
                                                                     <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                                         <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -459,14 +481,14 @@ export default function DriedFruits({ navigation }) {
                                                                 </View>
                                                                 : null
                                                             }): 
-                                                            <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, elevation: 5}} activeOpacity={1}>
+                                                            <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                                 <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                             </TouchableOpacity>
-                                                    :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                                    :  <Text style={{color: 'red', textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 10}}>Out of stock !</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                                 
                                             </View>
                                         </View>
-                                        <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: 10, paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                                        <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, margin: 10, paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                             
                                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                                 <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5), color: 'black'}}>Details</Text>
@@ -535,7 +557,7 @@ export default function DriedFruits({ navigation }) {
                     <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
                 </TouchableOpacity>
             </Animated.View>
-            <View style={{width: '100%', position: 'absolute', bottom: 0, backgroundColor: '#fcfcfc', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51}}>
+            <View style={{width: '100%', position: 'absolute', bottom: 0, backgroundColor: '#fcfcfc', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51, shadowColor: '#000'}}>
                 <View style={{flex: 1, alignItems: 'center'}}>
                     <TouchableOpacity onPress={() => navigation.navigate('Home')} activeOpacity={1}>
                         <CustomIcon name="home-1" size={wp(6)} style={{color: 'black', alignSelf: 'center'}} />
@@ -585,7 +607,10 @@ const styles = StyleSheet.create({
       popup: {
         backgroundColor: "#99b898",
         elevation: 3,
-        shadowOffset: {width: 3, height: 3},
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.22,
+        shadowRadius: 2.22,
+        shadowColor: '#000',
         marginHorizontal: 15,
         marginBottom: 5,
         borderTopLeftRadius: 5,

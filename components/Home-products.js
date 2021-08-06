@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ModalDropdown from 'react-native-modal-dropdown';
 import FlipCard from 'react-native-flip-card';
 import { StatusBar } from 'expo-status-bar';
+import { showMessage } from 'react-native-flash-message';
 
 
 export default function HomeProducts({ navigation, route }) {
@@ -125,6 +126,17 @@ export default function HomeProducts({ navigation, route }) {
                 
             }
         } else {
+            showMessage({
+                message: 'You need to be logged-in to edit cart !',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'warning',
+                statusBarHeight: hp(3),
+                duration: 2500
+            })
             navigation.navigate('Register')
         }
     }
@@ -145,6 +157,17 @@ export default function HomeProducts({ navigation, route }) {
         .then(resp => setCartData(resp.json.cart))
         .catch(error => setError(error))
         } else {
+            showMessage({
+                message: 'You need to be logged-in to edit cart !',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'warning',
+                statusBarHeight: hp(3),
+                duration: 2500
+            })
             navigation.navigate('Register');
         }
     }
@@ -213,20 +236,20 @@ export default function HomeProducts({ navigation, route }) {
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
-                contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
+                contentContainerStyle={{paddingBottom: 100}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
                 ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Banner1' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
                                     options={item.detail.map(item1 => item1.quantity)} 
                                     style={{alignSelf: 'center', marginTop: 5, position: 'absolute', bottom: 2, left: 20, padding: 5}}
-                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}} 
+                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} 
                                     dropdownTextStyle={{fontSize: wp(4), fontFamily: 'sf', textAlign: 'center', color: 'black'}} 
                                     renderSeparator={() => (<Text style={{backgroundColor: '#ebebeb', height: 1}}></Text>)}
                                     onSelect={(value, index) => updateList(item, index) ? setCustom([...custom]): setCustom([...custom, {item: item.name, value: index}])}
@@ -271,7 +294,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -285,14 +308,14 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
                                         :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5), color: 'black'}}>Details</Text>
@@ -371,20 +394,20 @@ export default function HomeProducts({ navigation, route }) {
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
-                contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
+                contentContainerStyle={{paddingBottom: 100}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
                 ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Banner2' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
                                     options={item.detail.map(item1 => item1.quantity)} 
                                     style={{alignSelf: 'center', marginTop: 5, position: 'absolute', bottom: 2, left: 20, padding: 5}}
-                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}} 
+                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} 
                                     dropdownTextStyle={{fontSize: wp(4), fontFamily: 'sf', textAlign: 'center', color: 'black'}} 
                                     renderSeparator={() => (<Text style={{backgroundColor: '#ebebeb', height: 1}}></Text>)}
                                     onSelect={(value, index) => updateList(item, index) ? setCustom([...custom]): setCustom([...custom, {item: item.name, value: index}])}
@@ -429,7 +452,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -443,14 +466,14 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
                                         :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5), color: 'black'}}>Details</Text>
@@ -533,20 +556,20 @@ export default function HomeProducts({ navigation, route }) {
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
-                contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
+                contentContainerStyle={{paddingBottom: 100}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
                 ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Custom1' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
                                     options={item.detail.map(item1 => item1.quantity)} 
                                     style={{alignSelf: 'center', marginTop: 5, position: 'absolute', bottom: 2, left: 20, padding: 5}}
-                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}} 
+                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} 
                                     dropdownTextStyle={{fontSize: wp(4), fontFamily: 'sf', textAlign: 'center', color: 'black'}} 
                                     renderSeparator={() => (<Text style={{backgroundColor: '#ebebeb', height: 1}}></Text>)}
                                     onSelect={(value, index) => updateList(item, index) ? setCustom([...custom]): setCustom([...custom, {item: item.name, value: index}])}
@@ -591,7 +614,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -605,14 +628,14 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
                                         :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5), color: 'black'}}>Details</Text>
@@ -691,20 +714,20 @@ export default function HomeProducts({ navigation, route }) {
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
-                contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
+                contentContainerStyle={{paddingBottom: 100}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
                 ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Custom2' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
                                     options={item.detail.map(item1 => item1.quantity)} 
                                     style={{alignSelf: 'center', marginTop: 5, position: 'absolute', bottom: 2, left: 20, padding: 5}}
-                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}} 
+                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} 
                                     dropdownTextStyle={{fontSize: wp(4), fontFamily: 'sf', textAlign: 'center', color: 'black'}} 
                                     renderSeparator={() => (<Text style={{backgroundColor: '#ebebeb', height: 1}}></Text>)}
                                     onSelect={(value, index) => updateList(item, index) ? setCustom([...custom]): setCustom([...custom, {item: item.name, value: index}])}
@@ -749,7 +772,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -763,14 +786,14 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
                                         :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5), color: 'black'}}>Details</Text>
@@ -849,20 +872,20 @@ export default function HomeProducts({ navigation, route }) {
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
-                contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
+                contentContainerStyle={{paddingBottom: 100}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
                 ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Custom3' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
                                     options={item.detail.map(item1 => item1.quantity)} 
                                     style={{alignSelf: 'center', marginTop: 5, position: 'absolute', bottom: 2, left: 20, padding: 5}}
-                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}} 
+                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} 
                                     dropdownTextStyle={{fontSize: wp(4), fontFamily: 'sf', textAlign: 'center', color: 'black'}} 
                                     renderSeparator={() => (<Text style={{backgroundColor: '#ebebeb', height: 1}}></Text>)}
                                     onSelect={(value, index) => updateList(item, index) ? setCustom([...custom]): setCustom([...custom, {item: item.name, value: index}])}
@@ -907,7 +930,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -921,14 +944,14 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
                                         :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5), color: 'black'}}>Details</Text>
@@ -1007,20 +1030,20 @@ export default function HomeProducts({ navigation, route }) {
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
-                contentContainerStyle={{paddingBottom: 100, marginTop: hp(10)}}
+                contentContainerStyle={{paddingBottom: 100}}
                 showsVerticalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
                 ListEmptyComponent={() => (!storeList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(4), color: 'grey'}}>Nothing found! Try something different.</Text>: null)}
                 renderItem={({ item }) => {
                     return item.category === 'Custom4' ?
                         <FlipCard friction={50} flip={false} flipHorizontal={true} flipVertical={false} useNativeDriver={true} style={{width: '85%', alignSelf: 'center'}}>
-                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
+                            <View key={item.id} style={{flexDirection: 'row', marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, paddingTop: wp(6), paddingBottom: wp(8), paddingLeft: wp(5), borderRadius: 10, margin: wp(1)}}>
                                 <ModalDropdown 
                                     ref={el => dropDownRef.current[item.id] = el}
                                     defaultValue={item.detail[0].quantity}
                                     options={item.detail.map(item1 => item1.quantity)} 
                                     style={{alignSelf: 'center', marginTop: 5, position: 'absolute', bottom: 2, left: 20, padding: 5}}
-                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}} 
+                                    dropdownStyle={{marginTop: -15, marginLeft: -10, width: '20%', alignItems: 'center', backgroundColor: 'white', elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} 
                                     dropdownTextStyle={{fontSize: wp(4), fontFamily: 'sf', textAlign: 'center', color: 'black'}} 
                                     renderSeparator={() => (<Text style={{backgroundColor: '#ebebeb', height: 1}}></Text>)}
                                     onSelect={(value, index) => updateList(item, index) ? setCustom([...custom]): setCustom([...custom, {item: item.name, value: index}])}
@@ -1065,7 +1088,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -1079,14 +1102,14 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5, elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
                                         :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
-                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
+                            <View key={item.id} style={{marginBottom: hp(4), backgroundColor: 'white', shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5, margin: wp(1), paddingTop: wp(1), paddingBottom: wp(6), borderRadius: 10}}>
                                 
                                 <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                                     <Text style={{flex: 1, marginLeft: 15, fontFamily: 'sofia-black', fontSize: wp(5.5), color: 'black'}}>Details</Text>
@@ -1167,7 +1190,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fafafa',
-        paddingTop: hp(5),
+        paddingTop: 100,
     },
     sheet: {
         position: "absolute",
@@ -1180,7 +1203,10 @@ const styles = StyleSheet.create({
     popup: {
         backgroundColor: "#99b898",
         elevation: 3,
-        shadowOffset: {width: 3, height: 3},
+        shadowOffset: {width: 0, height: 1},
+        shadowRadius: 2.22,
+        shadowOpacity: 0.22,
+        shadowColor: '#000',
         marginHorizontal: 15,
         marginBottom: 5,
         borderRadius: 10,

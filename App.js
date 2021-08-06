@@ -34,6 +34,7 @@ import NetInfo from "@react-native-community/netinfo";
 import AppIntroSlider from 'react-native-app-intro-slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottieView from 'lottie-react-native';
+import FlashMessage, {showMessage} from "react-native-flash-message";
 
 
 const Stack = createStackNavigator();
@@ -44,7 +45,7 @@ export default function App() {
 
   const [showRealApp, setShowRealApp] = useState(true);
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [errorMsg, setErrormsg] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const [conLocation, setConLocation] = useState({'name': '', 'district': ''});
   const [conPushToken, setConPushToken] = useState('');
@@ -107,7 +108,7 @@ export default function App() {
       if (token === null || token === undefined && mounted) {
         setIsLogin(false);
       }
-    })().catch(error => console.log(error))
+    })().catch(error => setErrorMsg(error))
 
     return () => mounted = false;
   }, [])
@@ -129,11 +130,31 @@ export default function App() {
                         carouselRef.current.snapToNext();
                         setCounter(60);
                     } else if (resp.status === 500) {
-                        alert('Provided number is not valid or there was an error in sending OTP. Please check the number.')
+                        showMessage({
+                          message: 'Provided number is not valid or there was an error in sending OTP. Please check the number.',
+                          position: 'top',
+                          floating: true,
+                          titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                          style: {alignItems: 'center'},
+                          icon: 'auto',
+                          type: 'danger',
+                          statusBarHeight: hp(3),
+                          duration: 4000
+                        })
                         setDisabled(false);
                     }
                 })
-    .catch(error => (console.log(error), alert('Provided number is not valid or there was an error in sending OTP. Please check the number.'), setDisabled(false)))
+    .catch(error => (setErrorMsg(error), showMessage({
+      message: 'Provided number is not valid or there was an error in sending OTP. Please check the number.',
+      position: 'top',
+      floating: true,
+      titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+      style: {alignItems: 'center'},
+      icon: 'auto',
+      type: 'danger',
+      statusBarHeight: hp(3),
+      duration: 4000
+    }), setDisabled(false)))
   }
 
   useEffect(() => {
@@ -165,8 +186,17 @@ export default function App() {
       body: JSON.stringify({username: phone, password: OTP})
       })
       .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-      .then(resp => {return resp.json.token ? saveToken(resp.json.token): (alert('OTP did not match or has expired'), setVerifyOTPDisabled(false))})
-      .catch(error => console.log(error))
+      .then(resp => {return resp.json.token ? saveToken(resp.json.token): (showMessage({
+          message: 'OTP did not match or has expired.',
+          position: 'top',
+          floating: true,
+          titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+          style: {alignItems: 'center'},
+          icon: 'auto',
+          type: 'danger',
+          statusBarHeight: hp(3)
+      }), setVerifyOTPDisabled(false))})
+      .catch(error => setErrorMsg(error))
   }
 
 
@@ -184,7 +214,17 @@ export default function App() {
           })
         .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
         .then(() => setIsLogin(true))
-        .catch(error => console.log(error))
+        .then(() => setTimeout(() => showMessage({
+            message: 'You are successfully logged in !',
+            position: 'top',
+            floating: true,
+            titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+            style: {alignItems: 'center'},
+            icon: 'auto',
+            type: 'success',
+            statusBarHeight: hp(3)
+        }), 500))
+        .catch(error => setErrorMsg(error))
       }
     }
 
@@ -199,7 +239,7 @@ export default function App() {
       body: JSON.stringify({phone: phone})
       })
       .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-      .catch(error => console.log(error))
+      .catch(error => setErrorMsg(error))
   }
 
 
@@ -213,6 +253,16 @@ export default function App() {
         setTimeout(() => carouselRef.current.snapToNext(), 1500);
       } else if (action === 'Login' && mounted){
         setTimeout(() => setIsLogin(true), 1500);
+        setTimeout(() => showMessage({
+            message: 'You are successfully logged in !',
+            position: 'top',
+            floating: true,
+            titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+            style: {alignItems: 'center'},
+            icon: 'auto',
+            type: 'success',
+            statusBarHeight: hp(3)
+        }), 2000)
       }
   }
 
@@ -253,7 +303,7 @@ export default function App() {
 
       } catch (error) {
         if (mounted) {
-          setErrormsg(error);
+          setErrorMsg(error);
         }
       } finally {
         setFontsLoaded(true);
@@ -300,7 +350,7 @@ export default function App() {
         setShowRealApp(false);
         await AsyncStorage.setItem('isFirstTime', 'false')
       }
-    })().catch(error => console.log(error))
+    })().catch(error => setErrorMsg(error))
 
     return () => mounted = false;
     
@@ -404,7 +454,7 @@ export default function App() {
 
               <View style={{flex: 1, paddingTop: hp(15)}}>
                 <Image source={require('./assets/register.png')} style={{width: '100%', height: 2185*(screenWidth/3505), alignSelf: 'center'}} />
-                <View style={{backgroundColor: 'white', width: '100%', height: '100%', position: 'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 5, shadowOpacity: 0.3}}>
+                <View style={{backgroundColor: 'white', width: '100%', height: '100%', position: 'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
                     <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), paddingTop: wp(8), paddingLeft: wp(15), color: 'black'}} >Enter your{'\n'}mobile number.</Text>
                     <Text style={{fontFamily: 'sf', marginBottom: 35, paddingLeft: wp(15), fontSize: wp(4), color: 'black'}}>We will send you a verification code.</Text>
                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: hp(5), paddingLeft: wp(15)}}>
@@ -430,10 +480,10 @@ export default function App() {
                         onChangeText={(text) => setPhone(text)} keyboardType={'numeric'} maxLength={10} />               
                     </View>
                     {phone.length <= 9 || phone === 0 || !(/\d{10}/g.test(phone)) || disabled ? 
-                        <TouchableOpacity disabled={true} style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}: {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}} >
+                        <TouchableOpacity disabled={true} style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} >
                             <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black'}}>&#x27F6;</Text>
                         </TouchableOpacity>:
-                        <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}: {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3}} onPress={SignUp} activeOpacity={0.8} >
+                        <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} onPress={SignUp} activeOpacity={0.8} >
                             <Text style={{opacity: 1, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'black'}}>&#x27F6;</Text>
                         </TouchableOpacity>
                     }
@@ -445,7 +495,7 @@ export default function App() {
               : index === 1 ?
               <View style={{flex: 1, paddingTop: hp(15)}}>
                 <Image source={require('./assets/message-sent.png')} style={{width: '100%', height: 2073*(screenWidth/3381), alignSelf: 'center'}} />
-                <View style={{width: '100%', height: '100%', backgroundColor: 'white', position:'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 5, shadowOpacity: 0.3}}>
+                <View style={{width: '100%', height: '100%', backgroundColor: 'white', position:'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
                     <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), paddingTop: wp(8), textAlign: 'center', color: 'black'}} >We have sent the verification code to{'\n'}+91 {phone}.</Text>
                     <View style={{flexDirection: 'row', marginTop: 40, alignSelf: 'center', alignItems: 'center'}}>
                     <TextInput ref={ti1} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
@@ -509,7 +559,7 @@ export default function App() {
             )
           }}
         />
-        
+        <FlashMessage />
       </View>
     )
   }
@@ -564,6 +614,7 @@ export default function App() {
             <Stack.Screen name="TermsandConditions" component={TermsandConditions}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
             <Stack.Screen name="NutritionCalculator" component={NutritionCalculator}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
           </Stack.Navigator>
+          <FlashMessage />
           </UserContext.Provider>
         </PushTokenContext.Provider>
       </NavigationContainer>

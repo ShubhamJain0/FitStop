@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import Svg, { Path, Rect, Circle, G, Polygon, Ellipse, Defs, Stop } from 'react-native-svg';
 import Clipboard from 'expo-clipboard';
+import { showMessage } from 'react-native-flash-message';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -83,7 +84,16 @@ export default function OtpComponent({ navigation, route }){
         body: JSON.stringify({username: phone, password: OTP})
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-        .then(resp => {return resp.json.token ? saveToken(resp.json.token): (alert('OTP did not match or has expired'), setVerifyOTPDisabled(false))})
+        .then(resp => {return resp.json.token ? saveToken(resp.json.token): (showMessage({
+            message: 'OTP did not match or has expired.',
+            position: 'top',
+            floating: true,
+            titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+            style: {alignItems: 'center'},
+            icon: 'auto',
+            type: 'danger',
+            statusBarHeight: hp(3)
+        }), setVerifyOTPDisabled(false))})
         .catch(error => setError(error))
     }
 
@@ -103,6 +113,16 @@ export default function OtpComponent({ navigation, route }){
           .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
           .then(() => navigation.pop(2))//navigates to top stack which in our case is tab navigator
           .then(() => setUserDetailsModal(false))
+          .then(() => showMessage({
+                message: 'You are successfully logged in !',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'success',
+                statusBarHeight: hp(3)
+            }))
           .catch(error => setError(error))
         }
       }
@@ -131,6 +151,16 @@ export default function OtpComponent({ navigation, route }){
             setTimeout(() => setUserDetailsModal(true), 2000)
         } else if (action === 'Login') {
             setTimeout(() => navigation.pop(2), 1500);
+            setTimeout(() => showMessage({
+                message: 'You are successfully logged in !',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'success',
+                statusBarHeight: hp(3)
+            }), 1500);
         }
     }
 
@@ -160,7 +190,7 @@ export default function OtpComponent({ navigation, route }){
         <View style={styles.container}>
             <StatusBar style="inverted" />
             <Image source={require('../assets/message-sent.png')} style={{width: '100%', height: 2073*(screenWidth/3381), alignSelf: 'center'}} />
-            <View style={{width: '100%', height: '100%', backgroundColor: 'white', position:'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 5, shadowOpacity: 0.3}}>
+            <View style={{width: '100%', height: '100%', backgroundColor: 'white', position:'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
                 <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), paddingTop: wp(8), textAlign: 'center', color: 'black'}} >We have sent the verification code to{'\n'}+91 {phone}.</Text>
                 <View style={{flexDirection: 'row', marginTop: 40, alignSelf: 'center', alignItems: 'center'}}>
                 <TextInput ref={ti1} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}

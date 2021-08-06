@@ -900,7 +900,7 @@ function Home(props){
                 return (
                   <View key={item.id} style={{flex: 1, marginTop: 15}}>
                     <TouchableOpacity  onPress={() => navigation.navigate('HomeProducts', {from: item.category})} activeOpacity={0.9}>
-                      <View style={{alignSelf: index === 0 ? 'flex-start': 'flex-end', elevation: 5, borderRadius: 10, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5}}>
+                      <View style={{alignSelf: index === 0 ? 'flex-start': 'flex-end', elevation: 5, borderRadius: 10, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000'}}>
                         <Image source={{uri: item.image}} style={{width: wp(40), height: wp(40), borderRadius: 10}} />
                         <LinearGradient colors={['rgba(255,255,255,0)', 'black']} start={{x: 0, y:0.3}} style={{position: 'absolute', top: 0, bottom: 0, left: 0,right: 0, borderRadius: 10}} ></LinearGradient>
                         <View style={{position: 'absolute', left: 15, right: 15,bottom: 10}}>
@@ -922,7 +922,7 @@ function Home(props){
                 return (
                   <View key={item.id} style={{flex: 1, marginTop: 45}}>
                     <TouchableOpacity  onPress={() => navigation.navigate('HomeProducts', {from: item.category})} activeOpacity={0.9}>
-                      <View style={{alignSelf: index === 0 ? 'flex-start': 'flex-end', elevation: 5, borderRadius: 10, shadowOffset: {width: 1, height: 1}, shadowRadius: 2, shadowOpacity: 0.5}}>
+                      <View style={{alignSelf: index === 0 ? 'flex-start': 'flex-end', elevation: 5, borderRadius: 10, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000'}}>
                         <Image source={{uri: item.image}} style={{width: wp(40), height: wp(40), borderRadius: 10}} />
                         <LinearGradient colors={['rgba(255,255,255,0)', 'black']} start={{x: 0, y:0.2}} style={{position: 'absolute', top: 0, bottom: 0, left: 0,right: 0, borderRadius: 10}} ></LinearGradient>
                         <View style={{position: 'absolute', left: 15, right: 15,bottom: 10}}>
@@ -949,8 +949,8 @@ function Home(props){
               horizontal={true}
               showsHorizontalScrollIndicator={false}
               renderItem={({ item }) => (
-                <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, marginRight: 50, padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}} >
-                  <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}}>
+                <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, marginRight: 50, padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43, shadowColor: '#000'}} >
+                  <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43, shadowColor: '#000'}}>
                     <Image source={{uri: item.image}} style={{width: 125, height: 125, alignSelf: 'center', borderRadius: 100}} />
                   </View>
                   <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
@@ -986,7 +986,7 @@ function Home(props){
             <ScrollView bounces={false} showsHorizontalScrollIndicator={false} horizontal={true} contentContainerStyle={{paddingTop: 15, paddingLeft: 25, paddingBottom: 25}}>
                 {previousOrderStatus === 200 ? previousOrderList.slice(0, 5).map((item, index) => {
                     return(
-                        <View key={item.id} style={{marginRight: 50, backgroundColor: 'white', padding: 25, paddingTop: 15, paddingBottom: 15, borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}}>
+                        <View key={item.id} style={{marginRight: 50, backgroundColor: 'white', padding: 25, paddingTop: 15, paddingBottom: 15, borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}}>
                             <View style={{flex: 1}}>
                                 <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Order #{item.id}</Text>
                                 <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'grey', marginTop: 2}}>{item.ordereddate}</Text>
@@ -1104,7 +1104,7 @@ function Home(props){
             : null}
           </View>
         </Animated.View>
-        <View style={{width: '100%', backgroundColor: '#fafafa', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51}}>
+        <View style={{width: '100%', backgroundColor: '#fafafa', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51, shadowColor: '#000'}}>
           <View style={{flex: 1}}>
             <CopilotStep text="View offers of the day and other information " order={1} name={'Home'}>
               <CoPilotTouchableOpacity activeOpacity={1} style={{alignSelf: 'center'}}>
@@ -1155,7 +1155,7 @@ const styles = StyleSheet.create({
       shadowOffset: {width: 0, height: 7},
       shadowOpacity: 0.43,
       shadowRadius: 9.51,
-      
+      shadowColor: '#000'
     },
     image: {
       ...StyleSheet.absoluteFillObject,

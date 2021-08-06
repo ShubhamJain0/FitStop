@@ -144,7 +144,7 @@ export default function NutritionCalculator({ navigation, route }) {
         <View style={styles.container}>
             <StatusBar style="inverted" />
             <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{minHeight: hp(99)}}>
-            <Image source={{uri: Item.image}} style={{width: 175, height: 175, alignSelf: 'center', marginTop: 25}} />
+            <Image source={{uri: Item.image}} style={{width: 175, height: 175, alignSelf: 'center'}} />
             <Text style={{fontFamily: 'sofia-black', textAlign: 'center', fontSize: wp(6), marginTop: 15, color: 'black'}}>{Item.name}</Text>
             <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 25, width: '80%', alignSelf: 'center'}}></Text>
             <Carousel 
@@ -171,8 +171,8 @@ export default function NutritionCalculator({ navigation, route }) {
                                     listItemLabelStyle={{fontFamily: 'Maison-bold'}}
                                     selectedItemLabelStyle={{fontFamily: 'Maison-bold', color: '#249c86'}}
                                     labelStyle={{color: '#249c86', fontFamily: 'Maison-bold'}}
-                                    dropDownContainerStyle={{elevation: 3, backgroundColor: 'white', borderColor: '#fcfcfc', borderTopColor: '#ebebeb', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.22, shadowRadius: 2.22}}
-                                    style={{elevation: 3, borderColor: '#fcfcfc', backgroundColor: '#fff', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.22, shadowRadius: 2.22}}
+                                    dropDownContainerStyle={{elevation: 3, backgroundColor: 'white', borderColor: '#fcfcfc', borderTopColor: '#ebebeb', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.22, shadowRadius: 2.22, shadowColor: '#000'}}
+                                    style={{elevation: 3, borderColor: '#fcfcfc', backgroundColor: '#fff', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.22, shadowRadius: 2.22, shadowColor: '#000'}}
                                     
                                 />
                                 : index === 1 ? 
@@ -308,6 +308,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff', 
-        paddingTop: hp(10),
+        paddingTop: 100,
     }
 });

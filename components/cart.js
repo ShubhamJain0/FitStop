@@ -11,7 +11,7 @@ import { UserContext, PushTokenContext } from './context';
 import * as Location from 'expo-location';
 import MapView, {Marker, AnimatedRegion, Callout, MarkerAnimated} from 'react-native-maps';
 import RazorpayCheckout from 'react-native-razorpay';
-
+import { showMessage } from 'react-native-flash-message';
 
 
 export default function Cart({ navigation }) {
@@ -227,6 +227,16 @@ export default function Cart({ navigation }) {
             .then(() => (setInputAddress(''), setInputLocality(''), setInputAddressType('')))
             .then(() => setAddressModal(false))
             .then(() => setIndicPos('relative'))
+            .then(() => showMessage({
+                message: 'Address saved !',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'success',
+                statusBarHeight: hp(3)
+            }))
             .catch(error => setError(error))
         } else {
             navigation.navigate('Register')
@@ -367,7 +377,16 @@ const createPaymentOrder = async (payMethod) => {
       modal: {
           ondismiss: () => {
               setOnPlace(false);
-              alert('Payment cancelled');
+              showMessage({
+                message: 'Payment failed.',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'danger',
+                statusBarHeight: hp(3)
+            })
           },
           confirm_close: true
       },
@@ -398,12 +417,31 @@ const createPaymentOrder = async (payMethod) => {
             .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
             .then(resp => {
                 if (resp.status === 201) {
-                    setAfterPaymentModal(false);
-                    setTimeout(() => setOnPlaceLottieModal(true), 700);
+                    showMessage({
+                        message: 'Order placed !',
+                        position: 'top',
+                        floating: true,
+                        titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                        style: {alignItems: 'center'},
+                        icon: 'auto',
+                        type: 'success',
+                        statusBarHeight: hp(3)
+                    })
+                    navigation.pop();
+                    navigation.navigate('ActiveOrders', {activeOrder: resp.json.active_order_id})
                 } else if (resp.status === 401) {
                     setOnPlace(false);
                     setAfterPaymentModal(false);
-                    alert('We could not verify the source of payment. If any amount is debited, it will be refunded at the earliest.')
+                    showMessage({
+                        message: 'We could not verify the source of payment. If any amount is debited, it will be refunded at the earliest.',
+                        position: 'top',
+                        floating: true,
+                        titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                        style: {alignItems: 'center'},
+                        icon: 'auto',
+                        type: 'danger',
+                        statusBarHeight: hp(3)
+                    })
                 }
             })
             .catch(error => (setError(error), setOnPlace(false), setAfterPaymentModal(false)))
@@ -412,7 +450,16 @@ const createPaymentOrder = async (payMethod) => {
         }
     }).catch((error) => {
       // handle failure
-      alert('Payment Failed');
+        showMessage({
+            message: 'Payment failed. If any amount is debited, it will be refunded at the earliest.',
+            position: 'top',
+            floating: true,
+            titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+            style: {alignItems: 'center'},
+            icon: 'auto',
+            type: 'danger',
+            statusBarHeight: hp(3)
+        })
       setOnPlace(false);
       setAfterPaymentModal(false);
     });
@@ -435,10 +482,20 @@ const createPaymentOrder = async (payMethod) => {
         .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
         .then(resp => {
             if (resp.status === 201) {
-                setOnPlaceLottieModal(true);
+                showMessage({
+                    message: 'Order placed !',
+                    position: 'top',
+                    floating: true,
+                    titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                    style: {alignItems: 'center'},
+                    icon: 'auto',
+                    type: 'success',
+                    statusBarHeight: hp(3)
+                })
+                navigation.pop();
+                navigation.navigate('ActiveOrders', {activeOrder: resp.json.active_order_id})
             } else if (resp.status === 404) {
                 setOnPlace(false);
-                alert('Cart is empty')
             }
         })
         .catch(error => (setError(error), setOnPlace(false)))
@@ -548,7 +605,7 @@ const createPaymentOrder = async (payMethod) => {
                 <ScrollView contentContainerStyle={cartList.length > 2 ? {paddingBottom: 25, paddingLeft: 30}: {flex: 1, justifyContent: 'center', paddingBottom: 25, paddingLeft: 30}} horizontal={true} showsHorizontalScrollIndicator={false}>
                 {cartStatus === 200 ? cartList.map((item) => {
                     return (
-                        <View style={{backgroundColor: 'white', maxWidth: '40%', elevation: 5, shadowOffset: {width: 0.5, height: 2}, shadowRadius: 3, shadowOpacity: 0.3, marginBottom: 15, marginRight: 35, marginTop: 10, padding: 20, paddingBottom: 30, borderRadius: 10}} key={item.id}>
+                        <View style={{backgroundColor: 'white', maxWidth: '40%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', marginBottom: 15, marginRight: 35, marginTop: 10, padding: 20, paddingBottom: 30, borderRadius: 10}} key={item.id}>
                             {itemPhotos.map((item1) => {
                                 return item1.name === item.ordereditem ? 
                                 <View key={item1.id}>
@@ -598,7 +655,7 @@ const createPaymentOrder = async (payMethod) => {
                         <Text style={{fontFamily: 'Maison-bold', color: '#249c86', fontSize: wp(3.5)}}>Add delivery address</Text>
                     </TouchableOpacity>
                 </View>}
-                <View style={{marginTop: 40, backgroundColor: '#fff', padding: 10, paddingBottom: 20, borderRadius: 10, elevation: 2, shadowOffset: {width: 0, height: 1}, shadowRadius: 1.41, shadowOpacity: 0.20}}>
+                <View style={{marginTop: 40, backgroundColor: '#fff', padding: 10, paddingBottom: 20, borderRadius: 10, elevation: 2, shadowOffset: {width: 0, height: 1}, shadowRadius: 1.41, shadowOpacity: 0.20, shadowColor: '#000'}}>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
                         <View style={{flex: 1}}>
                             <View style={{flexDirection: 'row', alignItems: 'center'}}>
@@ -650,10 +707,10 @@ const createPaymentOrder = async (payMethod) => {
 
                 {onPlace ? <ActivityIndicator color="#99b898" size={50} />
                  : myAddressesStatus === 200 && deliveryAddressStatus === 200 && cartStatus === 200 ? 
-                    <TouchableOpacity onPress={() => setPaymentModal(true)} style={{flex: 1, opacity: 1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
+                    <TouchableOpacity onPress={() => setPaymentModal(true)} style={{flex: 1, opacity: 1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}}>
                         <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Place Order &raquo;</Text>
                     </TouchableOpacity>:
-                    <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 3, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84}}>
+                    <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%'}}>
                         <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Place Order &raquo;</Text>
                     </TouchableOpacity>
                 }
@@ -691,11 +748,11 @@ const createPaymentOrder = async (payMethod) => {
                         <TouchableOpacity style={{position: 'absolute', top: 5, left: 15}} onPress={() => (setAddressModal(false), setInputAddress(''), setInputLocality(''), setInputAddressType(''))}>
                             <Text style={{fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={{position: 'absolute', top: 15, right: 15, backgroundColor: '#f0f0f0', padding: wp(2), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58}} onPress={getLocation}>
+                        <TouchableOpacity style={{position: 'absolute', top: 15, right: 15, backgroundColor: '#f0f0f0', padding: wp(2), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}} onPress={getLocation}>
                         {Platform.OS === 'android' ? <MaterialIcons name="my-location" size={wp(8)} color="black" />: <Ionicons name="ios-location" size={wp(6.5)} color="black" />}
                         </TouchableOpacity>
                     </View>
-                    <View style={{backgroundColor: '#fafafa', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, borderTopLeftRadius: 50, borderTopRightRadius: 50, flex: 1, paddingTop: 5}}>
+                    <View style={{backgroundColor: '#fafafa', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000', borderTopLeftRadius: 50, borderTopRightRadius: 50, flex: 1, paddingTop: 5}}>
                         <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{padding: 35, paddingBottom: 50}} >
                             <View>
                                 <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginBottom: 25, color: 'black'}}>Choose delivery address</Text>
@@ -739,7 +796,7 @@ const createPaymentOrder = async (payMethod) => {
                                     <TouchableOpacity style={{marginTop: 25, opacity: 0.2, backgroundColor: '#99b898', padding: 10, borderRadius: 10}} disabled={true}>
                                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
                                     </TouchableOpacity>:
-                                    <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#99b898', padding: 10, borderRadius: 10}} disabled={false} onPress={addAddress}>
+                                    <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#99b898', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} disabled={false} onPress={addAddress}>
                                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
                                     </TouchableOpacity>
                                 }
@@ -762,7 +819,7 @@ const createPaymentOrder = async (payMethod) => {
                     onBackdropPress={() => setPaymentModal(false)}
                     style={{margin: 0}}
                 >
-                    <View style={{flex: 1, backgroundColor: 'white', height: '50%', position: 'absolute', bottom: 0, width: '100%', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, padding: 25, paddingBottom: 5}}>
+                    <View style={{flex: 1, backgroundColor: 'white', height: '50%', position: 'absolute', bottom: 0, width: '100%', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000', padding: 25, paddingBottom: 5}}>
                         <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginBottom: 5, color: 'black'}}>Choose payment method</Text>
                         <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, alignSelf: 'flex-start'}} onPress={() => (setPaymentModal(false), createPaymentOrder('card'))}>
                             <Entypo name="credit-card" size={15} color="black" />
@@ -796,7 +853,7 @@ const createPaymentOrder = async (payMethod) => {
                     onBackdropPress={() => setCouponModal(false)}
                     useNativeDriver={true}
                 >
-                    <View style={{backgroundColor: 'white', padding: 20, maxHeight: '30%', borderRadius: 10, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowOpacity: 0.58, shadowRadius: 16.00}}>
+                    <View style={{backgroundColor: 'white', padding: 20, maxHeight: '30%', borderRadius: 10, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowOpacity: 0.58, shadowRadius: 16.00, shadowColor: '#000'}}>
                         {couponList.length > 0 ? <Text style={{fontFamily: 'sofia-black', marginBottom: 25, fontSize: wp(5), textAlign: 'center', color: 'black'}}>Available Offers</Text>: <LottieView source={require('../assets/animations/823-crying.json')} autoPlay={true} loop={true} style={{width: 80, height: 80, alignSelf: 'center'}} />}
                         <FlatList 
                             data={couponList}
@@ -858,7 +915,7 @@ const styles = StyleSheet.create({
   container: {
       flex: 1,
       backgroundColor: '#fafafa',
-      paddingTop: hp(10)
+      paddingTop: 100
       
   },
   refreshcontainer: {

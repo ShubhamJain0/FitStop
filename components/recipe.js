@@ -336,8 +336,8 @@ function Recipe(props){
                     ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
                     renderItem={({ item, index }) => (
                       item.category === 'Breakfast' ?
-                        <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}} >
-                            <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}}>
+                        <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43, shadowColor: '#000'}} >
+                            <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43, shadowColor: '#000'}}>
                               <Image source={{uri: item.image}} style={{width: 125, height: 125, alignSelf: 'center', borderRadius: 100}} />
                             </View>
                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
@@ -393,8 +393,8 @@ function Recipe(props){
                     ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
                     renderItem={({ item }) => (
                       item.category === 'Lunch' ?
-                        <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}} >
-                            <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}}>
+                        <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43, shadowColor: '#000'}} >
+                            <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43, shadowColor: '#000'}}>
                               <Image source={{uri: item.image}} style={{width: 125, height: 125, alignSelf: 'center', borderRadius: 100}} />
                             </View>
                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
@@ -443,8 +443,8 @@ function Recipe(props){
                     ListEmptyComponent={() => (!filteredList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
                     renderItem={({ item }) => (
                       item.category === 'Dinner' ?
-                        <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}} >
-                            <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43}}>
+                        <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43, shadowColor: '#000'}} >
+                            <View style={{backgroundColor: 'white', borderRadius: 100, width: 125, height: 125, alignSelf: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowRadius: 9.51, shadowOpacity: 0.43, shadowColor: '#000'}}>
                               <Image source={{uri: item.image}} style={{width: 125, height: 125, alignSelf: 'center', borderRadius: 100}} />
                             </View>
                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
@@ -489,7 +489,7 @@ function Recipe(props){
                 }
               </View>
             </View>
-            <View style={{width: '100%', bottom: 0, backgroundColor: '#fafafa', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51}}>
+            <View style={{width: '100%', bottom: 0, backgroundColor: '#fafafa', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51, shadowColor: '#000'}}>
                 <View style={{flex: 1}}>
                     <TouchableOpacity onPress={() => navigation.navigate('Home')} activeOpacity={1}>
                       <CustomIcon name="home-1" size={wp(6)} style={{color: 'black', alignSelf: 'center'}} />

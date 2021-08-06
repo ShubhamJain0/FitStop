@@ -6,6 +6,7 @@ import { Ionicons, FontAwesome, FontAwesome5, MaterialCommunityIcons, MaterialIc
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import LottieView from 'lottie-react-native';
+import { showMessage } from 'react-native-flash-message';
 
 
 const {width: screenWidth} = Dimensions.get('window');
@@ -51,7 +52,17 @@ export default function RecipeDetails({ navigation, route }){
             body: JSON.stringify({ id: item.id })
             })
             .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-            .then(resp => {if (resp.status === 404) {alert('Some items are out of stock, sorry for inconvenience!')}})
+            .then(resp => {if (resp.status === 404) {showMessage({
+                message: 'Some items are out of stock, sorry for inconvenience !',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'warning',
+                statusBarHeight: hp(3),
+                duration: 2500
+            })}})
             .then(() => navigation.navigate('cart'))
             .catch(error => setError(error))
         } else {
@@ -73,7 +84,7 @@ export default function RecipeDetails({ navigation, route }){
     return (
         <View style={styles.container}>
           <StatusBar style="inverted" />
-          <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{padding: 25}}>
+          <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{padding: 25, paddingTop: 0}}>
           <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), color: 'black'}}>{recipeDetails.name}</Text>
             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 1}}>
               <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" />
@@ -130,7 +141,7 @@ export default function RecipeDetails({ navigation, route }){
                 </View>
               </View>
               <View style={{flex: 1}}>
-                <View style={{backgroundColor: 'white', alignSelf: 'flex-end', borderRadius: 200, height: wp(40), width: wp(40), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27}}>
+                <View style={{backgroundColor: 'white', alignSelf: 'flex-end', borderRadius: 200, height: wp(40), width: wp(40), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}}>
                   <Image source={{uri: recipeDetails.image}} style={{width: wp(40), height: wp(40), borderRadius: 200}} />
                 </View>
               </View>
@@ -144,8 +155,8 @@ export default function RecipeDetails({ navigation, route }){
             <ScrollView horizontal={true} contentContainerStyle={{paddingRight: 25}}>
               {recipe_ingredients.map(item => {
                 return item.id_of_recipe === recipe_id ?
-                  <View key={item.id} style={{marginRight: 40, width: '30%'}}>
-                    <View style={{backgroundColor: '#f9f9f9', padding: 15, borderRadius: 15, alignSelf: 'flex-start'}}>
+                  <View key={item.id} style={{marginRight: 40, width: '30%', marginTop: 15}}>
+                    <View style={{borderRadius: 15, alignSelf: 'flex-start'}}>
                       <Image source={{uri: item.image}} style={{width: 30, height: 30}} />
                     </View>
                     <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), marginTop: 10, color: 'black'}}>{item.name}</Text>
@@ -153,7 +164,7 @@ export default function RecipeDetails({ navigation, route }){
                   </View>: null
               })}
             </ScrollView>
-            <TouchableOpacity style={{marginTop: 50, backgroundColor: '#99b898', alignSelf: 'center', padding: 15, borderRadius: 10}} onPress={addCart(recipeDetails)} activeOpacity={0.8}>
+            <TouchableOpacity style={{marginTop: 50, backgroundColor: '#99b898', alignSelf: 'center', padding: 15, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={addCart(recipeDetails)} activeOpacity={0.8}>
                 <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>Add Ingredients to cart  &rarr;</Text>
             </TouchableOpacity>
             <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 35}}></Text>
@@ -169,6 +180,6 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: '#fff',
-      paddingTop: hp(10)
+      paddingTop: 100
     }
 })
