@@ -12,7 +12,7 @@ import LottieView from 'lottie-react-native';
 import { copilot, walkthroughable, CopilotStep } from "react-native-copilot";
 import icoMoonConfig from '../selection.json';
 import { StatusBar } from 'expo-status-bar';
-
+import * as SecureStore from 'expo-secure-store';
 
 function Recipe(props){
 
@@ -105,7 +105,7 @@ function Recipe(props){
       useEffect(() => {
 
         (async () => {
-          const token = await AsyncStorage.getItem('USER_TOKEN')
+          const token = await SecureStore.getItemAsync('USER_TOKEN')
           if (token) {
             fetch('http://192.168.0.105:8000/store/favrecipes/',{
               method: 'GET',
@@ -133,7 +133,7 @@ function Recipe(props){
 
 
     const addFavRecipe = async (item) => {
-      const token = await AsyncStorage.getItem('USER_TOKEN')
+      const token = await SecureStore.getItemAsync('USER_TOKEN')
       if (token) {
         fetch('http://192.168.0.105:8000/store/favrecipes/',{
           method: 'POST',
@@ -151,7 +151,7 @@ function Recipe(props){
 
 
     const deleteFavRecipe = async (item) => {
-      const token = await AsyncStorage.getItem('USER_TOKEN')
+      const token = await SecureStore.getItemAsync('USER_TOKEN')
       if (token) {
         fetch('http://192.168.0.105:8000/store/favrecipes/',{
           method: 'DELETE',
@@ -211,7 +211,7 @@ function Recipe(props){
 
     const retry = async () => {
       setShowInidc(true);
-      const token = await AsyncStorage.getItem('USER_TOKEN')
+      const token = await SecureStore.getItemAsync('USER_TOKEN')
       try {
         
         //Recipes

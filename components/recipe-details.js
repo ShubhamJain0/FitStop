@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import LottieView from 'lottie-react-native';
 import { showMessage } from 'react-native-flash-message';
-
+import * as SecureStore from 'expo-secure-store';
 
 const {width: screenWidth} = Dimensions.get('window');
 
@@ -41,7 +41,7 @@ export default function RecipeDetails({ navigation, route }){
 
 
     const addCart = (item) => async evt => {
-        const token =  await AsyncStorage.getItem('USER_TOKEN')
+        const token =  await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
             fetch('http://192.168.0.105:8000/store/recipecart/',{
             method: 'POST',

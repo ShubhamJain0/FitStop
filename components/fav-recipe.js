@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 import { StatusBar } from 'expo-status-bar';
 import LottieView from 'lottie-react-native';
-
+import * as SecureStore from 'expo-secure-store';
 
 
 export default function FavRecipe({ navigation }){
@@ -45,7 +45,7 @@ export default function FavRecipe({ navigation }){
       useEffect(() => {
 
         (async () => {
-          const token = await AsyncStorage.getItem('USER_TOKEN')
+          const token = await SecureStore.getItemAsync('USER_TOKEN')
           if (token) {
             fetch('http://192.168.0.105:8000/store/favrecipes/',{
               method: 'GET',

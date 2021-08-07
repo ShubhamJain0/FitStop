@@ -12,7 +12,7 @@ import * as Location from 'expo-location';
 import MapView, {Marker, AnimatedRegion, Callout, MarkerAnimated} from 'react-native-maps';
 import RazorpayCheckout from 'react-native-razorpay';
 import { showMessage } from 'react-native-flash-message';
-
+import * as SecureStore from 'expo-secure-store';
 
 export default function Cart({ navigation }) {
 
@@ -64,7 +64,7 @@ export default function Cart({ navigation }) {
 
     useEffect(() => {
             (async () => {
-                const token = await AsyncStorage.getItem('USER_TOKEN')
+                const token = await SecureStore.getItemAsync('USER_TOKEN')
                 if (token) {
                     fetch('http://192.168.0.105:8000/store/confirm/',{
                         method: 'GET',
@@ -91,7 +91,7 @@ export default function Cart({ navigation }) {
 
     useEffect(() => {
         (async () => {
-            const token = await AsyncStorage.getItem('USER_TOKEN')
+            const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 fetch('http://192.168.0.105:8000/store/myaddress/',{
                     method: 'GET',
@@ -119,7 +119,7 @@ export default function Cart({ navigation }) {
 
     useEffect(() => {
         (async () => {
-            const token = await AsyncStorage.getItem('USER_TOKEN')
+            const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 fetch('http://192.168.0.105:8000/store/getdeliveryaddress/',{
                     method: 'GET',
@@ -147,7 +147,7 @@ export default function Cart({ navigation }) {
 
     useEffect(() => {
         (async () => {
-            const token = await AsyncStorage.getItem('USER_TOKEN')
+            const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 fetch('http://192.168.0.105:8000/store/coupons/',{
                     method: 'GET',
@@ -173,7 +173,7 @@ export default function Cart({ navigation }) {
 
     useEffect(() => {
         (async () => {
-            const token = await AsyncStorage.getItem('USER_TOKEN')
+            const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
               fetch('http://192.168.0.105:8000/api/me/',{
                     method: 'GET',
@@ -210,7 +210,7 @@ export default function Cart({ navigation }) {
 
 
   const addAddress = async () => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
             setIndicPos('absolute');
             fetch('http://192.168.0.105:8000/store/myaddress/',{
@@ -246,7 +246,7 @@ export default function Cart({ navigation }) {
 
 
   const deleteAddress = (item) => async evt => {
-    const token = await AsyncStorage.getItem('USER_TOKEN')
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token) {
         fetch('http://192.168.0.105:8000/store/myaddress/',{
             method: 'DELETE',
@@ -266,7 +266,7 @@ export default function Cart({ navigation }) {
 
 
     const setDeliveryAdrress = (item) => async evt => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
             fetch('http://192.168.0.105:8000/store/deliveryaddress/',{
                 method: 'POST',
@@ -335,7 +335,7 @@ export default function Cart({ navigation }) {
 
 const createPaymentOrder = async (payMethod) => {
     setOnPlace(true);
-    const token = await AsyncStorage.getItem('USER_TOKEN')
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token) {
       fetch('http://192.168.0.105:8000/store/createpaymentorder/',{
         method: 'POST',
@@ -355,7 +355,7 @@ const createPaymentOrder = async (payMethod) => {
 
 
   const openRazorpayCheckout = async (order_id, payMethod) => {
-    const token = await AsyncStorage.getItem('USER_TOKEN')
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
     var options = {
       description: 'Payment for order',
       currency: 'INR',
@@ -468,7 +468,7 @@ const createPaymentOrder = async (payMethod) => {
 
   const placeOrder = async () => {
     setOnPlace(true);
-    const token = await AsyncStorage.getItem('USER_TOKEN')
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token) {
         fetch('http://192.168.0.105:8000/store/orderCOD/',{
             method: 'POST',
@@ -507,7 +507,7 @@ const createPaymentOrder = async (payMethod) => {
 
 
   const deleteCart = () => async evt=>  {
-    const token = await AsyncStorage.getItem('USER_TOKEN')
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token)
         fetch('http://192.168.0.105:8000/store/cart/',{
             method: 'DELETE',
@@ -523,7 +523,7 @@ const createPaymentOrder = async (payMethod) => {
 
 
     const deleteItem = async (item) => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token)
             fetch('http://192.168.0.105:8000/store/reduceordelete/',{
                 method: 'DELETE',

@@ -9,6 +9,7 @@ import ModalDropdown from 'react-native-modal-dropdown';
 import FlipCard from 'react-native-flip-card';
 import icoMoonConfig from '../selection.json';
 import { showMessage } from 'react-native-flash-message';
+import * as SecureStore from 'expo-secure-store';
 
 
 export default function DriedFruits({ navigation }) {
@@ -78,7 +79,7 @@ export default function DriedFruits({ navigation }) {
                 setHideButton('flex')
             };
             (async () => {
-                const token = await AsyncStorage.getItem('USER_TOKEN')
+                const token = await SecureStore.getItemAsync('USER_TOKEN')
                 if (token) {
                     fetch('http://192.168.0.105:8000/store/cart/',{
                         method: 'GET',
@@ -162,7 +163,7 @@ export default function DriedFruits({ navigation }) {
 
 
     const buildCart = (item) => async evt  => {
-        const token =  await AsyncStorage.getItem('USER_TOKEN')
+        const token =  await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
             const check = exists(item);
             if (check !== undefined){
@@ -209,7 +210,7 @@ export default function DriedFruits({ navigation }) {
 
 
     const reduceItem = (item) => async evt => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
         return fetch('http://192.168.0.105:8000/store/reduceordelete/',{
             method: 'POST',

@@ -9,6 +9,7 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-nat
 import Svg, { Path, Rect, Circle, G, Polygon, LinearGradient, Defs, Stop, Ellipse } from 'react-native-svg';
 import LottieView from 'lottie-react-native';
 import { showMessage } from 'react-native-flash-message';
+import * as SecureStore from 'expo-secure-store';
 
 
 const {width: screenWidth} = Dimensions.get('window');
@@ -48,7 +49,7 @@ export default function PreviousOrders({ navigation, route }) {
 
     useEffect(() => {
         (async () => {
-            const token = await AsyncStorage.getItem('USER_TOKEN')
+            const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
               fetch('http://192.168.0.105:8000/store/previousorders/',{
                   method: 'GET',
@@ -70,7 +71,7 @@ export default function PreviousOrders({ navigation, route }) {
     useEffect(() => {
         const get = navigation.addListener('focus', () => {
             (async () => {
-                const token = await AsyncStorage.getItem('USER_TOKEN')
+                const token = await SecureStore.getItemAsync('USER_TOKEN')
                 if (token) {
                 fetch('http://192.168.0.105:8000/store/previousorders/',{
                     method: 'GET',
@@ -92,7 +93,7 @@ export default function PreviousOrders({ navigation, route }) {
 
     useEffect(() => {
         (async () => {
-            const token = await AsyncStorage.getItem('USER_TOKEN')
+            const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 fetch('http://192.168.0.105:8000/store/activeorders/',{
                     method: 'GET',
@@ -119,7 +120,7 @@ export default function PreviousOrders({ navigation, route }) {
 
 
     const repeatOrder = (item) => async evt => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
               fetch('http://192.168.0.105:8000/store/repeatorder/',{
                   method: 'POST',

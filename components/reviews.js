@@ -10,6 +10,7 @@ import Carousel, {ParallaxImage, Pagination} from 'react-native-snap-carousel';
 import { StatusBar } from 'expo-status-bar';
 import Modal from 'react-native-modal';
 import { showMessage, hideMessage } from "react-native-flash-message";
+import * as SecureStore from 'expo-secure-store';
 
 const {width: screenWidth} = Dimensions.get('window');
 
@@ -48,7 +49,7 @@ export default function Reviews({ route, navigation }) {
 
     useEffect(() => {
         (async () => {
-            const token = await AsyncStorage.getItem('USER_TOKEN')
+            const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 fetch('http://192.168.0.105:8000/store/createrating/',{
                     method: 'GET',
@@ -71,7 +72,7 @@ export default function Reviews({ route, navigation }) {
 
   useEffect(() => {
         (async () => {
-            const token = await AsyncStorage.getItem('USER_TOKEN')
+            const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
               fetch('http://192.168.0.105:8000/store/getratingitems/',{
                   method: 'POST',
@@ -93,7 +94,7 @@ export default function Reviews({ route, navigation }) {
 
 
     const createRating = async (item) => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 if (sliderValue > 0){
                     fetch('http://192.168.0.105:8000/store/createrating/',{
@@ -116,7 +117,7 @@ export default function Reviews({ route, navigation }) {
     }
 
     const createDelPackRating = async () => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 if (delPackRating > 0){
                     fetch('http://192.168.0.105:8000/store/delpackrate/',{

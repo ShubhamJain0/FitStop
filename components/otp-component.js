@@ -9,6 +9,7 @@ import * as Notifications from 'expo-notifications';
 import Svg, { Path, Rect, Circle, G, Polygon, Ellipse, Defs, Stop } from 'react-native-svg';
 import Clipboard from 'expo-clipboard';
 import { showMessage } from 'react-native-flash-message';
+import * as SecureStore from 'expo-secure-store';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -100,7 +101,7 @@ export default function OtpComponent({ navigation, route }){
 
 
     const editProfile = async () => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
           fetch('http://192.168.0.105:8000/api/me/',{
                 method: 'PATCH',
@@ -145,7 +146,7 @@ export default function OtpComponent({ navigation, route }){
 
 
     const saveToken = async (token) => {
-        await AsyncStorage.setItem('USER_TOKEN', token);
+        await SecureStore.setItemAsync('USER_TOKEN', token);
         setTimeout(() => setVerifyOTPDisabled(false), 1500);
         if (action === 'create') {
             setTimeout(() => setUserDetailsModal(true), 2000)

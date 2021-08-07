@@ -35,6 +35,7 @@ import AppIntroSlider from 'react-native-app-intro-slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottieView from 'lottie-react-native';
 import FlashMessage, {showMessage} from "react-native-flash-message";
+import * as SecureStore from 'expo-secure-store';
 
 
 const Stack = createStackNavigator();
@@ -104,7 +105,7 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const token = await AsyncStorage.getItem('USER_TOKEN')
+      const token = await SecureStore.getItemAsync('USER_TOKEN')
       if (token === null || token === undefined && mounted) {
         setIsLogin(false);
       }
@@ -202,7 +203,7 @@ export default function App() {
 
 
   const editProfile = async () => {
-      const token = await AsyncStorage.getItem('USER_TOKEN')
+      const token = await SecureStore.getItemAsync('USER_TOKEN')
       if (token) {
         fetch('http://192.168.0.105:8000/api/me/',{
               method: 'PATCH',
@@ -247,7 +248,7 @@ export default function App() {
 
   const saveToken = async (token) => {
       let mounted = true;
-      await AsyncStorage.setItem('USER_TOKEN', token);
+      await SecureStore.setItemAsync('USER_TOKEN', token);
       setTimeout(() => setVerifyOTPDisabled(false), 1500)
       if (action === 'create' && mounted) {
         setTimeout(() => carouselRef.current.snapToNext(), 1500);

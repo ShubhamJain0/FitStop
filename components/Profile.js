@@ -11,6 +11,7 @@ import * as Location from 'expo-location';
 import MapView, {Marker, AnimatedRegion, Callout, MarkerAnimated} from 'react-native-maps';
 import * as ImagePicker from 'expo-image-picker';
 import { showMessage } from 'react-native-flash-message';
+import * as SecureStore from 'expo-secure-store';
 
 
 export default function Profile({ navigation }) {
@@ -50,7 +51,7 @@ export default function Profile({ navigation }) {
   useEffect(() => {
     const getToken = navigation.addListener('focus', () => {
       (async () => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
           fetch('http://192.168.0.105:8000/api/me/',{
                 method: 'GET',
@@ -74,7 +75,7 @@ export default function Profile({ navigation }) {
 
   useEffect(() => {
     (async () => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
             fetch('http://192.168.0.105:8000/store/myaddress/',{
                 method: 'GET',
@@ -100,7 +101,7 @@ export default function Profile({ navigation }) {
 
 
   const logout = async () => {
-    await AsyncStorage.removeItem('USER_TOKEN')
+    await SecureStore.deleteItemAsync('USER_TOKEN')
     .then(() => navigation.goBack())
     .then(() => setRespStatus(401))
     .then(() => showMessage({
@@ -118,7 +119,7 @@ export default function Profile({ navigation }) {
 
   const editProfile = async () => {
     setProfileIndic('absolute');
-    const token = await AsyncStorage.getItem('USER_TOKEN')
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token) {
       fetch('http://192.168.0.105:8000/api/me/',{
             method: 'PATCH',
@@ -190,7 +191,7 @@ export default function Profile({ navigation }) {
   //Address
 
   const addAddress = async () => {
-    const token = await AsyncStorage.getItem('USER_TOKEN')
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token) {
         setIndicPos('absolute');
         fetch('http://192.168.0.105:8000/store/myaddress/',{
@@ -215,7 +216,7 @@ export default function Profile({ navigation }) {
 
 
   const deleteAddress = (item) => async evt => {
-  const token = await AsyncStorage.getItem('USER_TOKEN')
+  const token = await SecureStore.getItemAsync('USER_TOKEN')
   if (token) {
       fetch('http://192.168.0.105:8000/store/myaddress/',{
           method: 'DELETE',
@@ -235,7 +236,7 @@ export default function Profile({ navigation }) {
 
 
   const setDeliveryAdrress = (item) => async evt => {
-      const token = await AsyncStorage.getItem('USER_TOKEN')
+      const token = await SecureStore.getItemAsync('USER_TOKEN')
       if (token) {
           fetch('http://192.168.0.105:8000/store/deliveryaddress/',{
               method: 'POST',

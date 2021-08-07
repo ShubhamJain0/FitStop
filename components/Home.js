@@ -17,6 +17,7 @@ import NetInfo from "@react-native-community/netinfo";
 import Svg, { Path, Rect, Circle, G, Polygon, Ellipse } from 'react-native-svg';
 import { copilot, walkthroughable, CopilotStep } from "react-native-copilot";
 import icoMoonConfig from '../selection.json';
+import * as SecureStore from 'expo-secure-store';
 
 
 
@@ -178,7 +179,7 @@ function Home(props){
   useEffect(() => {
     const getpreviousorders = navigation.addListener('focus', () => {
       (async () => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
           fetch('http://192.168.0.105:8000/store/previousorders/',{
               method: 'GET',
@@ -204,7 +205,7 @@ function Home(props){
   useEffect(() => {
     const getToken = navigation.addListener('focus', () => {
       (async () => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
           fetch('http://192.168.0.105:8000/store/activeorders/',{
               method: 'GET',
@@ -263,7 +264,7 @@ function Home(props){
   useEffect(() => {
     const getToken = navigation.addListener('focus', () => {
       (async () => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
           fetch('http://192.168.0.105:8000/api/me/',{
                 method: 'GET',
@@ -320,7 +321,7 @@ function Home(props){
 
 
   const savePushToken = async (pushToken) => {
-    const token = await AsyncStorage.getItem('USER_TOKEN')
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token){
       fetch('http://192.168.0.105:8000/store/pushnotificationtoken/',{
               method: 'POST',
@@ -554,7 +555,7 @@ function Home(props){
 
 
   const repeatOrder = (item) => async evt => {
-    const token = await AsyncStorage.getItem('USER_TOKEN')
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
           fetch('http://192.168.0.105:8000/store/repeatorder/',{
               method: 'POST',
@@ -578,7 +579,7 @@ function Home(props){
 
   const retry = async () => {
     setShowInidc(true);
-    const token = await AsyncStorage.getItem('USER_TOKEN')
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
     try {
 
       //Banners

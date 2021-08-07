@@ -14,6 +14,7 @@ import LottieView from 'lottie-react-native';
 import { copilot, walkthroughable, CopilotStep } from "react-native-copilot";
 import icoMoonConfig from '../selection.json';
 import { showMessage } from 'react-native-flash-message';
+import * as SecureStore from 'expo-secure-store';
 
 
 if (
@@ -128,7 +129,7 @@ function Fruits(props) {
                 setHideButton('flex')
             };
             (async () => {
-                const token = await AsyncStorage.getItem('USER_TOKEN')
+                const token = await SecureStore.getItemAsync('USER_TOKEN')
                 if (token) {
                     fetch('http://192.168.0.105:8000/store/cart/',{
                         method: 'GET',
@@ -217,7 +218,7 @@ function Fruits(props) {
 
 
     const buildCart = (item) => async evt  => {
-            const token =  await AsyncStorage.getItem('USER_TOKEN')
+            const token =  await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 const check = exists(item);
                 if (check !== undefined){
@@ -264,7 +265,7 @@ function Fruits(props) {
 
 
     const reduceItem = (item) => async evt => {
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
         return fetch('http://192.168.0.105:8000/store/reduceordelete/',{
             method: 'POST',
@@ -377,7 +378,7 @@ function Fruits(props) {
 
     const retry = async () => {
         setShowInidc(true);
-        const token = await AsyncStorage.getItem('USER_TOKEN')
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
         try {
 
             //Fruits list

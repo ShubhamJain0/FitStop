@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottieView from 'lottie-react-native';
 import StepIndicator from 'react-native-step-indicator';
 import { Feather } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
 
 
 export default function ActiveOrders({ navigation, route }) {
@@ -25,7 +26,7 @@ export default function ActiveOrders({ navigation, route }) {
 
     useEffect(() => {
         (async () => {
-            const token = await AsyncStorage.getItem('USER_TOKEN')
+            const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 fetch('http://192.168.0.105:8000/store/activeorders/',{
                     method: 'GET',
