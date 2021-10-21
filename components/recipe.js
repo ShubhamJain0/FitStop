@@ -13,6 +13,8 @@ import { copilot, walkthroughable, CopilotStep } from "react-native-copilot";
 import icoMoonConfig from '../selection.json';
 import { StatusBar } from 'expo-status-bar';
 import * as SecureStore from 'expo-secure-store';
+import Draggable from 'react-native-draggable';
+import { UserContext } from './context';
 
 function Recipe(props){
 
@@ -38,6 +40,7 @@ function Recipe(props){
     const [showIndic, setShowInidc] = useState(false);
 
     const [error, setError] = useState(null);
+
 
     //Copilot Variables
   
@@ -84,7 +87,7 @@ function Recipe(props){
 
 
     useEffect(() => {
-        fetch('http://192.168.0.105:8000/store/recipes/',{
+        fetch('http://192.168.0.156:8000/store/recipes/',{
           method: 'GET',
           headers: {
             'Content-type': 'application/json'
@@ -107,7 +110,7 @@ function Recipe(props){
         (async () => {
           const token = await SecureStore.getItemAsync('USER_TOKEN')
           if (token) {
-            fetch('http://192.168.0.105:8000/store/favrecipes/',{
+            fetch('http://192.168.0.156:8000/store/favrecipes/',{
               method: 'GET',
               headers: {
                 'Content-type': 'application/json',
@@ -135,7 +138,7 @@ function Recipe(props){
     const addFavRecipe = async (item) => {
       const token = await SecureStore.getItemAsync('USER_TOKEN')
       if (token) {
-        fetch('http://192.168.0.105:8000/store/favrecipes/',{
+        fetch('http://192.168.0.156:8000/store/favrecipes/',{
           method: 'POST',
           headers: {
             'Content-type': 'application/json',
@@ -153,7 +156,7 @@ function Recipe(props){
     const deleteFavRecipe = async (item) => {
       const token = await SecureStore.getItemAsync('USER_TOKEN')
       if (token) {
-        fetch('http://192.168.0.105:8000/store/favrecipes/',{
+        fetch('http://192.168.0.156:8000/store/favrecipes/',{
           method: 'DELETE',
           headers: {
             'Content-type': 'application/json',
@@ -215,7 +218,7 @@ function Recipe(props){
       try {
         
         //Recipes
-        fetch('http://192.168.0.105:8000/store/recipes/',{
+        fetch('http://192.168.0.156:8000/store/recipes/',{
           method: 'GET',
           headers: {
             'Content-type': 'application/json'
@@ -227,7 +230,7 @@ function Recipe(props){
 
         //Fav Recipes
         if (token) {
-          fetch('http://192.168.0.105:8000/store/favrecipes/',{
+          fetch('http://192.168.0.156:8000/store/favrecipes/',{
             method: 'GET',
             headers: {
               'Content-type': 'application/json',
@@ -283,6 +286,17 @@ function Recipe(props){
 
     return (
         <View style={styles.container}>
+          <Draggable
+            renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
+            renderColor={'black'}
+            renderSize={50} 
+            x={wp(80)}
+            y={hp(80)}
+            z={15}
+            isCircle={true}
+            onShortPressRelease={() => navigation.navigate('cart')}
+            touchableOpacityProps={{activeOpacity: 1}}
+          />
           <StatusBar style="inverted" />
             <View style={{flexDirection: 'row', alignItems: 'center', padding: 25, paddingBottom: 0}}>
               <View style={{flex: 1}}>
@@ -326,7 +340,7 @@ function Recipe(props){
                     {category === 'Dinner' ? <Text style={{backgroundColor: '#249C86', height: 2, width: '35%', marginTop: 5, alignSelf: 'center'}}></Text> : <Text style={{ height: 2, marginTop: 5}}></Text>}
                   </CoPilotTouchableOpacity>
                 </CopilotStep>
-              </View>
+              </View>  
               <View style={{flex: 1.5}}>
                 {category === 'Break Fast' ? 
                   <FlatList 

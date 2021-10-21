@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { StyleSheet, Text, View, RefreshControl, ScrollView, SafeAreaView, Image, Button, TouchableOpacity, Animated, Dimensions, FlatList, ActivityIndicator } from 'react-native';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { Ionicons, FontAwesome, FontAwesome5, MaterialCommunityIcons, Feather, Entypo, MaterialIcons, AntDesign } from "@expo/vector-icons";
@@ -9,6 +9,8 @@ import FlipCard from 'react-native-flip-card';
 import { StatusBar } from 'expo-status-bar';
 import { showMessage } from 'react-native-flash-message';
 import * as SecureStore from 'expo-secure-store';
+import Draggable from 'react-native-draggable';
+import { UserContext } from './context';
 
 
 export default function HomeProducts({ navigation, route }) {
@@ -31,10 +33,9 @@ export default function HomeProducts({ navigation, route }) {
 
     const [error, setError] = useState('');
 
-
     useEffect(() => {
         let mounted = true
-        fetch('http://192.168.0.105:8000/store/storelist/',{
+        fetch('http://192.168.0.156:8000/store/storelist/',{
         method: 'GET',
         headers: {
             'Content-type': 'application/json'
@@ -65,7 +66,7 @@ export default function HomeProducts({ navigation, route }) {
             (async () => {
                 const token = await SecureStore.getItemAsync('USER_TOKEN')
                 if (token) {
-                    fetch('http://192.168.0.105:8000/store/cart/',{
+                    fetch('http://192.168.0.156:8000/store/cart/',{
                         method: 'GET',
                         headers: {
                             'Authorization': `Token ${token}`,
@@ -100,7 +101,7 @@ export default function HomeProducts({ navigation, route }) {
         if (token) {
             const check = exists(item);
             if (check !== undefined){
-                return fetch('http://192.168.0.105:8000/store/cart/',{
+                return fetch('http://192.168.0.156:8000/store/cart/',{
                     method: 'POST',
                     headers: {
                     'Authorization': `Token ${token}`,
@@ -109,11 +110,11 @@ export default function HomeProducts({ navigation, route }) {
                     body: JSON.stringify({ ordereditem: item, quantity:  check })
                 })
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-                .then(resp => setCartData(resp.json.cart))
+                .then(resp => (setCartData(resp.json.cart)))
                 .then(() => console.log(check))
                 .catch(error => setError(error))
             } else {
-                return fetch('http://192.168.0.105:8000/store/cart/',{
+                return fetch('http://192.168.0.156:8000/store/cart/',{
                     method: 'POST',
                     headers: {
                     'Authorization': `Token ${token}`,
@@ -122,7 +123,7 @@ export default function HomeProducts({ navigation, route }) {
                     body: JSON.stringify({ ordereditem: item, quantity:  item.detail[0].quantity })
                 })
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-                .then(resp => setCartData(resp.json.cart))
+                .then(resp => (setCartData(resp.json.cart)))
                 .catch(error => setError(error))
                 
             }
@@ -146,7 +147,7 @@ export default function HomeProducts({ navigation, route }) {
     const reduceItem = (item) => async evt => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
-        return fetch('http://192.168.0.105:8000/store/reduceordelete/',{
+        return fetch('http://192.168.0.156:8000/store/reduceordelete/',{
             method: 'POST',
             headers: {
             'Authorization': `Token ${token}`,
@@ -155,7 +156,7 @@ export default function HomeProducts({ navigation, route }) {
             body: JSON.stringify({ reduceitem: item })
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-        .then(resp => setCartData(resp.json.cart))
+        .then(resp => {setCartData(resp.json.cart)})
         .catch(error => setError(error))
         } else {
             showMessage({
@@ -234,6 +235,17 @@ export default function HomeProducts({ navigation, route }) {
     if (from === 'Banner1')
     return (
         <View style={styles.container}>
+            <Draggable
+                renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
+                renderColor={'black'}
+                renderSize={50} 
+                x={wp(80)}
+                y={hp(80)}
+                z={15}
+                isCircle={true}
+                onShortPressRelease={() => navigation.navigate('cart')}
+                touchableOpacityProps={{activeOpacity: 1}}
+            />
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
@@ -259,11 +271,11 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
-                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
+                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(4)}}> ▼</Text>
                                     </TouchableOpacity>
                                 </ModalDropdown>
                                 <View style={{flex: 1}}>
@@ -295,7 +307,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#6aab9e', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -309,10 +321,10 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#6aab9e', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
-                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#6aab9e" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
@@ -376,14 +388,6 @@ export default function HomeProducts({ navigation, route }) {
                         </FlipCard>: null
                 }}
             />
-
-            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
-            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', justifyContent: 'center', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={{color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
-                <TouchableOpacity style={{marginLeft: 25}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
-                </TouchableOpacity>
-            </Animated.View>
         </View>
     )
 
@@ -392,6 +396,17 @@ export default function HomeProducts({ navigation, route }) {
     if (from === 'Banner2')
     return (
         <View style={styles.container}>
+            <Draggable
+                renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
+                renderColor={'black'}
+                renderSize={50} 
+                x={wp(80)}
+                y={hp(80)}
+                z={15}
+                isCircle={true}
+                onShortPressRelease={() => navigation.navigate('cart')}
+                touchableOpacityProps={{activeOpacity: 1}}
+            />
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
@@ -417,11 +432,11 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
-                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
+                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(4)}}> ▼</Text>
                                     </TouchableOpacity>
                                 </ModalDropdown>
                                 <View style={{flex: 1}}>
@@ -453,7 +468,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#6aab9e', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -467,10 +482,10 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#6aab9e', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
-                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#6aab9e" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
@@ -534,14 +549,6 @@ export default function HomeProducts({ navigation, route }) {
                         </FlipCard>: null
                 }}
             />
-
-            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
-            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', justifyContent: 'center', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={{color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
-                <TouchableOpacity style={{marginLeft: 25}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
-                </TouchableOpacity>
-            </Animated.View>
         </View>
     )
 
@@ -554,6 +561,17 @@ export default function HomeProducts({ navigation, route }) {
     if (from === 'Custom1')
     return (
         <View style={styles.container}>
+            <Draggable
+                renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
+                renderColor={'black'}
+                renderSize={50} 
+                x={wp(80)}
+                y={hp(80)}
+                z={15}
+                isCircle={true}
+                onShortPressRelease={() => navigation.navigate('cart')}
+                touchableOpacityProps={{activeOpacity: 1}}
+            />
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
@@ -579,11 +597,11 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
-                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
+                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(4)}}> ▼</Text>
                                     </TouchableOpacity>
                                 </ModalDropdown>
                                 <View style={{flex: 1}}>
@@ -615,7 +633,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#6aab9e', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -629,10 +647,10 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#6aab9e', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
-                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#6aab9e" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
@@ -696,14 +714,6 @@ export default function HomeProducts({ navigation, route }) {
                         </FlipCard>: null
                 }}
             />
-
-            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
-            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', justifyContent: 'center', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={{color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
-                <TouchableOpacity style={{marginLeft: 25}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
-                </TouchableOpacity>
-            </Animated.View>
         </View>
     )
 
@@ -712,6 +722,17 @@ export default function HomeProducts({ navigation, route }) {
     if (from === 'Custom2')
     return (
         <View style={styles.container}>
+            <Draggable
+                renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
+                renderColor={'black'}
+                renderSize={50} 
+                x={wp(80)}
+                y={hp(80)}
+                z={15}
+                isCircle={true}
+                onShortPressRelease={() => navigation.navigate('cart')}
+                touchableOpacityProps={{activeOpacity: 1}}
+            />
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
@@ -737,11 +758,11 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
-                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
+                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(4)}}> ▼</Text>
                                     </TouchableOpacity>
                                 </ModalDropdown>
                                 <View style={{flex: 1}}>
@@ -773,7 +794,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#6aab9e', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -787,10 +808,10 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#6aab9e', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
-                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#6aab9e" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
@@ -854,14 +875,6 @@ export default function HomeProducts({ navigation, route }) {
                         </FlipCard>: null
                 }}
             />
-
-            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
-            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', justifyContent: 'center', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={{color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
-                <TouchableOpacity style={{marginLeft: 25}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
-                </TouchableOpacity>
-            </Animated.View>
         </View>
     )
 
@@ -870,6 +883,17 @@ export default function HomeProducts({ navigation, route }) {
     if (from === 'Custom3')
     return (
         <View style={styles.container}>
+            <Draggable
+                renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
+                renderColor={'black'}
+                renderSize={50} 
+                x={wp(80)}
+                y={hp(80)}
+                z={15}
+                isCircle={true}
+                onShortPressRelease={() => navigation.navigate('cart')}
+                touchableOpacityProps={{activeOpacity: 1}}
+            />
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
@@ -895,11 +919,11 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
-                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
+                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(4)}}> ▼</Text>
                                     </TouchableOpacity>
                                 </ModalDropdown>
                                 <View style={{flex: 1}}>
@@ -931,7 +955,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#6aab9e', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -945,10 +969,10 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#6aab9e', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
-                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#6aab9e" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
@@ -1012,14 +1036,6 @@ export default function HomeProducts({ navigation, route }) {
                         </FlipCard>: null
                 }}
             />
-
-            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
-            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', justifyContent: 'center', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={{color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
-                <TouchableOpacity style={{marginLeft: 25}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
-                </TouchableOpacity>
-            </Animated.View>
         </View>
     )
 
@@ -1028,6 +1044,17 @@ export default function HomeProducts({ navigation, route }) {
     if (from === 'Custom4')
     return (
         <View style={styles.container}>
+            <Draggable
+                renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
+                renderColor={'black'}
+                renderSize={50} 
+                x={wp(80)}
+                y={hp(80)}
+                z={15}
+                isCircle={true}
+                onShortPressRelease={() => navigation.navigate('cart')}
+                touchableOpacityProps={{activeOpacity: 1}}
+            />
             <StatusBar style="inverted" />
             <FlatList 
                 data={storeList}
@@ -1053,11 +1080,11 @@ export default function HomeProducts({ navigation, route }) {
                                         {exists(item) ?
                                             item.detail.map((item2) => {
                                                 return item2.quantity === exists(item) ?
-                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item2.quantity}</Text>: null 
+                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item2.quantity}</Text>: null 
                                             })
-                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86', }}>{item.detail[0].quantity}</Text>
+                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', }}>{item.detail[0].quantity}</Text>
                                         }
-                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
+                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(4)}}> ▼</Text>
                                     </TouchableOpacity>
                                 </ModalDropdown>
                                 <View style={{flex: 1}}>
@@ -1089,7 +1116,7 @@ export default function HomeProducts({ navigation, route }) {
                                             search(item) ? cartData.map((item1) => {
                                                 return item1.ordereditem  === item.name ? 
                                                     
-                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
+                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#6aab9e', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                         
                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -1103,10 +1130,10 @@ export default function HomeProducts({ navigation, route }) {
                                                     </View>
                                                     : null
                                                 }): 
-                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
+                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#6aab9e', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                 </TouchableOpacity>
-                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                        :  <Text style={{color: 'red', textAlign: 'center'}}>Out of stock!</Text>: <ActivityIndicator size={30} color="#6aab9e" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                     
                                 </View>
                             </View>
@@ -1170,14 +1197,6 @@ export default function HomeProducts({ navigation, route }) {
                         </FlipCard>: null
                 }}
             />
-
-            {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
-            <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', justifyContent: 'center', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 0, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={{color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
-                <TouchableOpacity style={{marginLeft: 25}} onPress={() => navigation.navigate('cart')}>
-                    <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
-                </TouchableOpacity>
-            </Animated.View>
         </View>
     )
 
@@ -1202,7 +1221,7 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
     },
     popup: {
-        backgroundColor: "#99b898",
+        backgroundColor: "#6aab9e",
         elevation: 3,
         shadowOffset: {width: 0, height: 1},
         shadowRadius: 2.22,

@@ -15,7 +15,7 @@ import { copilot, walkthroughable, CopilotStep } from "react-native-copilot";
 import icoMoonConfig from '../selection.json';
 import { showMessage } from 'react-native-flash-message';
 import * as SecureStore from 'expo-secure-store';
-
+import Draggable from 'react-native-draggable';
 
 if (
     Platform.OS === "android" &&
@@ -54,7 +54,6 @@ function Fruits(props) {
 
     const [isOffline, setIsOffline] = useState(false);
     const [showIndic, setShowInidc] = useState(false);    
-
 
 
     //Copilot Variables
@@ -101,7 +100,7 @@ function Fruits(props) {
 
 
     useEffect(() => {
-            fetch('http://192.168.0.105:8000/store/fruitslist/',{
+            fetch('http://192.168.0.156:8000/store/fruitslist/',{
             method: 'GET',
             headers: {
                 'Content-type': 'application/json'
@@ -131,7 +130,7 @@ function Fruits(props) {
             (async () => {
                 const token = await SecureStore.getItemAsync('USER_TOKEN')
                 if (token) {
-                    fetch('http://192.168.0.105:8000/store/cart/',{
+                    fetch('http://192.168.0.156:8000/store/cart/',{
                         method: 'GET',
                         headers: {
                             'Authorization': `Token ${token}`,
@@ -202,7 +201,7 @@ function Fruits(props) {
     
         wait(2000).then(() => setRefreshing(false))
     
-        fetch('http://192.168.0.105:8000/store/fruitslist/',{
+        fetch('http://192.168.0.156:8000/store/fruitslist/',{
             method: 'GET',
             headers: {
             'Content-type': 'application/json'
@@ -222,7 +221,7 @@ function Fruits(props) {
             if (token) {
                 const check = exists(item);
                 if (check !== undefined){
-                    return fetch('http://192.168.0.105:8000/store/cart/',{
+                    return fetch('http://192.168.0.156:8000/store/cart/',{
                         method: 'POST',
                         headers: {
                         'Authorization': `Token ${token}`,
@@ -231,10 +230,10 @@ function Fruits(props) {
                         body: JSON.stringify({ ordereditem: item, quantity:  check })
                     })
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-                    .then(resp => setCartData(resp.json.cart))
+                    .then(resp => (setCartData(resp.json.cart)))
                     .catch(error => setError(error))
                 } else {
-                    return fetch('http://192.168.0.105:8000/store/cart/',{
+                    return fetch('http://192.168.0.156:8000/store/cart/',{
                         method: 'POST',
                         headers: {
                         'Authorization': `Token ${token}`,
@@ -243,7 +242,7 @@ function Fruits(props) {
                         body: JSON.stringify({ ordereditem: item, quantity:  item.detail[0].quantity })
                     })
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-                    .then(resp => setCartData(resp.json.cart))
+                    .then(resp => (setCartData(resp.json.cart)))
                     .catch(error => setError(error))
                     
                 }
@@ -267,7 +266,7 @@ function Fruits(props) {
     const reduceItem = (item) => async evt => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
-        return fetch('http://192.168.0.105:8000/store/reduceordelete/',{
+        return fetch('http://192.168.0.156:8000/store/reduceordelete/',{
             method: 'POST',
             headers: {
             'Authorization': `Token ${token}`,
@@ -276,7 +275,7 @@ function Fruits(props) {
             body: JSON.stringify({ reduceitem: item })
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-        .then(resp => setCartData(resp.json.cart))
+        .then(resp => {setCartData(resp.json.cart)})
         .catch(error => setError(error))
         } else {
             showMessage({
@@ -382,7 +381,7 @@ function Fruits(props) {
         try {
 
             //Fruits list
-            fetch('http://192.168.0.105:8000/store/fruitslist/',{
+            fetch('http://192.168.0.156:8000/store/fruitslist/',{
                 method: 'GET',
                 headers: {
                     'Content-type': 'application/json'
@@ -395,7 +394,7 @@ function Fruits(props) {
             //Cart
 
             if (token) {
-                fetch('http://192.168.0.105:8000/store/cart/',{
+                fetch('http://192.168.0.156:8000/store/cart/',{
                     method: 'GET',
                     headers: {
                         'Authorization': `Token ${token}`,
@@ -458,6 +457,17 @@ function Fruits(props) {
 
     return (
             <View style={{flexDirection: 'row', backgroundColor: '#fcfcfc', flex: 1}}>
+                <Draggable
+                    renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
+                    renderColor={'black'}
+                    renderSize={50} 
+                    x={wp(80)}
+                    y={hp(80)}
+                    z={15}
+                    isCircle={true}
+                    onShortPressRelease={() => navigation.navigate('cart')}
+                    touchableOpacityProps={{activeOpacity: 1}}
+                />
                 <View style={{flex: 0.4, marginTop: hp(30)}}>
                     <CopilotStep text={'Explore fruits !'} order={3} name={'fruits'}>
                         <CoPilotTouchableOpacity style={{alignItems: 'center', marginBottom: 100, transform: [{rotate: '-90deg'}]}} onPress={() => navigation.navigate('Fruits')} >
@@ -532,11 +542,11 @@ function Fruits(props) {
                                                             {exists(item) ?
                                                                 item.detail.map((item2) => {
                                                                     return item2.quantity === exists(item) ?
-                                                                    <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>{item2.quantity}</Text>: null 
+                                                                    <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}>{item2.quantity}</Text>: null 
                                                                 })
-                                                                : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>{item.detail[0].quantity}</Text>
+                                                                : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}>{item.detail[0].quantity}</Text>
                                                             }
-                                                            <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
+                                                            <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(4)}}> ▼</Text>
                                                         </TouchableOpacity>
                                                     </ModalDropdown>
                                                     <View style={{flex: 1}}>
@@ -568,7 +578,7 @@ function Fruits(props) {
                                                                 search(item) ? cartData.map((item1) => {
                                                                     return item1.ordereditem  === item.name ? 
                                                                         
-                                                                    <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
+                                                                    <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#6aab9e', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                                             
                                                                             <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                                                 <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -582,10 +592,10 @@ function Fruits(props) {
                                                                         </View>
                                                                         : null
                                                                     }): 
-                                                                    <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
+                                                                    <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#6aab9e', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                                         <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                                     </TouchableOpacity>
-                                                            :  <Text style={{color: 'red', textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 10}}>Out of stock !</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                                            :  <Text style={{color: 'red', textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 10}}>Out of stock !</Text>: <ActivityIndicator size={30} color="#6aab9e" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                                         
                                                     </View>
                                                 </CoPilotView>
@@ -606,11 +616,11 @@ function Fruits(props) {
                                                         {exists(item) ?
                                                             item.detail.map((item2) => {
                                                                 return item2.quantity === exists(item) ?
-                                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>{item2.quantity}</Text>: null 
+                                                                <Text key={item2.id} style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}>{item2.quantity}</Text>: null 
                                                             })
-                                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>{item.detail[0].quantity}</Text>
+                                                            : <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}>{item.detail[0].quantity}</Text>
                                                         }
-                                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(3.5)}}> ▼</Text>
+                                                        <Text style={{fontFamily: 'sf', color: '#249c86', fontSize: wp(4)}}> ▼</Text>
                                                     </TouchableOpacity>
                                                 </ModalDropdown>
                                                 <View style={{flex: 1}}>
@@ -642,7 +652,7 @@ function Fruits(props) {
                                                             search(item) ? cartData.map((item1) => {
                                                                 return item1.ordereditem  === item.name ? 
                                                                     
-                                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#99b898', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
+                                                                <View key={item1.id} style={{flexDirection: 'row', justifyContent: 'center', alignSelf: 'center', marginTop: 10, alignItems: 'center', backgroundColor: '#6aab9e', borderRadius: 5, width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', height: 30, padding: wp(1), flex: 0.1}}>
                                                                         
                                                                         <TouchableOpacity onPress={buildCart(item)} style={{justifyContent: 'center'}}>
                                                                             <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(6)}}>+ </Text>
@@ -656,10 +666,10 @@ function Fruits(props) {
                                                                     </View>
                                                                     : null
                                                                 }): 
-                                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#99b898', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
+                                                                <TouchableOpacity onPress={buildCart(item)} style={{flex: 0.1, alignSelf: 'center', justifyContent: 'center',  marginTop: 10, backgroundColor: '#6aab9e', width: '60%', height: 30, borderRadius: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', elevation: 5}} activeOpacity={1}>
                                                                     <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: '#2A363B', fontSize: wp(4)}}>Add &#43;</Text>
                                                                 </TouchableOpacity>
-                                                        :  <Text style={{color: 'red', textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 10}}>Out of stock !</Text>: <ActivityIndicator size={30} color="#99b898" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
+                                                        :  <Text style={{color: 'red', textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 10}}>Out of stock !</Text>: <ActivityIndicator size={30} color="#6aab9e" style={{display: hideButton, alignSelf: 'center', marginTop: 10}} />}
                                                     
                                                 </View>
                                             </View>
@@ -725,13 +735,6 @@ function Fruits(props) {
                             )}
                         />
                     </View>
-                {cartStatus !== 401 ? cartData.length > 0 ? triggerOpenAnimation() : triggerCloseAnimation() : null}
-                <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', justifyContent: 'center', padding: 25, paddingLeft: 0, position: 'absolute', bottom: 55, width: '100%', transform: [{translateY: slideUp}], flexDirection: 'row', alignItems: 'center'}}>
-                    <Text style={{color: 'black', fontFamily: 'sf'}}>Items added to your cart!</Text>
-                    <TouchableOpacity style={{marginLeft: 25}} onPress={() => navigation.navigate('cart')}>
-                        <Text style={{textAlign: 'center', color: '#249c86', fontFamily: 'Maison-bold'}}>View Cart</Text>
-                    </TouchableOpacity>
-                </Animated.View>
                 <View style={{width: '100%', position: 'absolute', bottom: 0, backgroundColor: '#fcfcfc', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51, shadowColor: '#000'}}>
                     <View style={{flex: 1, alignItems: 'center'}}>
                         <TouchableOpacity onPress={() => navigation.navigate('Home')} activeOpacity={1}>
@@ -783,7 +786,7 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
       },
       popup: {
-        backgroundColor: "#99b898",
+        backgroundColor: "#6aab9e",
         elevation: 3,
         shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.22,

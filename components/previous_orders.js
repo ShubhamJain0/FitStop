@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import { Button } from 'react-native';
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, Image, ScrollView, Platform, ActivityIndicator, Dimensions, FlatList } from 'react-native';
 import Modal from 'react-native-modal';
@@ -10,6 +10,7 @@ import Svg, { Path, Rect, Circle, G, Polygon, LinearGradient, Defs, Stop, Ellips
 import LottieView from 'lottie-react-native';
 import { showMessage } from 'react-native-flash-message';
 import * as SecureStore from 'expo-secure-store';
+import { UserContext } from './context';
 
 
 const {width: screenWidth} = Dimensions.get('window');
@@ -51,7 +52,7 @@ export default function PreviousOrders({ navigation, route }) {
         (async () => {
             const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
-              fetch('http://192.168.0.105:8000/store/previousorders/',{
+              fetch('http://192.168.0.156:8000/store/previousorders/',{
                   method: 'GET',
                   headers: {
                   'Authorization': `Token ${token}`,
@@ -73,7 +74,7 @@ export default function PreviousOrders({ navigation, route }) {
             (async () => {
                 const token = await SecureStore.getItemAsync('USER_TOKEN')
                 if (token) {
-                fetch('http://192.168.0.105:8000/store/previousorders/',{
+                fetch('http://192.168.0.156:8000/store/previousorders/',{
                     method: 'GET',
                     headers: {
                     'Authorization': `Token ${token}`,
@@ -95,7 +96,7 @@ export default function PreviousOrders({ navigation, route }) {
         (async () => {
             const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
-                fetch('http://192.168.0.105:8000/store/activeorders/',{
+                fetch('http://192.168.0.156:8000/store/activeorders/',{
                     method: 'GET',
                     headers: {
                         'Authorization': `Token ${token}`,
@@ -122,7 +123,7 @@ export default function PreviousOrders({ navigation, route }) {
     const repeatOrder = (item) => async evt => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
-              fetch('http://192.168.0.105:8000/store/repeatorder/',{
+              fetch('http://192.168.0.156:8000/store/repeatorder/',{
                   method: 'POST',
                   headers: {
                   'Authorization': `Token ${token}`,
@@ -143,9 +144,12 @@ export default function PreviousOrders({ navigation, route }) {
                     statusBarHeight: hp(3),
                     duration: 2500
                 })
-              }})
-              .then(() => navigation.popToTop())
-              .then(() => navigation.navigate('cart'))
+              }
+              if (resp.json.cart.length > 0) {
+                navigation.popToTop();
+                navigation.navigate('cart');
+              }    
+              })
               .catch(error => setError(error))
             } else {
               navigation.navigate('Register')

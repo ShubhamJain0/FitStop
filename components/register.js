@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState, useRef } from 'react';
 import { Button } from 'react-native';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, Keyboard, Platform, Image, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, Keyboard, Platform, Image, Dimensions, Animated } from 'react-native';
 import Modal from 'react-native-modal';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,10 +18,9 @@ export default function Register({ navigation }) {
 
     const [error, setError] = useState(null);
 
-
-    const [keyboardOffset, setKeyboardOffset] = useState(hp(45));
-    const onKeyboardShow = event => setKeyboardOffset(hp(15));
-    const onKeyboardHide = () => setKeyboardOffset(hp(45));
+    const [animation] = useState(new Animated.Value(0));
+    const onKeyboardShow = event => showAnim();
+    const onKeyboardHide = () => closeAnim();
     const keyboardDidShowListener = useRef();
     const keyboardDidHideListener = useRef();
 
@@ -36,11 +35,34 @@ export default function Register({ navigation }) {
     }, []);
 
 
+    //Animations
+    const showAnim = () => {
+        Animated.timing(animation, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true
+        }).start();
+    }
+
+    const closeAnim = () => {
+        Animated.timing(animation, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true
+        }).start();
+    }
+
+    const keyboardOffset = animation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [hp(45), hp(25)],
+        extrapolate: 'clamp',
+    })
+
 
 
     const Register = () => {
         setDisabled(true);
-        fetch('http://192.168.0.105:8000/api/send_sms_code/',{
+        fetch('http://192.168.0.156:8000/api/send_sms_code/',{
           method: 'POST',
           headers: {
             'Content-type': 'application/json'
@@ -86,7 +108,7 @@ export default function Register({ navigation }) {
         <View style={styles.container}>
             <StatusBar style="inverted" />
             <Image source={require('../assets/register.png')} style={{width: '100%', height: 2185*(screenWidth/3505), alignSelf: 'center'}} />
-            <View style={{backgroundColor: 'white', width: '100%', height: '100%', position: 'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
+            <Animated.View style={{backgroundColor: 'white', width: '100%', height: '100%', position: 'absolute', transform: [{translateY: keyboardOffset}], borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
                 <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), paddingTop: wp(8), paddingLeft: wp(15), color: 'black'}} >Enter your{'\n'}mobile number.</Text>
                 <Text style={{fontFamily: 'sf', marginBottom: 35, paddingLeft: wp(15), fontSize: wp(4), color: 'black'}}>We will send you a verification code.</Text>
                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: hp(5), paddingLeft: wp(15)}}>
@@ -112,14 +134,14 @@ export default function Register({ navigation }) {
                     onChangeText={(text) => setPhone(text)} keyboardType={'numeric'} maxLength={10} />               
                 </View>
                 {phone.length <= 9 || phone === 0 || disabled ? 
-                    <TouchableOpacity disabled={true} style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} >
+                    <TouchableOpacity disabled={true} style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} >
                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black'}}>&#x27F6;</Text>
                     </TouchableOpacity>:
-                    <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} onPress={Register} activeOpacity={0.8} >
+                    <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} onPress={Register} activeOpacity={0.8} >
                         <Text style={{opacity: 1, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'black'}}>&#x27F6;</Text>
                     </TouchableOpacity>
                 }
-        </View>
+            </Animated.View>
       </View>
     );
 }

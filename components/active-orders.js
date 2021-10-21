@@ -28,7 +28,7 @@ export default function ActiveOrders({ navigation, route }) {
         (async () => {
             const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
-                fetch('http://192.168.0.105:8000/store/activeorders/',{
+                fetch('http://192.168.0.156:8000/store/activeorders/',{
                     method: 'GET',
                     headers: {
                         'Authorization': `Token ${token}`,
@@ -159,7 +159,7 @@ export default function ActiveOrders({ navigation, route }) {
                         <Image source={require('../assets/not-found.png')} style={{width: '85%', height: 2071*(screenWidth/3994), alignSelf: 'center'}} />
                         <Text style={{marginTop: 50, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center'}}>You don't have any active orders !</Text>
                     </View>
-                : <ActivityIndicator size={40} color={'#99b898'} style={{marginTop: wp(50)}} />}
+                : <ActivityIndicator size={40} color={'#6aab9e'} style={{marginTop: wp(50)}} />}
         </View>
     )
 }

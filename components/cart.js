@@ -66,7 +66,7 @@ export default function Cart({ navigation }) {
             (async () => {
                 const token = await SecureStore.getItemAsync('USER_TOKEN')
                 if (token) {
-                    fetch('http://192.168.0.105:8000/store/confirm/',{
+                    fetch('http://192.168.0.156:8000/store/confirm/',{
                         method: 'GET',
                         headers: {
                             'Authorization': `Token ${token}`,
@@ -93,7 +93,7 @@ export default function Cart({ navigation }) {
         (async () => {
             const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
-                fetch('http://192.168.0.105:8000/store/myaddress/',{
+                fetch('http://192.168.0.156:8000/store/myaddress/',{
                     method: 'GET',
                     headers: {
                     'Authorization': `Token ${token}`,
@@ -121,7 +121,7 @@ export default function Cart({ navigation }) {
         (async () => {
             const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
-                fetch('http://192.168.0.105:8000/store/getdeliveryaddress/',{
+                fetch('http://192.168.0.156:8000/store/getdeliveryaddress/',{
                     method: 'GET',
                     headers: {
                     'Authorization': `Token ${token}`,
@@ -149,7 +149,7 @@ export default function Cart({ navigation }) {
         (async () => {
             const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
-                fetch('http://192.168.0.105:8000/store/coupons/',{
+                fetch('http://192.168.0.156:8000/store/coupons/',{
                     method: 'GET',
                     headers: {
                     'Authorization': `Token ${token}`,
@@ -175,7 +175,7 @@ export default function Cart({ navigation }) {
         (async () => {
             const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
-              fetch('http://192.168.0.105:8000/api/me/',{
+              fetch('http://192.168.0.156:8000/api/me/',{
                     method: 'GET',
                     headers: {
                     'Authorization': `Token ${token}`,
@@ -213,7 +213,7 @@ export default function Cart({ navigation }) {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
             setIndicPos('absolute');
-            fetch('http://192.168.0.105:8000/store/myaddress/',{
+            fetch('http://192.168.0.156:8000/store/myaddress/',{
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,
@@ -248,7 +248,7 @@ export default function Cart({ navigation }) {
   const deleteAddress = (item) => async evt => {
     const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token) {
-        fetch('http://192.168.0.105:8000/store/myaddress/',{
+        fetch('http://192.168.0.156:8000/store/myaddress/',{
             method: 'DELETE',
             headers: {
                 'Authorization': `Token ${token}`,
@@ -268,7 +268,7 @@ export default function Cart({ navigation }) {
     const setDeliveryAdrress = (item) => async evt => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
-            fetch('http://192.168.0.105:8000/store/deliveryaddress/',{
+            fetch('http://192.168.0.156:8000/store/deliveryaddress/',{
                 method: 'POST',
                 headers: {
                 'Authorization': `Token ${token}`,
@@ -337,7 +337,7 @@ const createPaymentOrder = async (payMethod) => {
     setOnPlace(true);
     const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token) {
-      fetch('http://192.168.0.105:8000/store/createpaymentorder/',{
+      fetch('http://192.168.0.156:8000/store/createpaymentorder/',{
         method: 'POST',
         headers: {
           'Content-type': 'application/json',
@@ -404,7 +404,7 @@ const createPaymentOrder = async (payMethod) => {
       // handle success
         setAfterPaymentModal(true);
         if (token) {
-            fetch('http://192.168.0.105:8000/store/order/',{
+            fetch('http://192.168.0.156:8000/store/order/',{
                 method: 'POST',
                 headers: {
                 'Authorization': `Token ${token}`,
@@ -470,7 +470,7 @@ const createPaymentOrder = async (payMethod) => {
     setOnPlace(true);
     const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token) {
-        fetch('http://192.168.0.105:8000/store/orderCOD/',{
+        fetch('http://192.168.0.156:8000/store/orderCOD/',{
             method: 'POST',
             headers: {
             'Authorization': `Token ${token}`,
@@ -509,7 +509,7 @@ const createPaymentOrder = async (payMethod) => {
   const deleteCart = () => async evt=>  {
     const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token)
-        fetch('http://192.168.0.105:8000/store/cart/',{
+        fetch('http://192.168.0.156:8000/store/cart/',{
             method: 'DELETE',
             headers: {
                 'Authorization': `Token ${token}`,
@@ -525,7 +525,7 @@ const createPaymentOrder = async (payMethod) => {
     const deleteItem = async (item) => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token)
-            fetch('http://192.168.0.105:8000/store/reduceordelete/',{
+            fetch('http://192.168.0.156:8000/store/reduceordelete/',{
                 method: 'DELETE',
                 headers: {
                 'Authorization': `Token ${token}`,
@@ -585,9 +585,8 @@ const createPaymentOrder = async (payMethod) => {
   if (cartStatus === 401){
         return (
             <View style={[styles.container, {flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}]}>
-                <Text style={{fontFamily: 'sofia-medium', fontSize: wp(5)}}>Please</Text>
                 <TouchableOpacity onPress={() => (navigation.goBack(), navigation.navigate('Register'))}>
-                    <Text style={{color: '#99b898', fontFamily: 'sofia-bold', fontSize: wp(5)}}> login </Text>
+                    <Text style={{color: '#249c86', fontFamily: 'sofia-bold', fontSize: wp(5)}}>Login </Text>
                 </TouchableOpacity> 
                 <Text style={{fontFamily: 'sofia-medium', fontSize: wp(5)}}>to continue!</Text>
             </View>
@@ -705,12 +704,12 @@ const createPaymentOrder = async (payMethod) => {
                     </View>
                 </View>
 
-                {onPlace ? <ActivityIndicator color="#99b898" size={50} />
+                {onPlace ? <ActivityIndicator color="#6aab9e" size={50} />
                  : myAddressesStatus === 200 && deliveryAddressStatus === 200 && cartStatus === 200 ? 
-                    <TouchableOpacity onPress={() => setPaymentModal(true)} style={{flex: 1, opacity: 1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}}>
+                    <TouchableOpacity onPress={() => setPaymentModal(true)} style={{flex: 1, opacity: 1, backgroundColor: '#6aab9e', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}}>
                         <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Place Order &raquo;</Text>
                     </TouchableOpacity>:
-                    <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#99b898', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%'}}>
+                    <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#6aab9e', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%'}}>
                         <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Place Order &raquo;</Text>
                     </TouchableOpacity>
                 }
@@ -780,7 +779,7 @@ const createPaymentOrder = async (payMethod) => {
                             <View style={{marginTop: 25}} >
                                 <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), color: 'black'}}>Add an address</Text>
                                 <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), marginBottom: 25, color: 'black'}}>(Use the map to auto-fill)</Text>
-                                <ActivityIndicator size={50} color="#99b898" style={{position: indicPos, display: 'none', alignSelf: 'center', top: 0, bottom: 0}} />
+                                <ActivityIndicator size={50} color="#6aab9e" style={{position: indicPos, display: 'none', alignSelf: 'center', top: 0, bottom: 0}} />
                                 <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'House/Colony'} value={inputAddress} onChangeText={(text) => setInputAddress(text)} />
                                 <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'Road Number, Road Name'} value={inputLocality} onChangeText={(text) => setInputLocality(text)} />
                                 <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'City'} value={inputCity} onChangeText={(text) => setInputCity(text)} />
@@ -793,10 +792,10 @@ const createPaymentOrder = async (payMethod) => {
                                     </TouchableOpacity>
                                 </View>
                                 {inputAddress === '' || inputLocality === '' || inputCity === '' || inputAddressType === '' ? 
-                                    <TouchableOpacity style={{marginTop: 25, opacity: 0.2, backgroundColor: '#99b898', padding: 10, borderRadius: 10}} disabled={true}>
+                                    <TouchableOpacity style={{marginTop: 25, opacity: 0.2, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10}} disabled={true}>
                                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
                                     </TouchableOpacity>:
-                                    <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#99b898', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} disabled={false} onPress={addAddress}>
+                                    <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} disabled={false} onPress={addAddress}>
                                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
                                     </TouchableOpacity>
                                 }

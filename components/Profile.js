@@ -12,6 +12,7 @@ import MapView, {Marker, AnimatedRegion, Callout, MarkerAnimated} from 'react-na
 import * as ImagePicker from 'expo-image-picker';
 import { showMessage } from 'react-native-flash-message';
 import * as SecureStore from 'expo-secure-store';
+import { UserContext } from './context';
 
 
 export default function Profile({ navigation }) {
@@ -53,7 +54,7 @@ export default function Profile({ navigation }) {
       (async () => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
-          fetch('http://192.168.0.105:8000/api/me/',{
+          fetch('http://192.168.0.156:8000/api/me/',{
                 method: 'GET',
                 headers: {
                 'Authorization': `Token ${token}`,
@@ -77,7 +78,7 @@ export default function Profile({ navigation }) {
     (async () => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
-            fetch('http://192.168.0.105:8000/store/myaddress/',{
+            fetch('http://192.168.0.156:8000/store/myaddress/',{
                 method: 'GET',
                 headers: {
                 'Authorization': `Token ${token}`,
@@ -121,7 +122,7 @@ export default function Profile({ navigation }) {
     setProfileIndic('absolute');
     const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token) {
-      fetch('http://192.168.0.105:8000/api/me/',{
+      fetch('http://192.168.0.156:8000/api/me/',{
             method: 'PATCH',
             headers: {
             'Authorization': `Token ${token}`,
@@ -140,7 +141,7 @@ export default function Profile({ navigation }) {
           type: 'warning',
           statusBarHeight: hp(3)
       })}})
-      .then(() => fetch('http://192.168.0.105:8000/api/me/',{
+      .then(() => fetch('http://192.168.0.156:8000/api/me/',{
                       method: 'PATCH',
                       headers: {
                       'Authorization': `Token ${token}`,
@@ -194,7 +195,7 @@ export default function Profile({ navigation }) {
     const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token) {
         setIndicPos('absolute');
-        fetch('http://192.168.0.105:8000/store/myaddress/',{
+        fetch('http://192.168.0.156:8000/store/myaddress/',{
             method: 'POST',
             headers: {
                 'Authorization': `Token ${token}`,
@@ -218,7 +219,7 @@ export default function Profile({ navigation }) {
   const deleteAddress = (item) => async evt => {
   const token = await SecureStore.getItemAsync('USER_TOKEN')
   if (token) {
-      fetch('http://192.168.0.105:8000/store/myaddress/',{
+      fetch('http://192.168.0.156:8000/store/myaddress/',{
           method: 'DELETE',
           headers: {
               'Authorization': `Token ${token}`,
@@ -238,7 +239,7 @@ export default function Profile({ navigation }) {
   const setDeliveryAdrress = (item) => async evt => {
       const token = await SecureStore.getItemAsync('USER_TOKEN')
       if (token) {
-          fetch('http://192.168.0.105:8000/store/deliveryaddress/',{
+          fetch('http://192.168.0.156:8000/store/deliveryaddress/',{
               method: 'POST',
               headers: {
               'Authorization': `Token ${token}`,
@@ -349,7 +350,7 @@ export default function Profile({ navigation }) {
           <View style={{width: '70%', alignSelf: 'center'}}>
             <Text style={{fontFamily: 'sofia-black', textAlign: 'center', fontSize: wp(12), color: 'black'}}>EatFrut</Text>
             <Text style={{fontFamily: 'sf', marginTop: hp(2), textAlign: 'center', fontSize: wp(3.5), color: 'black'}}>Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out print, graphic or web designs.</Text>
-              <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(10), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(10), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} onPress={() => navigation.navigate('Register')} activeOpacity={0.8} >
+              <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(10), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(10), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} onPress={() => navigation.navigate('Register')} activeOpacity={0.8} >
                 <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black'}}>&#x27F6;</Text>
               </TouchableOpacity>
           </View>
@@ -393,7 +394,7 @@ export default function Profile({ navigation }) {
               </View>
               <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>My Orders</Text>
               <View style={{flex: 1}}>
-                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#99b898', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => navigation.navigate('PreviousOrders')}>
+                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => navigation.navigate('PreviousOrders')}>
                   <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
                 </TouchableOpacity>
               </View>
@@ -407,7 +408,7 @@ export default function Profile({ navigation }) {
               </View>
               <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>Address Book</Text>
               <View style={{flex: 1}}>
-                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#99b898', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => setAddressModal(true)}>
+                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => setAddressModal(true)}>
                   <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
                 </TouchableOpacity>
               </View>
@@ -421,7 +422,7 @@ export default function Profile({ navigation }) {
               </View>
               <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>Terms and Conditions</Text>
               <View style={{flex: 1}}>
-                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#99b898', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => navigation.navigate('TermsandConditions')}>
+                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => navigation.navigate('TermsandConditions')}>
                   <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
                 </TouchableOpacity>
               </View>
@@ -435,7 +436,7 @@ export default function Profile({ navigation }) {
               </View>
               <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>Rate us !</Text>
               <View style={{flex: 1}}>
-                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#99b898', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}}>
+                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}}>
                   <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
                 </TouchableOpacity>
               </View>
@@ -463,7 +464,7 @@ export default function Profile({ navigation }) {
             useNativeDriver={true}
           >
             <View style={{flex: 1, backgroundColor: 'white', height: '100%', marginTop: hp(40), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000', borderTopLeftRadius: 50, borderTopRightRadius: 50}}>
-              <ActivityIndicator size={45} color={'#99b898'} style={{position: profileIndic, display: 'none', alignSelf: 'center', top: 0, bottom: 0}}  />
+              <ActivityIndicator size={45} color={'#6aab9e'} style={{position: profileIndic, display: 'none', alignSelf: 'center', top: 0, bottom: 0}}  />
               <ScrollView contentContainerStyle={{paddingBottom: 50, padding: 50, paddingTop: 25}} showsVerticalScrollIndicator={false} bounces={false}>
                 <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), marginBottom: 35, color: 'black'}}>Edit Profile</Text>
                 <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: hp(2), fontFamily: 'sf', fontSize: wp(3.5) }} 
@@ -487,10 +488,10 @@ export default function Profile({ navigation }) {
                   }                
                 </View>
                 {changeName === '' && changeEmail === '' && changePhoto === null ?
-                  <TouchableOpacity disabled={true} style={{opacity: 0.2, marginTop: 25, backgroundColor: '#99b898', padding: 10, borderRadius: 10}}>
+                  <TouchableOpacity disabled={true} style={{opacity: 0.2, marginTop: 25, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10}}>
                     <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>Update</Text>
                   </TouchableOpacity> :
-                  <TouchableOpacity disabled={profileIndic === 'absolute' ? true: false} style={profileIndic === 'absolute' ? {opacity: 0.2, marginTop: 25, backgroundColor: '#99b898', padding: 10, borderRadius: 10} : {opacity: 1, marginTop: 25, backgroundColor: '#99b898', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={editProfile} activeOpacity={0.6}>
+                  <TouchableOpacity disabled={profileIndic === 'absolute' ? true: false} style={profileIndic === 'absolute' ? {opacity: 0.2, marginTop: 25, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10} : {opacity: 1, marginTop: 25, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={editProfile} activeOpacity={0.6}>
                     <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>Update</Text>
                   </TouchableOpacity>
                 }
@@ -565,7 +566,7 @@ export default function Profile({ navigation }) {
                       <View style={{marginTop: 25}} >
                           <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), color: 'black'}}>Add an address</Text>
                           <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), marginBottom: 25, color: 'black'}}>(Use the map to auto-fill)</Text>
-                          <ActivityIndicator size={50} color="#99b898" style={{position: indicPos, display: 'none', alignSelf: 'center', top: 0, bottom: 0}} />
+                          <ActivityIndicator size={50} color="#6aab9e" style={{position: indicPos, display: 'none', alignSelf: 'center', top: 0, bottom: 0}} />
                           <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'House/Colony'} value={inputAddress} onChangeText={(text) => setInputAddress(text)} />
                           <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'Road Number, Road Name'} value={inputLocality} onChangeText={(text) => setInputLocality(text)} />
                           <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'City'} value={inputCity} onChangeText={(text) => setInputCity(text)} />
@@ -578,10 +579,10 @@ export default function Profile({ navigation }) {
                               </TouchableOpacity>
                           </View>
                           {inputAddress === '' || inputLocality === '' || inputCity === '' || inputAddressType === '' ? 
-                              <TouchableOpacity style={{marginTop: 25, opacity: 0.2, backgroundColor: '#99b898', padding: 10, borderRadius: 10}} disabled={true}>
+                              <TouchableOpacity style={{marginTop: 25, opacity: 0.2, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10}} disabled={true}>
                                   <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
                               </TouchableOpacity>:
-                              <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#99b898', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} disabled={false} onPress={addAddress}>
+                              <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} disabled={false} onPress={addAddress}>
                                   <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
                               </TouchableOpacity>
                           }

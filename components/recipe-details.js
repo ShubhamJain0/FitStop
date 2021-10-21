@@ -8,6 +8,8 @@ import { StatusBar } from 'expo-status-bar';
 import LottieView from 'lottie-react-native';
 import { showMessage } from 'react-native-flash-message';
 import * as SecureStore from 'expo-secure-store';
+import { UserContext } from './context';
+import Draggable from 'react-native-draggable';
 
 const {width: screenWidth} = Dimensions.get('window');
 
@@ -21,8 +23,9 @@ export default function RecipeDetails({ navigation, route }){
 
     const [error, setError] = useState(null);
 
+
     useEffect(() => {
-        fetch(`http://192.168.0.105:8000/store/recipedetail/${recipe_id}/`,{
+        fetch(`http://192.168.0.156:8000/store/recipedetail/${recipe_id}/`,{
           method: 'GET',
           headers: {
             'Content-type': 'application/json'
@@ -43,7 +46,7 @@ export default function RecipeDetails({ navigation, route }){
     const addCart = (item) => async evt => {
         const token =  await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
-            fetch('http://192.168.0.105:8000/store/recipecart/',{
+            fetch('http://192.168.0.156:8000/store/recipecart/',{
             method: 'POST',
             headers: {
                 'Authorization': `Token ${token}`,
@@ -62,8 +65,11 @@ export default function RecipeDetails({ navigation, route }){
                 type: 'warning',
                 statusBarHeight: hp(3),
                 duration: 2500
-            })}})
-            .then(() => navigation.navigate('cart'))
+            })}
+            if (resp.json.data.length > 0) {
+              navigation.navigate('cart');
+            }
+            })
             .catch(error => setError(error))
         } else {
             navigation.navigate('Register')
@@ -83,6 +89,17 @@ export default function RecipeDetails({ navigation, route }){
 
     return (
         <View style={styles.container}>
+          <Draggable
+              renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
+              renderColor={'black'}
+              renderSize={50} 
+              x={wp(80)}
+              y={hp(80)}
+              z={15}
+              isCircle={true}
+              onShortPressRelease={() => navigation.navigate('cart')}
+              touchableOpacityProps={{activeOpacity: 1}}
+          />
           <StatusBar style="inverted" />
           <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{padding: 25, paddingTop: 0}}>
           <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), color: 'black'}}>{recipeDetails.name}</Text>
@@ -164,7 +181,7 @@ export default function RecipeDetails({ navigation, route }){
                   </View>: null
               })}
             </ScrollView>
-            <TouchableOpacity style={{marginTop: 50, backgroundColor: '#99b898', alignSelf: 'center', padding: 15, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={addCart(recipeDetails)} activeOpacity={0.8}>
+            <TouchableOpacity style={{marginTop: 50, backgroundColor: '#6aab9e', alignSelf: 'center', padding: 15, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={addCart(recipeDetails)} activeOpacity={0.8}>
                 <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>Add Ingredients to cart  &rarr;</Text>
             </TouchableOpacity>
             <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 35}}></Text>

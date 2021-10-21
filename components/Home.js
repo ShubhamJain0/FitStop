@@ -14,11 +14,12 @@ import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 import LottieView from 'lottie-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import NetInfo from "@react-native-community/netinfo";
-import Svg, { Path, Rect, Circle, G, Polygon, Ellipse } from 'react-native-svg';
+import Svg, { Path, Rect, Circle, G, Polygon, Ellipse, Use } from 'react-native-svg';
 import { copilot, walkthroughable, CopilotStep } from "react-native-copilot";
 import icoMoonConfig from '../selection.json';
 import * as SecureStore from 'expo-secure-store';
-
+import { showMessage } from 'react-native-flash-message';
+import Draggable from 'react-native-draggable';
 
 
 const {width: screenWidth} = Dimensions.get('window');
@@ -62,7 +63,7 @@ function Home(props){
   const [markerData, setMarkerData] = useState({latitude: 17.4217697, longitude: 78.4749875 });
   const [locationPermission, setlocationPermission] = useState('Detecting Location....');
 
-  const[loading, setLoading] = useState('true');
+  const[loading, setLoading] = useState('false');
   const [refreshing, setRefreshing] = useState(false);
   const[fontsLoaded, setFontsLoaded] = useState(false);
   const [refreshOpacity, setRefreshOpacity] = useState(0);
@@ -142,7 +143,7 @@ function Home(props){
 
   useEffect(() => {
     let timeOut = setTimeout(() => setRefreshOpacity(1), 8000);
-    fetch('http://192.168.0.105:8000/store/homebanner/',{
+    fetch('http://192.168.0.156:8000/store/homebanner/',{
       method: 'GET',
       headers: {
         'Content-type': 'application/json'
@@ -160,7 +161,7 @@ function Home(props){
 
 
   useEffect(() => {
-    fetch('http://192.168.0.105:8000/store/homeproducts/',{
+    fetch('http://192.168.0.156:8000/store/homeproducts/',{
       method: 'GET',
       headers: {
         'Content-type': 'application/json'
@@ -181,7 +182,7 @@ function Home(props){
       (async () => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
-          fetch('http://192.168.0.105:8000/store/previousorders/',{
+          fetch('http://192.168.0.156:8000/store/previousorders/',{
               method: 'GET',
               headers: {
               'Authorization': `Token ${token}`,
@@ -207,7 +208,7 @@ function Home(props){
       (async () => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
-          fetch('http://192.168.0.105:8000/store/activeorders/',{
+          fetch('http://192.168.0.156:8000/store/activeorders/',{
               method: 'GET',
               headers: {
                   'Authorization': `Token ${token}`,
@@ -242,7 +243,7 @@ function Home(props){
 
 
   useEffect(() => {
-    fetch('http://192.168.0.105:8000/store/recipes/',{
+    fetch('http://192.168.0.156:8000/store/recipes/',{
       method: 'GET',
       headers: {
         'Content-type': 'application/json'
@@ -266,7 +267,7 @@ function Home(props){
       (async () => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
-          fetch('http://192.168.0.105:8000/api/me/',{
+          fetch('http://192.168.0.156:8000/api/me/',{
                 method: 'GET',
                 headers: {
                 'Authorization': `Token ${token}`,
@@ -323,7 +324,7 @@ function Home(props){
   const savePushToken = async (pushToken) => {
     const token = await SecureStore.getItemAsync('USER_TOKEN')
     if (token){
-      fetch('http://192.168.0.105:8000/store/pushnotificationtoken/',{
+      fetch('http://192.168.0.156:8000/store/pushnotificationtoken/',{
               method: 'POST',
               headers: {
                 'Authorization': `Token ${token}`,
@@ -337,7 +338,7 @@ function Home(props){
       .then(() => setShowInidc(false))
       .catch(error => setError(error))
     } else {
-      fetch('http://192.168.0.105:8000/store/pushnotificationtoken/',{
+      fetch('http://192.168.0.156:8000/store/pushnotificationtoken/',{
               method: 'POST',
               headers: {
               'Content-type': 'application/json'
@@ -417,7 +418,7 @@ function Home(props){
 
     wait(2000).then(() => setRefreshing(false))
 
-    fetch('http://192.168.0.105:8000/store/homebanner/',{
+    fetch('http://192.168.0.156:8000/store/homebanner/',{
       method: 'GET',
       headers: {
         'Content-type': 'application/json'
@@ -519,7 +520,7 @@ function Home(props){
         <Pagination
           dotsLength={bannerImages.length}
           activeDotIndex={activeSlide}
-          containerStyle={{ backgroundColor: '#fafafa', alignSelf: 'flex-end', paddingVertical: 0, marginTop: 2}}
+          containerStyle={{ backgroundColor: '#fafafa', alignSelf: 'center', paddingVertical: 0, marginTop: 2}}
           dotStyle={{
               width: 10,
               height: 10,
@@ -557,7 +558,7 @@ function Home(props){
   const repeatOrder = (item) => async evt => {
     const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
-          fetch('http://192.168.0.105:8000/store/repeatorder/',{
+          fetch('http://192.168.0.156:8000/store/repeatorder/',{
               method: 'POST',
               headers: {
               'Authorization': `Token ${token}`,
@@ -566,8 +567,23 @@ function Home(props){
               body: JSON.stringify({id: item.id})
           })
           .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
-          .then(resp => {if (resp.status === 404) {alert('Some items are out of stock, sorry for inconvenience!')}})
-          .then(() => navigation.navigate('cart'))
+          .then(resp => {if (resp.status === 404) {
+            showMessage({
+                message: 'Some items are out of stock, sorry for inconvenience !',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'warning',
+                statusBarHeight: hp(3),
+                duration: 2500
+            })
+          }
+          if (resp.json.cart.length > 0) {
+            navigation.navigate('cart');
+          }
+          })
           .catch(error => setError(error))
         } else {
           navigation.navigate('Register')
@@ -583,7 +599,7 @@ function Home(props){
     try {
 
       //Banners
-      fetch('http://192.168.0.105:8000/store/homebanner/',{
+      fetch('http://192.168.0.156:8000/store/homebanner/',{
         method: 'GET',
         headers: {
           'Content-type': 'application/json'
@@ -594,7 +610,7 @@ function Home(props){
       .catch(error => setError(error))
 
       //Home Products
-      fetch('http://192.168.0.105:8000/store/homeproducts/',{
+      fetch('http://192.168.0.156:8000/store/homeproducts/',{
         method: 'GET',
         headers: {
           'Content-type': 'application/json'
@@ -605,7 +621,7 @@ function Home(props){
       .catch(error => setError(error))
 
       //Recipes
-      fetch('http://192.168.0.105:8000/store/recipes/',{
+      fetch('http://192.168.0.156:8000/store/recipes/',{
         method: 'GET',
         headers: {
           'Content-type': 'application/json'
@@ -619,7 +635,7 @@ function Home(props){
       if (token) {
 
         //Previous orders
-        fetch('http://192.168.0.105:8000/store/previousorders/',{
+        fetch('http://192.168.0.156:8000/store/previousorders/',{
             method: 'GET',
             headers: {
             'Authorization': `Token ${token}`,
@@ -631,7 +647,7 @@ function Home(props){
         .catch(error => setError(error))
 
         //Active orders
-        fetch('http://192.168.0.105:8000/store/activeorders/',{
+        fetch('http://192.168.0.156:8000/store/activeorders/',{
             method: 'GET',
             headers: {
                 'Authorization': `Token ${token}`,
@@ -655,7 +671,7 @@ function Home(props){
 
 
         //Profile
-        fetch('http://192.168.0.105:8000/api/me/',{
+        fetch('http://192.168.0.156:8000/api/me/',{
             method: 'GET',
             headers: {
             'Authorization': `Token ${token}`,
@@ -831,8 +847,19 @@ function Home(props){
 
     return (
       <View style={{backgroundColor: '#fafafa', flex: 1}}>
+        <Draggable
+          renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
+          renderColor={'black'}
+          renderSize={50} 
+          x={wp(80)}
+          y={hp(80)}
+          z={15}
+          isCircle={true}
+          onShortPressRelease={() => navigation.navigate('cart')}
+          touchableOpacityProps={{activeOpacity: 1}}
+        />
         <View style={{backgroundColor: '#fafafa', paddingBottom: 25}}>
-          <Text></Text>
+        <Text></Text>
         </View>
         <ScrollView
           bounces={false}// for ios 
@@ -846,13 +873,14 @@ function Home(props){
           <StatusBar style="inverted" />
           
           <View style={styles.container}>
+            <Image source={require('../assets/splash.png')} style={{width: 50, height: 50, alignSelf: 'center'}} />
             <View style={{flexDirection: 'row', alignItems: 'center', padding: 25, paddingTop: 15}}>
               <View style={{flex: 1}}>
                 <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), color: '#228f7b'}}> {isLogin ? userData.name ? 'Hello, ' + userData.name + '.' : 'Hello !': 'Hello !'}</Text>
               </View>
               <CopilotStep text={isLogin ? "Manage your profile" : 'Login Here'} order={4} name={'Profile'}>
                 <CoPilotTouchableOpacity onPress={() => navigation.navigate('Profile')}>
-                  {isLogin ? userData.image ? <Image source={{uri: userData.image}} style={{width: 40, height: 40, borderRadius: 50}} />: <LottieView source={require('../assets/animations/43110-male-avatar.json')} autoPlay={true} loop={true} style={{width: 60}}  />: <FontAwesome5 name="sign-in-alt" size={wp(6)} color="black" />}
+                  {isLogin ? userData.image ? <Image source={{uri: userData.image}} style={{width: 50, height: 50, borderRadius: 50}} />: <LottieView source={require('../assets/animations/43110-male-avatar.json')} autoPlay={true} loop={true} style={{width: 75}}  />: <FontAwesome5 name="sign-in-alt" size={wp(6)} color="black" />}
                 </CoPilotTouchableOpacity>
               </CopilotStep>
             </View>
@@ -871,7 +899,7 @@ function Home(props){
                             style={styles.image}
                             parallaxFactor={0.1}
                             showSpinner={true}
-                            spinnerColor={'#99b898'}
+                            spinnerColor={'#6aab9e'}
                             {...parallaxProps}
                           />
                       </View>
@@ -904,28 +932,6 @@ function Home(props){
                       <View style={{alignSelf: index === 0 ? 'flex-start': 'flex-end', elevation: 5, borderRadius: 10, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000'}}>
                         <Image source={{uri: item.image}} style={{width: wp(40), height: wp(40), borderRadius: 10}} />
                         <LinearGradient colors={['rgba(255,255,255,0)', 'black']} start={{x: 0, y:0.3}} style={{position: 'absolute', top: 0, bottom: 0, left: 0,right: 0, borderRadius: 10}} ></LinearGradient>
-                        <View style={{position: 'absolute', left: 15, right: 15,bottom: 10}}>
-                          <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5),  color: 'white'}}>{item.title}</Text>
-                          <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3),  color: 'white', marginTop: 5}} numberOfLines={2}>{item.description}</Text>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                )
-              
-            })}
-          </View>
-          <View
-            style={{paddingLeft: 25, flexDirection: 'row', alignItems: 'center', paddingRight: 25}}
-          >
-            {homeProductImages.slice(2, 4).map((item, index) => {
-              
-                return (
-                  <View key={item.id} style={{flex: 1, marginTop: 45}}>
-                    <TouchableOpacity  onPress={() => navigation.navigate('HomeProducts', {from: item.category})} activeOpacity={0.9}>
-                      <View style={{alignSelf: index === 0 ? 'flex-start': 'flex-end', elevation: 5, borderRadius: 10, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000'}}>
-                        <Image source={{uri: item.image}} style={{width: wp(40), height: wp(40), borderRadius: 10}} />
-                        <LinearGradient colors={['rgba(255,255,255,0)', 'black']} start={{x: 0, y:0.2}} style={{position: 'absolute', top: 0, bottom: 0, left: 0,right: 0, borderRadius: 10}} ></LinearGradient>
                         <View style={{position: 'absolute', left: 15, right: 15,bottom: 10}}>
                           <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5),  color: 'white'}}>{item.title}</Text>
                           <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3),  color: 'white', marginTop: 5}} numberOfLines={2}>{item.description}</Text>

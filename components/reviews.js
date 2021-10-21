@@ -51,7 +51,7 @@ export default function Reviews({ route, navigation }) {
         (async () => {
             const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
-                fetch('http://192.168.0.105:8000/store/createrating/',{
+                fetch('http://192.168.0.156:8000/store/createrating/',{
                     method: 'GET',
                     headers: {
                         'Authorization': `Token ${token}`,
@@ -74,7 +74,7 @@ export default function Reviews({ route, navigation }) {
         (async () => {
             const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
-              fetch('http://192.168.0.105:8000/store/getratingitems/',{
+              fetch('http://192.168.0.156:8000/store/getratingitems/',{
                   method: 'POST',
                   headers: {
                   'Authorization': `Token ${token}`,
@@ -97,7 +97,7 @@ export default function Reviews({ route, navigation }) {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 if (sliderValue > 0){
-                    fetch('http://192.168.0.105:8000/store/createrating/',{
+                    fetch('http://192.168.0.156:8000/store/createrating/',{
                         method: 'POST',
                         headers: {
                             'Authorization': `Token ${token}`,
@@ -120,7 +120,7 @@ export default function Reviews({ route, navigation }) {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
             if (token) {
                 if (delPackRating > 0){
-                    fetch('http://192.168.0.105:8000/store/delpackrate/',{
+                    fetch('http://192.168.0.156:8000/store/delpackrate/',{
                         method: 'POST',
                         headers: {
                             'Authorization': `Token ${token}`,
@@ -201,7 +201,7 @@ export default function Reviews({ route, navigation }) {
                                         <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), marginBottom: 25, color: 'black'}}>You have rated {activeItem.item_name} : </Text>
                                         {exists() === 1 ? emojis[0]: exists() === 2 ? emojis[1]: exists() === 3 ? emojis[2]: exists() === 4 ? emojis[3]: exists() === 5 ? emojis[4] : null } 
                                         <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5), color: 'black'}}>{exists() === 1 ? 'Ugh ! Terrible !': exists() === 2 ? 'Bad': exists() === 3 ? 'Could have been better !' : exists() === 4 ? 'Good': exists() === 5 ? 'Awesome': null}</Text>
-                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
+                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#6aab9e', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
                                             <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Next</Text>
                                         </TouchableOpacity>
                                     </View> :
@@ -210,15 +210,15 @@ export default function Reviews({ route, navigation }) {
                                             {sliderValue === 1 ? emojis[0]: sliderValue === 2 ? emojis[1]: sliderValue === 3 ? emojis[2]: sliderValue === 4 ? emojis[3]: sliderValue === 5 ? emojis[4]:  null}
                                         </View>
                                         <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5), color: 'black'}}>{sliderValue === 1 ? 'Ugh ! Terrible !': sliderValue === 2 ? 'Bad': sliderValue === 3 ? 'Could have been better !' : sliderValue === 4 ? 'Good': sliderValue === 5 ? 'Awesome': null}</Text>
-                                        <Slider style={{marginTop: 25, width: '60%', alignSelf: 'center'}} minimumValue={1} maximumValue={5} onValueChange={(value) => (setSliderValue(value), setSliderPosition(value))} step={1} value={sliderPosition} thumbTintColor={'#99b898'} minimumTrackTintColor={'#99b898'} />
+                                        <Slider style={{marginTop: 25, width: '60%', alignSelf: 'center'}} minimumValue={1} maximumValue={5} onValueChange={(value) => (setSliderValue(value), setSliderPosition(value))} step={1} value={sliderPosition} thumbTintColor={'#6aab9e'} minimumTrackTintColor={'#6aab9e'} />
                                         <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 45}}>
-                                            <Ionicons name="ios-chatbox-ellipses" size={wp(4.5)} color="#99b898" />
+                                            <Ionicons name="ios-chatbox-ellipses" size={wp(4.5)} color="#6aab9e" />
                                             <View style={{marginLeft: 5}}>
                                                 <Text style={{fontSize: wp(4.5), fontFamily: 'Maison-bold', color: 'black'}}>Wanna leave a comment?</Text>
                                             </View>
                                         </View>
                                         <TextInput style={{fontFamily: 'sf', fontSize: wp(4), width: wp(50), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} onChangeText={(text) => setComment(text)} />
-                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
+                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#6aab9e', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
                                             <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Next</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -249,18 +249,18 @@ export default function Reviews({ route, navigation }) {
                                 <View style={{marginTop: 30}}>
                                     <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Sorry to hear that! Please tell us what went wrong</Text>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
-                                        <TouchableOpacity style={{flex: 1, marginRight: 25, backgroundColor: problem1 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem1 !== '' ? setProblem1(''): setProblem1('Items were damaged ')} activeOpacity={0.8}>
+                                        <TouchableOpacity style={{flex: 1, marginRight: 25, backgroundColor: problem1 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem1 !== '' ? setProblem1(''): setProblem1('Items were damaged ')} activeOpacity={0.8}>
                                             <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Items were damaged</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem2 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem2 !== '' ? setProblem2(''): setProblem2('Delivery man was impolite ')} activeOpacity={0.8}>
+                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem2 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem2 !== '' ? setProblem2(''): setProblem2('Delivery man was impolite ')} activeOpacity={0.8}>
                                             <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Delivery man was impolite</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
-                                        <TouchableOpacity style={{flex: 1, marginRight: 15, backgroundColor: problem3 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem3 !== '' ? setProblem3(''): setProblem3("Packing wasn't up-to mark ")} activeOpacity={0.8}>
+                                        <TouchableOpacity style={{flex: 1, marginRight: 15, backgroundColor: problem3 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem3 !== '' ? setProblem3(''): setProblem3("Packing wasn't up-to mark ")} activeOpacity={0.8}>
                                             <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Packing wasn't up-to mark</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem4 === '' ? 'white' :'#99b898', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#99b898'}} onPress={() => problem4 !== '' ?(setProblem4(''), setProblem5('')): setProblem4('other ')} activeOpacity={0.8}>
+                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem4 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem4 !== '' ?(setProblem4(''), setProblem5('')): setProblem4('other ')} activeOpacity={0.8}>
                                             <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Other</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -280,7 +280,7 @@ export default function Reviews({ route, navigation }) {
                                 <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 30, color: 'black'}}>Awesome ! We will do our best to continue this experience with you !</Text>
                                 : null
                             }
-                            <TouchableOpacity style={{marginTop: 50, alignSelf: 'center', padding: 10, backgroundColor: '#99b898', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => (createDelPackRating(), createRating(activeItem.item_name))} activeOpacity={0.8}>
+                            <TouchableOpacity style={{marginTop: 50, alignSelf: 'center', padding: 10, backgroundColor: '#6aab9e', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => (createDelPackRating(), createRating(activeItem.item_name))} activeOpacity={0.8}>
                                 <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Done</Text>
                             </TouchableOpacity>
                             <Modal

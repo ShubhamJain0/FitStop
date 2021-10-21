@@ -24,7 +24,7 @@ export default function FavRecipe({ navigation }){
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetch('http://192.168.0.105:8000/store/recipes/',{
+        fetch('http://192.168.0.156:8000/store/recipes/',{
           method: 'GET',
           headers: {
             'Content-type': 'application/json'
@@ -47,7 +47,7 @@ export default function FavRecipe({ navigation }){
         (async () => {
           const token = await SecureStore.getItemAsync('USER_TOKEN')
           if (token) {
-            fetch('http://192.168.0.105:8000/store/favrecipes/',{
+            fetch('http://192.168.0.156:8000/store/favrecipes/',{
               method: 'GET',
               headers: {
                 'Content-type': 'application/json',

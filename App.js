@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useCallback, createContext, useContext, useRef } from 'react';
-import { StyleSheet, Text, View, TextInput, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions, Keyboard, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions, Keyboard, ActivityIndicator, Animated } from 'react-native';
 import { NavigationContainer, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator, CardStyleInterpolators, HeaderStyleInterpolators, HeaderBackButton } from '@react-navigation/stack';
@@ -48,7 +48,6 @@ export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  const [conLocation, setConLocation] = useState({'name': '', 'district': ''});
   const [conPushToken, setConPushToken] = useState('');
 
   const [isOffline, setIsOffline] = useState(false);
@@ -59,9 +58,9 @@ export default function App() {
   const [disabled, setDisabled] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [action, setAction] = useState('');
-  const [keyboardOffset, setKeyboardOffset] = useState(hp(45));
-  const onKeyboardShow = event => setKeyboardOffset(hp(15));
-  const onKeyboardHide = () => setKeyboardOffset(hp(45));
+  const [animation] = useState(new Animated.Value(0));
+  const onKeyboardShow = event => showAnim();
+  const onKeyboardHide = () => closeAnim();
   const keyboardDidShowListener = useRef();
   const keyboardDidHideListener = useRef();
 
@@ -117,7 +116,7 @@ export default function App() {
 
   const SignUp = () => {
     setDisabled(true);
-    fetch('http://192.168.0.105:8000/api/send_sms_code/',{
+    fetch('http://192.168.0.156:8000/api/send_sms_code/',{
       method: 'POST',
       headers: {
         'Content-type': 'application/json'
@@ -179,7 +178,7 @@ export default function App() {
   //Sign In
   const SignIn = () => {
       setVerifyOTPDisabled(true);
-      fetch('http://192.168.0.105:8000/api/customauth/',{
+      fetch('http://192.168.0.156:8000/api/customauth/',{
         method: 'POST',
         headers: {
           'Content-type': 'application/json'
@@ -205,7 +204,7 @@ export default function App() {
   const editProfile = async () => {
       const token = await SecureStore.getItemAsync('USER_TOKEN')
       if (token) {
-        fetch('http://192.168.0.105:8000/api/me/',{
+        fetch('http://192.168.0.156:8000/api/me/',{
               method: 'PATCH',
               headers: {
               'Authorization': `Token ${token}`,
@@ -232,7 +231,7 @@ export default function App() {
 
   const resendOTP = () => {
       setCounter(60);
-      fetch('http://192.168.0.105:8000/api/send_sms_code/',{
+      fetch('http://192.168.0.156:8000/api/send_sms_code/',{
         method: 'POST',
         headers: {
           'Content-type': 'application/json'
@@ -247,23 +246,34 @@ export default function App() {
 
 
   const saveToken = async (token) => {
-      let mounted = true;
       await SecureStore.setItemAsync('USER_TOKEN', token);
       setTimeout(() => setVerifyOTPDisabled(false), 1500)
-      if (action === 'create' && mounted) {
+      if (action === 'create') {
         setTimeout(() => carouselRef.current.snapToNext(), 1500);
-      } else if (action === 'Login' && mounted){
-        setTimeout(() => setIsLogin(true), 1500);
-        setTimeout(() => showMessage({
-            message: 'You are successfully logged in !',
-            position: 'top',
-            floating: true,
-            titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
-            style: {alignItems: 'center'},
-            icon: 'auto',
-            type: 'success',
-            statusBarHeight: hp(3)
-        }), 2000)
+      } else if (action === 'Login'){
+        if (token) {
+            fetch('http://192.168.0.156:8000/store/cart/',{
+                method: 'GET',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-type': 'application/json'
+                }
+            })
+            .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+            //.then(resp => {if (resp.json.length > 0) {setConCart(true)}})
+            .then(() => setTimeout(() => setIsLogin(true), 1500))
+            .then(() => setTimeout(() => showMessage({
+                message: 'You are successfully logged in !',
+                position: 'top',
+                floating: true,
+                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                style: {alignItems: 'center'},
+                icon: 'auto',
+                type: 'success',
+                statusBarHeight: hp(3)
+            }), 2000))
+            .catch(error => setErrorMsg(error))
+        }
       }
   }
 
@@ -395,6 +405,32 @@ export default function App() {
 
 
 
+  //Animations
+
+  const showAnim = () => {
+    Animated.timing(animation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+    }).start();
+  }
+
+  const closeAnim = () => {
+      Animated.timing(animation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true
+      }).start();
+  }
+
+  const keyboardOffset = animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [hp(45), hp(25)],
+      extrapolate: 'clamp',
+  })
+
+
+
   if (!fontsLoaded) {
     return null;
   }
@@ -455,7 +491,7 @@ export default function App() {
 
               <View style={{flex: 1, paddingTop: hp(15)}}>
                 <Image source={require('./assets/register.png')} style={{width: '100%', height: 2185*(screenWidth/3505), alignSelf: 'center'}} />
-                <View style={{backgroundColor: 'white', width: '100%', height: '100%', position: 'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
+                <Animated.View style={{backgroundColor: 'white', width: '100%', height: '100%', position: 'absolute', transform: [{translateY: keyboardOffset}], borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
                     <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), paddingTop: wp(8), paddingLeft: wp(15), color: 'black'}} >Enter your{'\n'}mobile number.</Text>
                     <Text style={{fontFamily: 'sf', marginBottom: 35, paddingLeft: wp(15), fontSize: wp(4), color: 'black'}}>We will send you a verification code.</Text>
                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: hp(5), paddingLeft: wp(15)}}>
@@ -481,14 +517,14 @@ export default function App() {
                         onChangeText={(text) => setPhone(text)} keyboardType={'numeric'} maxLength={10} />               
                     </View>
                     {phone.length <= 9 || phone === 0 || !(/\d{10}/g.test(phone)) || disabled ? 
-                        <TouchableOpacity disabled={true} style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} >
+                        <TouchableOpacity disabled={true} style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, opacity: 0.2, backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} >
                             <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black'}}>&#x27F6;</Text>
                         </TouchableOpacity>:
-                        <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#99b898', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} onPress={SignUp} activeOpacity={0.8} >
+                        <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', marginRight: 50, backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(7), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} onPress={SignUp} activeOpacity={0.8} >
                             <Text style={{opacity: 1, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'black'}}>&#x27F6;</Text>
                         </TouchableOpacity>
                     }
-                </View>
+                </Animated.View>
                 <TouchableOpacity style={{position: 'absolute', top: 45, right: 15}} onPress={() => setIsLogin(true)}>
                   <Text style={{fontFamily: 'Maison-bold', color: '#249c86', fontSize: wp(4)}}>Skip for now</Text>
                 </TouchableOpacity>
@@ -496,24 +532,24 @@ export default function App() {
               : index === 1 ?
               <View style={{flex: 1, paddingTop: hp(15)}}>
                 <Image source={require('./assets/message-sent.png')} style={{width: '100%', height: 2073*(screenWidth/3381), alignSelf: 'center'}} />
-                <View style={{width: '100%', height: '100%', backgroundColor: 'white', position:'absolute', top: keyboardOffset, borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
+                <Animated.View style={{width: '100%', height: '100%', backgroundColor: 'white', position:'absolute', transform: [{translateY: keyboardOffset}], borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
                     <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), paddingTop: wp(8), textAlign: 'center', color: 'black'}} >We have sent the verification code to{'\n'}+91 {phone}.</Text>
                     <View style={{flexDirection: 'row', marginTop: 40, alignSelf: 'center', alignItems: 'center'}}>
-                    <TextInput ref={ti1} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
+                    <TextInput ref={ti1} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP1} onChangeText={(text) => {setOTP1(text); if (text) {copyFromClipboard(text), ti2.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}} />
-                        <TextInput ref={ti2} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
+                        <TextInput ref={ti2} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP2} onChangeText={(text) => {setOTP2(text); if (text) {ti3.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}}
                             onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti1.current.focus(): null}} />
-                        <TextInput ref={ti3} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
+                        <TextInput ref={ti3} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP3} onChangeText={(text) => {setOTP3(text); if (text) {ti4.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}}
                             onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti2.current.focus(): null}} />
-                        <TextInput ref={ti4} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
+                        <TextInput ref={ti4} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP4} onChangeText={(text) => {setOTP4(text); if (text) {ti5.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}}
                             onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti3.current.focus(): null}} />
-                        <TextInput ref={ti5} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
+                        <TextInput ref={ti5} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP5} onChangeText={(text) => {setOTP5(text); if (text) {ti6.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}}
                             onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti4.current.focus(): null}} />
-                        <TextInput ref={ti6} style={{ height: wp(10), textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
+                        <TextInput ref={ti6} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1, color: 'black'}}
                             value={OTP6} onChangeText={(text) => (setOTP6(text), setOTP(OTP1 + OTP2 + OTP3 + OTP4 + OTP5 + text))} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) SignIn()}}
                             onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti5.current.focus(): null}} />
                     </View>
@@ -524,12 +560,12 @@ export default function App() {
                         </TouchableOpacity>
                     </View>
                     <Text style={{fontFamily: 'sf', fontSize: wp(4), textAlign: 'center', color: 'black'}}> in {counter}s</Text>
-                </View>
+                </Animated.View>
                 
-                <Modal isVisible={verifyOTPDisabled} backdropOpacity={0.1} animationIn={'lightSpeedIn'} animationOut={'lightSpeedOut'}>
+                <Modal isVisible={verifyOTPDisabled} backdropOpacity={0.1} animationIn={'slideInRight'} animationOut={'slideOutLeft'} useNativeDriver={true}>
                     <View style={{alignSelf: 'center', backgroundColor: 'white', padding: 25}}>
                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                            <ActivityIndicator size={40} color={'#99b898'}  />
+                            <ActivityIndicator size={40} color={'#6aab9e'}  />
                             <Text style={{fontFamily: 'Maison-bold', marginLeft: 20, color: 'black'}}>Verifying code...</Text>
                         </View>
                     </View>
@@ -543,15 +579,15 @@ export default function App() {
                       <Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline', fontSize: wp(3), color: 'black'}}>Do it later &#187;</Text>
                   </TouchableOpacity>
                   <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), marginBottom: 50, color: 'black'}}>Enter your{'\n'}Personal Information.</Text>
-                  <TextInput style={{ height: 30, borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%', color: 'black', fontFamily: 'Maison-bold' }} 
+                  <TextInput style={{ borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%', color: 'black', fontFamily: 'Maison-bold' }} 
                       placeholder={'Name'} onChangeText={(text) => setChangeName(text)} />
-                  <TextInput style={{ height: 30, borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%', color: 'black', fontFamily: 'Maison-bold' }} 
+                  <TextInput style={{ borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%', color: 'black', fontFamily: 'Maison-bold' }} 
                       placeholder={'Email'} onChangeText={(text) => setChangeEmail(text)} keyboardType={'email-address'} />
                   {changeName === '' && changeEmail === '' ?
-                      <TouchableOpacity disabled={true} style={{opacity: 0.2, backgroundColor: '#99b898', padding: 10, paddingLeft: 20, paddingRight: 20, borderRadius: 10, alignSelf: 'flex-start'}}>
+                      <TouchableOpacity disabled={true} style={{opacity: 0.2, backgroundColor: '#6aab9e', padding: 10, paddingLeft: 20, paddingRight: 20, borderRadius: 10, alignSelf: 'flex-start'}}>
                       <Text style={{fontFamily: 'sf', color: 'black'}}>Save</Text>
                       </TouchableOpacity> :
-                      <TouchableOpacity disabled={false} style={{opacity: 1, backgroundColor: '#99b898', padding: 10, paddingLeft: 20, paddingRight: 20, borderRadius: 10, alignSelf: 'flex-start'}} onPress={editProfile}>
+                      <TouchableOpacity disabled={false} style={{opacity: 1, backgroundColor: '#6aab9e', padding: 10, paddingLeft: 20, paddingRight: 20, borderRadius: 10, alignSelf: 'flex-start'}} onPress={editProfile}>
                       <Text style={{fontFamily: 'sf', color: 'black'}}>Save</Text>
                       </TouchableOpacity>
                   }
@@ -569,9 +605,8 @@ export default function App() {
     return (
       <NavigationContainer>
         <PushTokenContext.Provider value={[conPushToken, setConPushToken]}>
-          <UserContext.Provider value={[conLocation, setConLocation]} >
           <Stack.Navigator>
-            <Stack.Screen name="Home" component={Home} options={{headerShown: false}} />
+            <Stack.Screen name="Home" component={Home} options={() => ({headerShown: false, animationEnabled: false})} />
             <Stack.Screen name="ActiveOrders" component={ActiveOrders} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
             <Stack.Screen name="HomeProducts" component={HomeProducts} options={({ navigation }) => ({
               title: '',
@@ -604,7 +639,7 @@ export default function App() {
               },
               cardStyleInterpolator: CardStyleInterpolators.forRevealFromBottomAndroid
             })} />
-            <Stack.Screen name="Recipes" component={Recipe} options={{headerShown: false, animationEnabled: false}} />
+            <Stack.Screen name="Recipes" component={Recipe} options={() => ({headerShown: false, animationEnabled: false})} />
             <Stack.Screen name="RecipeDetails" component={RecipeDetails}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
             <Stack.Screen name="FavRecipe" component={FavRecipe} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
             <Stack.Screen name="Profile" component={Profile} options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
@@ -616,7 +651,6 @@ export default function App() {
             <Stack.Screen name="NutritionCalculator" component={NutritionCalculator}  options={({ navigation }) => ({title: '', headerTransparent: true, cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, headerLeft: () => {return <TouchableOpacity onPress={() => navigation.pop()}><Text style={{marginLeft: 25, fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text></TouchableOpacity>}})} />
           </Stack.Navigator>
           <FlashMessage />
-          </UserContext.Provider>
         </PushTokenContext.Provider>
       </NavigationContainer>
     )

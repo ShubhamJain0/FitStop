@@ -186,7 +186,7 @@ export default function NutritionCalculator({ navigation, route }) {
                                                 <Text style={{marginLeft: 5, fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}>(Change)</Text>
                                             </TouchableOpacity>
                                         </View>
-                                        <TouchableOpacity disabled={customWeight ?  false : true} style={{opacity: customWeight ? 1 : 0.2, backgroundColor: '#99b898', alignSelf: 'center', padding: 10, paddingLeft: 15, paddingRight: 15, borderRadius: 5, marginTop: 25}} onPress={() => {calculate(), carouselRef.current.snapToNext()}}>
+                                        <TouchableOpacity disabled={customWeight ?  false : true} style={{opacity: customWeight ? 1 : 0.2, backgroundColor: '#6aab9e', alignSelf: 'center', padding: 10, paddingLeft: 15, paddingRight: 15, borderRadius: 5, marginTop: 25}} onPress={() => {calculate(), carouselRef.current.snapToNext()}}>
                                             <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>Get values</Text>
                                         </TouchableOpacity>
                                         
