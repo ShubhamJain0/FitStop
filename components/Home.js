@@ -6,11 +6,10 @@ import Modal from 'react-native-modal';
 import Carousel, {ParallaxImage, Pagination} from 'react-native-snap-carousel';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'; 
 import * as Location from 'expo-location';
-import { MaterialCommunityIcons, MaterialIcons, FontAwesome, Ionicons, AntDesign, createIconSetFromIcoMoon, FontAwesome5 } from '@expo/vector-icons';
-import { UserContext, PushTokenContext} from './context';
+import { MaterialCommunityIcons, MaterialIcons, FontAwesome, Ionicons, AntDesign, createIconSetFromIcoMoon, FontAwesome5, Feather } from '@expo/vector-icons';
+import { UserContext, PushTokenContext, CartContext, IsLoginContext} from './context';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 import LottieView from 'lottie-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import NetInfo from "@react-native-community/netinfo";
@@ -19,7 +18,7 @@ import { copilot, walkthroughable, CopilotStep } from "react-native-copilot";
 import icoMoonConfig from '../selection.json';
 import * as SecureStore from 'expo-secure-store';
 import { showMessage } from 'react-native-flash-message';
-import Draggable from 'react-native-draggable';
+import moment from 'moment';
 
 
 const {width: screenWidth} = Dimensions.get('window');
@@ -63,9 +62,8 @@ function Home(props){
   const [markerData, setMarkerData] = useState({latitude: 17.4217697, longitude: 78.4749875 });
   const [locationPermission, setlocationPermission] = useState('Detecting Location....');
 
-  const[loading, setLoading] = useState('false');
+  const[loading, setLoading] = useState('true');
   const [refreshing, setRefreshing] = useState(false);
-  const[fontsLoaded, setFontsLoaded] = useState(false);
   const [refreshOpacity, setRefreshOpacity] = useState(0);
   
   const [modalVisible, setmodalVisible] = useState(false);
@@ -75,19 +73,15 @@ function Home(props){
 
   const [confirmDisabled, setConfirmDisabled] = useState(false);
 
-  const [scrollViewScroll, setScrollViewScroll] = useState(0);
 
   const [conPushToken, setConPushToken] = useContext(PushTokenContext);
+  const [conIsLogin, setConIsLogin] = useContext(IsLoginContext);
 
   const [isLogin, setIsLogin] = useState(true);
   const [userData, setUserData] = useState({});
 
+  const [animation] = useState(new Animated.Value(0));
   const [scrollY] = useState(new Animated.Value(0));
-  const [activeOrderLen, setActiveOrderLen] = useState(0);
-  const [activeOrders, setActiveOrders] = useState([]);
-  const [activeOrderStatus, setActiveOrderStatus] = useState([]);
-  const [activeOrderRespStatus, setActiveOrderRespStatus] = useState(0);
-  const [activeSlide1, setactiveSlide1] = useState(0);
 
   const [previousOrderList, setPreviousOrderList] = useState([]);
   const [previousOrderItems, setPreviousOrderItems] = useState([]);
@@ -97,13 +91,22 @@ function Home(props){
   const [recipesList, setRecipesList] = useState([]);
   const [ingredients, setIngredients] = useState([]);
 
+  const [headerShadow, setHeaderShadow] = useState(false);
+  
+  const [cartBadge, setCartBadge] = useState('');
+  const [ordersBadge, setOrdersBadge] = useState('');
+
+  var re = /([^\s]+)/;
 
   //Copilot Variables
   
   const CoPilotTouchableOpacity = walkthroughable(TouchableOpacity)
   const CoPilotScrollView = walkthroughable(ScrollView)
 
-  //Component mounts
+  //Custom scroll indicator
+  const [completeScrollBarWidth, setcompleteScrollBarWidth] = useState(1);
+  const [visibleScrollBarWidth, setvisibleScrollBarWidth] = useState(0);
+  const scrollIndicator = useRef(new Animated.Value(0)).current;
 
   //Checks for internet connection
   useEffect(() => {
@@ -121,7 +124,9 @@ function Home(props){
       } 
     })
 
-    unsubscribe();
+    return () => {
+      unsubscribe();
+    }
   }, [])
 
   //Checks for first time and launches co pilot
@@ -202,46 +207,6 @@ function Home(props){
 
 
 
-
-  useEffect(() => {
-    const getToken = navigation.addListener('focus', () => {
-      (async () => {
-        const token = await SecureStore.getItemAsync('USER_TOKEN')
-        if (token) {
-          fetch('http://192.168.0.156:8000/store/activeorders/',{
-              method: 'GET',
-              headers: {
-                  'Authorization': `Token ${token}`,
-                  'Content-type': 'application/json'
-              }
-          })
-          .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-          .then(resp => {if(mounted && resp.status === 200) {
-            setActiveOrderLen(resp.json.data.length);
-            setActiveOrders(resp.json.data);
-            setActiveOrderStatus(resp.json.orderstatus);
-            setActiveOrderRespStatus(resp.status);
-            } else if (mounted && resp.status === 404) {
-              setActiveOrderLen(0);
-              setActiveOrders([]);
-              setActiveOrderStatus([]);
-              setActiveOrderRespStatus(404);
-            }
-          }) 
-          .catch(error => setError(error))
-        } else {
-          setActiveOrderLen(0);
-        }
-      })().catch(error => setError(error))
-    });
-
-    return () => {
-      setMounted(false);
-    }
-
-  }, [navigation])
-
-
   useEffect(() => {
     fetch('http://192.168.0.156:8000/store/recipes/',{
       method: 'GET',
@@ -259,11 +224,35 @@ function Home(props){
   }, []);
 
 
+useEffect(() => {
+  const getCart = navigation.addListener('focus', () => {
+      (async () => {
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
+        if (token) {
+            fetch('http://192.168.0.156:8000/store/cart/',{
+                method: 'GET',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-type': 'application/json'
+                }
+            })
+            .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+            .then(resp => {if (mounted && resp.json.length > 0) {setCartBadge(true)} else {setCartBadge(false)}})
+            .catch(error => setError(error))
+        }
+      })().catch(error => setError(error))
+  })
+
+  return () => {
+    setMounted(false);
+  }
+}, [navigation])
+
+
   ////Profile related
 
 
   useEffect(() => {
-    const getToken = navigation.addListener('focus', () => {
       (async () => {
         const token = await SecureStore.getItemAsync('USER_TOKEN')
         if (token) {
@@ -282,16 +271,17 @@ function Home(props){
           return setIsLogin(false);
         }
       })().catch(error => setError(error))
-    });
 
-  }, [navigation])
+  }, [conIsLogin])
 
 
 
   ///Push Notifications
 
   useEffect(() => {
-    registerPushNotificationPermissions();
+    if (!isOffline) {
+      registerPushNotificationPermissions();
+    }
   }, [])
 
 
@@ -520,7 +510,7 @@ function Home(props){
         <Pagination
           dotsLength={bannerImages.length}
           activeDotIndex={activeSlide}
-          containerStyle={{ backgroundColor: '#fafafa', alignSelf: 'center', paddingVertical: 0, marginTop: 2}}
+          containerStyle={{ backgroundColor: '#fcfcfc', alignSelf: 'center', paddingVertical: 0}}
           dotStyle={{
               width: 10,
               height: 10,
@@ -548,12 +538,47 @@ function Home(props){
 
   //Animations
   const diffClamp = Animated.diffClamp(scrollY, 0, 100)
-  const slideUp = diffClamp.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, 120],
+
+  const headerHide = scrollY.interpolate({
+    inputRange: [0, 125],
+    outputRange: [0, -20],
     extrapolate: 'clamp',
   })
 
+
+  const hideGreet = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -400],
+    extrapolate: 'clamp',
+  })
+
+  useEffect(() => {
+    scrollY.addListener((value) => {
+      if (value.value > 50){
+        setHeaderShadow(true);
+      } else {
+        setHeaderShadow(false);
+      }
+    })
+  }, [])
+
+  useEffect(() => {
+    scrollY.addListener(value => {
+      if (value.value > 25){
+        Animated.timing(animation, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start()
+      } else {
+        Animated.timing(animation, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true
+        }).start()
+      }
+    })
+  }, [])
 
   const repeatOrder = (item) => async evt => {
     const token = await SecureStore.getItemAsync('USER_TOKEN')
@@ -572,12 +597,12 @@ function Home(props){
                 message: 'Some items are out of stock, sorry for inconvenience !',
                 position: 'top',
                 floating: true,
-                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                 style: {alignItems: 'center'},
                 icon: 'auto',
                 type: 'warning',
                 statusBarHeight: hp(3),
-                duration: 2500
+                duration: 5000
             })
           }
           if (resp.json.cart.length > 0) {
@@ -589,6 +614,38 @@ function Home(props){
           navigation.navigate('Register')
         }
   }
+
+
+  //Custom scroll indicator
+  const scrollIndicatorSize =
+  completeScrollBarWidth > visibleScrollBarWidth
+  ? (visibleScrollBarWidth * visibleScrollBarWidth)
+      / completeScrollBarWidth
+  : visibleScrollBarWidth;
+
+  const difference =
+    visibleScrollBarWidth > scrollIndicatorSize
+    ? visibleScrollBarWidth - scrollIndicatorSize
+    : 1;
+
+  const scrollIndicatorPosition = Animated.multiply(
+    scrollIndicator,
+    visibleScrollBarWidth / completeScrollBarWidth,
+  ).interpolate({
+    extrapolate: 'clamp',
+    inputRange: [0, difference],
+    outputRange: [0, difference - wp(40)],
+  });
+    
+
+  const onLayout = ({
+    nativeEvent: {
+    layout: { width },
+    },
+  }) => {
+    setvisibleScrollBarWidth(width);
+  };
+
 
 
   //Retry
@@ -646,8 +703,9 @@ function Home(props){
         .then(resp => (setPreviousOrderList(resp.json.qs), setPreviousOrderItems(resp.json.data), setImages(resp.json.images), setPreviousOrderStatus(resp.status)))
         .catch(error => setError(error))
 
-        //Active orders
-        fetch('http://192.168.0.156:8000/store/activeorders/',{
+
+        //Cart
+        fetch('http://192.168.0.156:8000/store/cart/',{
             method: 'GET',
             headers: {
                 'Authorization': `Token ${token}`,
@@ -655,18 +713,7 @@ function Home(props){
             }
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-        .then(resp => {if(resp.status === 200) {
-          setActiveOrderLen(resp.json.data.length);
-          setActiveOrders(resp.json.data);
-          setActiveOrderStatus(resp.json.orderstatus);
-          setActiveOrderRespStatus(resp.status);
-          } else if (resp.status === 404) {
-            setActiveOrderLen(0);
-            setActiveOrders([]);
-            setActiveOrderStatus([]);
-            setActiveOrderRespStatus(404);
-          }
-        }) 
+        .then(resp => {if (mounted && resp.json.length > 0) {setCartBadge(true)} else {setCartBadge(false)}})
         .catch(error => setError(error))
 
 
@@ -685,8 +732,12 @@ function Home(props){
 
         registerPushNotificationPermissions();
       } else {
-        registerPushNotificationPermissions();
-        setIsLogin(false);
+        if (mounted){
+          registerPushNotificationPermissions();
+          setIsLogin(false);
+          setOrdersBadge(false);
+          setCartBadge(false);
+        }
       }
 
     } catch (error) {
@@ -701,26 +752,16 @@ function Home(props){
       
   }
 
-  const getStatus = (item) => {
-    if (activeOrderRespStatus === 200) {
-        for (var i=0; i < activeOrderStatus.length; i++) {
-            if (activeOrderStatus[i].order_number === item.id) {
-                return activeOrderStatus[i].order_status;
-            }
-        }
-    }
-  }
-
   
   if (isOffline) {
     return (
-      <View style={{flex: 1, backgroundColor: '#fafafa'}}>
+      <View style={{flex: 1, backgroundColor: '#fcfcfc'}}>
         <StatusBar style="inverted" />
         <Image source={require('../assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
         <View style={{width: '80%', alignSelf: 'center'}}>
-          <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginTop: 50, textAlign: 'center'}}>Uh oh! Seems like you are disconnected !</Text>
-          {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={retry}>
-            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
+          <Text style={{fontFamily: 'Maven-sem', fontSize: wp(6), marginTop: 50, textAlign: 'center'}}>Uh oh! Seems like you are disconnected !</Text>
+          {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={retry} activeOpacity={1}>
+            <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
           </TouchableOpacity>: <LottieView source={require('../assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
         </View>
       </View>
@@ -729,166 +770,51 @@ function Home(props){
 
   
   
-    if (loading == 'true') return (
-
-      <View style={{flex: 1, backgroundColor: '#fafafa'}}>
-        <StatusBar style="inverted" />
-        <SkeletonPlaceholder>
-          <SkeletonPlaceholder.Item height={hp(99)}>
-            <SkeletonPlaceholder.Item marginTop={25} padding={25} flexDirection={'row'} alignItems={'center'} justifyContent={'space-between'}>
-              <SkeletonPlaceholder.Item
-                width={wp(50)}
-                height={20}
-                borderRadius={5}
-              />
-              <SkeletonPlaceholder.Item
-                width={wp(12)}
-                height={wp(12)}
-                borderRadius={100}
-              />
-            </SkeletonPlaceholder.Item>
-            <SkeletonPlaceholder.Item padding={25}>
-              <SkeletonPlaceholder.Item 
-                width={wp(85)}
-                height={wp(50)}
-                borderRadius={10}
-              />
-            </SkeletonPlaceholder.Item>
-            <SkeletonPlaceholder.Item padding={25}>
-              <SkeletonPlaceholder.Item 
-                width={wp(40)}
-                height={20}
-                borderRadius={5}
-              />
-            </SkeletonPlaceholder.Item>
-            <SkeletonPlaceholder.Item padding={25} flexDirection={'row'} alignItems={'center'}>
-              <SkeletonPlaceholder.Item 
-                width={wp(50)}
-                height={wp(50)}
-                borderRadius={10}
-              />
-              <SkeletonPlaceholder.Item 
-                width={wp(50)}
-                height={wp(50)}
-                borderRadius={10}
-                marginLeft={wp(10)}
-              />
-            </SkeletonPlaceholder.Item>
-            <SkeletonPlaceholder.Item padding={25}>
-              <SkeletonPlaceholder.Item 
-                width={wp(40)}
-                height={20}
-                borderRadius={5}
-              />
-            </SkeletonPlaceholder.Item>
-            <SkeletonPlaceholder.Item padding={25} flexDirection={'row'} alignItems={'center'}>
-              <SkeletonPlaceholder.Item 
-                width={wp(50)}
-                height={wp(60)}
-                borderRadius={10}
-              />
-              <SkeletonPlaceholder.Item 
-                width={wp(50)}
-                height={wp(60)}
-                borderRadius={10}
-                marginLeft={wp(10)}
-              />
-            </SkeletonPlaceholder.Item>
-            <SkeletonPlaceholder.Item padding={25}>
-              <SkeletonPlaceholder.Item 
-                width={wp(40)}
-                height={20}
-                borderRadius={5}
-              />
-            </SkeletonPlaceholder.Item>
-            <SkeletonPlaceholder.Item padding={25} flexDirection={'row'} alignItems={'center'}>
-              <SkeletonPlaceholder.Item 
-                width={wp(50)}
-                height={wp(60)}
-                borderRadius={10}
-              />
-              <SkeletonPlaceholder.Item 
-                width={wp(50)}
-                height={wp(60)}
-                borderRadius={10}
-                marginLeft={wp(10)}
-              />
-            </SkeletonPlaceholder.Item>
-          </SkeletonPlaceholder.Item>
-        </SkeletonPlaceholder>
-        <View style={{position: 'absolute', bottom: 0, backgroundColor: '#fafafa', width: '100%'}}>
-            <SkeletonPlaceholder>
-              <SkeletonPlaceholder.Item paddingTop={15} padding={10} flexDirection={'row'} alignItems={'center'}>
-                  <SkeletonPlaceholder.Item 
-                    width={wp(9)}
-                    height={wp(9)}
-                    marginLeft={wp(11)}
-                    borderRadius={10}
-                  />
-                  <SkeletonPlaceholder.Item 
-                    width={wp(9)}
-                    height={wp(9)}
-                    marginLeft={wp(23)}
-                    borderRadius={10}
-                  />
-                  <SkeletonPlaceholder.Item 
-                    width={wp(9)}
-                    height={wp(9)}
-                    marginLeft={wp(23)}
-                    borderRadius={10}
-                  />
-              </SkeletonPlaceholder.Item>
-            </SkeletonPlaceholder>
+    if (loading == 'true') {
+      return (
+        <View style={{flex: 1, backgroundColor: '#fafafa', justifyContent: 'center', alignItems: 'center'}}>
+          <StatusBar style="inverted" />
+          <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
         </View>
-      </View>
-    )
+      )
+    }
 
 
 
     return (
-      <View style={{backgroundColor: '#fafafa', flex: 1}}>
-        <Draggable
-          renderText={<MaterialCommunityIcons name="cart-outline" size={wp(8)} color="#6aab9e" />}
-          renderColor={'black'}
-          renderSize={50} 
-          x={wp(80)}
-          y={hp(80)}
-          z={15}
-          isCircle={true}
-          onShortPressRelease={() => navigation.navigate('cart')}
-          touchableOpacityProps={{activeOpacity: 1}}
-        />
-        <View style={{backgroundColor: '#fafafa', paddingBottom: 25}}>
+      <View style={{backgroundColor: '#fcfcfc', flex: 1}}>
+        <StatusBar style="inverted" />
+        <View style={{backgroundColor: '#fcfcfc', paddingBottom: 25}}>
         <Text></Text>
         </View>
-        <ScrollView
+        <Animated.ScrollView
+          showsVerticalScrollIndicator={false}
+          overScrollMode={'never'}
           bounces={false}// for ios 
           scrollEventThrottle={16}
+          contentContainerStyle={{paddingTop: 60, paddingBottom: 75}}
           onScroll={Animated.event(
             [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false}
+            {useNativeDriver: true}
             
           )}
           >
           <StatusBar style="inverted" />
           
-          <View style={styles.container}>
-            <Image source={require('../assets/splash.png')} style={{width: 50, height: 50, alignSelf: 'center'}} />
-            <View style={{flexDirection: 'row', alignItems: 'center', padding: 25, paddingTop: 15}}>
-              <View style={{flex: 1}}>
-                <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), color: '#228f7b'}}> {isLogin ? userData.name ? 'Hello, ' + userData.name + '.' : 'Hello !': 'Hello !'}</Text>
-              </View>
-              <CopilotStep text={isLogin ? "Manage your profile" : 'Login Here'} order={4} name={'Profile'}>
-                <CoPilotTouchableOpacity onPress={() => navigation.navigate('Profile')}>
-                  {isLogin ? userData.image ? <Image source={{uri: userData.image}} style={{width: 50, height: 50, borderRadius: 50}} />: <LottieView source={require('../assets/animations/43110-male-avatar.json')} autoPlay={true} loop={true} style={{width: 75}}  />: <FontAwesome5 name="sign-in-alt" size={wp(6)} color="black" />}
-                </CoPilotTouchableOpacity>
-              </CopilotStep>
-            </View>
+          <View>
             <Carousel
               ref={carouselRef}
               sliderWidth={screenWidth}
               itemWidth={screenWidth}
               data={bannerImages}
+              onContentSizeChange={(w, h) => {
+                setcompleteScrollBarWidth(w);
+              }}
+              onLayout={onLayout}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { x: scrollIndicator } } }],
+                { useNativeDriver: true },
+              )}
               renderItem={({item, index}, parallaxProps) => {
                   return (
                     <TouchableOpacity onPress={touched(index)} activeOpacity={0.9}>
@@ -909,47 +835,80 @@ function Home(props){
               hasParallaxImages={true}
               keyExtractor={(item, index) => index.toString()}
               onSnapToItem={(index) => setactiveSlide(index)}
-              enableMomentum={false}
               autoplay={true}
               autoplayDelay={10}
               autoplayInterval={2500}
+              pagingEnabled={true}
             />
-            {pagination()}
+            <View style={{width: wp(20), backgroundColor: '#ebebeb', borderRadius: 3, height: 4, alignSelf: 'center', marginBottom: 15}}>
+              <Animated.View
+              style={{
+                  width: scrollIndicatorSize - wp(40),
+                  transform: [{ translateX: scrollIndicatorPosition }],
+                  backgroundColor: '#249c86',
+                  borderRadius: 3,
+                  height: 4,
+                  elevation: 5,
+                  shadowColor: '#249c86',
+                  shadowOffset: {
+                      width: 0,
+                      height: 2,
+                  },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                  }}
+              />
+            </View>
 
           </View>
           
-          <View style={{backgroundColor: '#fafafa', padding: 25, paddingBottom: 0, marginTop: 50, paddingTop: 0}}>
-            <Text style={{fontFamily: 'sofia-black',fontSize: wp(4), color: 'grey'}}>IMMUNITY BOOSTERS</Text>
+          <View style={{backgroundColor: '#fcfcfc', padding: 25, paddingBottom: 0, marginTop: 50, paddingTop: 0}}>
+            <Text style={{fontFamily: 'Maven-bold',fontSize: wp(4.5), color: 'black'}}>CATEGORIES</Text>
           </View>
-          <View
-            style={{paddingLeft: 25, flexDirection: 'row', alignItems: 'center', paddingRight: 25}}
-          >
-            {homeProductImages.slice(0, 2).map((item, index) => {
-              
-                return (
-                  <View key={item.id} style={{flex: 1, marginTop: 15}}>
-                    <TouchableOpacity  onPress={() => navigation.navigate('HomeProducts', {from: item.category})} activeOpacity={0.9}>
-                      <View style={{alignSelf: index === 0 ? 'flex-start': 'flex-end', elevation: 5, borderRadius: 10, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000'}}>
-                        <Image source={{uri: item.image}} style={{width: wp(40), height: wp(40), borderRadius: 10}} />
-                        <LinearGradient colors={['rgba(255,255,255,0)', 'black']} start={{x: 0, y:0.3}} style={{position: 'absolute', top: 0, bottom: 0, left: 0,right: 0, borderRadius: 10}} ></LinearGradient>
-                        <View style={{position: 'absolute', left: 15, right: 15,bottom: 10}}>
-                          <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5),  color: 'white'}}>{item.title}</Text>
-                          <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3),  color: 'white', marginTop: 5}} numberOfLines={2}>{item.description}</Text>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                )
-              
-            })}
-          </View>
-          <View style={{backgroundColor: '#fafafa', padding: 25, paddingTop: 0, paddingBottom: 0, marginTop: 50, flexDirection: 'row', alignItems: 'center'}}>
-            <Text style={{fontFamily: 'sofia-black',fontSize: wp(4), color: 'grey', flex: 1}}>RECENT RECIPES</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Recipes')}>
-              <Text style={{fontFamily: 'sofia-black',fontSize: wp(4), color: '#249C86'}}>SEE ALL</Text>
+          <View style={{marginLeft: 25, flexDirection: 'row', alignItems: 'center', marginTop: 10, marginRight: 25, borderBottomWidth: 1, borderBottomColor: '#ebebeb'}}>
+            <TouchableOpacity onPress={() => navigation.navigate('Fruits', {category: 'Fruits'})} style={{flex: 1, paddingBottom: 25, margin: 25, marginLeft: 0, marginBottom: 0}} activeOpacity={1}>
+              <Image source={require('../assets/fruits.png')} style={{width: 60, height: 60, alignSelf: 'center'}} />
+              <Text style={{fontFamily: 'Maven-sem',fontSize: wp(4), color: 'black', textAlign: 'center', marginTop: 25}}>Fruits</Text>
+            </TouchableOpacity>
+            <Text style={{width: 1.3, height: '100%', backgroundColor: '#ebebeb', marginRight: 15}}></Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Fruits', {category: 'Dried-fruits'})} style={{flex: 1, paddingBottom: 25, margin: 25, marginLeft: 0, marginBottom: 0}} activeOpacity={1}>
+              <Image source={require('../assets/dried-fruits.png')} style={{width: 60, height: 60, alignSelf: 'center'}} />
+              <Text style={{fontFamily: 'Maven-sem',fontSize: wp(4), color: 'black', textAlign: 'center', marginTop: 25}}>Dried-Fruits</Text>
             </TouchableOpacity>
           </View>
-          <FlatList 
+          <View style={{marginLeft: 25, flexDirection: 'row', alignItems: 'center', marginRight: 25, borderBottomWidth: 1, borderBottomColor: '#ebebeb'}}>
+            <TouchableOpacity onPress={() => navigation.navigate('Fruits', {category: 'Exotics'})} style={{flex: 1, paddingBottom: 25, margin: 25, marginLeft: 0, marginBottom: 0}} activeOpacity={1}>
+              <Image source={require('../assets/broccoli.png')} style={{width: 60, height: 60, alignSelf: 'center'}} />
+              <Text style={{fontFamily: 'Maven-sem',fontSize: wp(4), color: 'black', textAlign: 'center', marginTop: 25}}>Exotics</Text>
+            </TouchableOpacity>
+            <Text style={{width: 1.3, height: '100%', backgroundColor: '#ebebeb', marginRight: 15}}></Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Fruits', {category: 'Immunity-Boosters'})} style={{flex: 1, paddingBottom: 25, margin: 25, marginLeft: 0, marginBottom: 0}} activeOpacity={1}>
+              <Image source={require('../assets/imb.png')} style={{width: 60, height: 60, alignSelf: 'center'}} />
+              <Text style={{fontFamily: 'Maven-sem',fontSize: wp(4), color: 'black', textAlign: 'center', marginTop: 25}}>Immunity-Boosters</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={{marginLeft: 25, flexDirection: 'row', alignItems: 'center', marginRight: 25, borderBottomWidth: 0, borderBottomColor: '#ebebeb'}}>
+            <TouchableOpacity onPress={() => navigation.navigate('Fruits', {category: 'Other'})} style={{flex: 1, paddingBottom: 25, margin: 25, marginLeft: 0, marginBottom: 0}} activeOpacity={1}>
+              <Image source={require('../assets/other.png')} style={{width: 60, height: 60, alignSelf: 'center'}} />
+              <Text style={{fontFamily: 'Maven-sem',fontSize: wp(4), color: 'black', textAlign: 'center', marginTop: 25}}>Other</Text>
+            </TouchableOpacity>
+            <Text style={{width: 1.3, height: '100%', backgroundColor: '#ebebeb', marginRight: 15}}></Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Recipes')} style={{flex: 1, paddingBottom: 25, margin: 25, marginLeft: 0, marginBottom: 0}} activeOpacity={1}>
+              <Image source={require('../assets/recipes.png')} style={{width: 75, height: 75, alignSelf: 'center'}} />
+              <Text style={{fontFamily: 'Maven-sem',fontSize: wp(4), color: 'black', textAlign: 'center', marginTop: 25}}>Recipes</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* <View style={{marginTop: 50, paddingLeft: 25, paddingRight: 25, padding: 30, backgroundColor: '#ffffff', marginLeft: 25, marginRight: 25, borderRadius: 15, flexDirection: 'row', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}}>
+            <Image source={require('../assets/shopping-history.png')} style={{width: 100, height: 100}} />
+            <View style={{flex: 1, marginLeft: 10}}>
+              <Text style={{fontFamily: 'Maven-sem',fontSize: wp(5), color: 'black', textAlign: 'center'}}>Choose from your past orders!</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('PreviousOrders')} activeOpacity={1}>
+                <Text style={{fontFamily: 'Maven-sem',fontSize: wp(4), color: '#249c86', textAlign: 'center', marginTop: 10}}>View &rarr;</Text>
+              </TouchableOpacity>
+            </View>
+          </View> */}
+          {/* <FlatList 
               data={recipesList.slice(0, 2)}
               keyExtractor={(item, index) => index.toString()}
               contentContainerStyle={{paddingTop: 15, paddingLeft: 25, paddingBottom: 25}}
@@ -962,32 +921,32 @@ function Home(props){
                   </View>
                   <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
                     <MaterialIcons name="local-fire-department" size={wp(4.5)} color="#249C86" />
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
                     <Ionicons name="ios-people" size={wp(4)} color="#249c86" />
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings}</Text>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings}</Text>
                   </View>
                   <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 5}}>
                     <View style={{ flex: 1, alignItems: 'flex-end'}}>
                       <MaterialIcons name="favorite" size={wp(4)} color="#249C86" />
                     </View>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                   </View>
-                  <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginTop: 15, color: 'black'}}>{item.name}</Text>
+                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(5), marginTop: 15, color: 'black'}}>{item.name}</Text>
                   <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
                     <View style={{flex: 1}}>
                       <TouchableOpacity style={{alignSelf: 'center'}} onPress={() => navigation.navigate('RecipeDetails', {recipe_id: item.id, recipe_ingredients: ingredients})}>
-                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
+                        <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
                       </TouchableOpacity>
                     </View>
                 </View>
             </View>
               )}
-            />
-          {previousOrderList !== undefined ? previousOrderList.length > 0 ? <View style={{backgroundColor: '#fafafa', padding: 25, paddingTop: 0, paddingBottom: 0, marginTop: 50, flexDirection: 'row', alignItems: 'center'}}>
-            <Text style={{fontFamily: 'sofia-black',fontSize: wp(4), color: 'grey', flex: 1}}>ORDER AGAIN</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('PreviousOrders')}>
-              <Text style={{fontFamily: 'sofia-black',fontSize: wp(4), color: '#249C86'}}>SEE ALL</Text>
+            /> */}
+          {/* {previousOrderList !== undefined ? previousOrderList.length > 0 ? <View style={{backgroundColor: '#fcfcfc', padding: 25, paddingTop: 0, paddingBottom: 0, marginTop: 50, flexDirection: 'row', alignItems: 'center'}}>
+            <Text style={{fontFamily: 'Maven-bold',fontSize: wp(4), color: 'grey', flex: 1}}>ORDER AGAIN</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('PreviousOrders')} activeOpacity={1}>
+              <Text style={{fontFamily: 'Maven-bold',fontSize: wp(4), color: '#249C86'}}>SEE ALL</Text>
             </TouchableOpacity>
           </View>: null: null}
             <ScrollView bounces={false} showsHorizontalScrollIndicator={false} horizontal={true} contentContainerStyle={{paddingTop: 15, paddingLeft: 25, paddingBottom: 25}}>
@@ -995,8 +954,8 @@ function Home(props){
                     return(
                         <View key={item.id} style={{marginRight: 50, backgroundColor: 'white', padding: 25, paddingTop: 15, paddingBottom: 15, borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}}>
                             <View style={{flex: 1}}>
-                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4)}}>Order #{item.id}</Text>
-                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'grey', marginTop: 2}}>{item.ordereddate}</Text>
+                                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4)}}>Order #{item.id}</Text>
+                                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3), color: 'grey', marginTop: 2}}>{item.ordereddate}</Text>
                             </View>
                             <ScrollView>
                               {previousOrderItems.map(item1 => {
@@ -1013,8 +972,8 @@ function Home(props){
                                                   })
                                               : null}
                                               <View style={{marginLeft: 25, marginTop: 5}}>
-                                                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>{x.item_name} </Text>
-                                                  <Text style={{marginRight: 25, fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5, color: 'black'}}>{x.item_weight}     x{x.item_count}</Text>
+                                                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black'}}>{x.item_name} </Text>
+                                                  <Text style={{marginRight: 25, fontFamily: 'Maven-med', fontSize: wp(3.5), marginTop: 5, color: 'black'}}>{x.item_weight}     x{x.item_count}</Text>
                                               </View>
                                           </View>
                                       </View>: null
@@ -1024,12 +983,12 @@ function Home(props){
                             <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 25, marginBottom: 20}}></Text>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
                               <View style={{flex: 1, alignItems: 'flex-start'}}>
-                                <TouchableOpacity onPress={repeatOrder(item)} activeOpacity={0.5} >
-                                    <Text style={{fontSize: wp(3.5), color: '#249C86', fontFamily: 'Maison-bold'}}>Order Again</Text>
+                                <TouchableOpacity onPress={repeatOrder(item)} activeOpacity={1} >
+                                    <Text style={{fontSize: wp(3.5), color: '#249C86', fontFamily: 'Maven-sem'}}>Order Again</Text>
                                 </TouchableOpacity>
                               </View>
                               <View>
-                                <TouchableOpacity  onPress={() => navigation.navigate('PreviousOrders', {index: index})}>
+                                <TouchableOpacity  onPress={() => navigation.navigate('PreviousOrders', {index: index})} activeOpacity={1}>
                                     <Text style={{fontFamily: 'sofia-medium', fontSize: wp(3.5), color: 'black' }}>View &rarr;</Text>
                                 </TouchableOpacity>
                               </View>
@@ -1038,8 +997,8 @@ function Home(props){
                     )
                 }): null
               }
-            </ScrollView>
-        </ScrollView>
+            </ScrollView> */}
+        </Animated.ScrollView>
 
         <Modal
           isVisible={orderReceivedModal}
@@ -1050,93 +1009,53 @@ function Home(props){
           animationOut={'slideOutRight'}        
         >
           <LottieView source={require('../assets/animations/23211-receive-order.json')} autoPlay={true} loop={false} style={{alignSelf: 'center', width: '100%'}} onAnimationFinish={() => setOrderReceivedModal(false)} />
-          <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), textAlign: 'center', position: 'absolute', bottom: 100, alignSelf: 'center', color: 'black'}}>Order delivered successfully !</Text>
+          <Text style={{fontFamily: 'Maven-bold', fontSize: wp(6), textAlign: 'center', position: 'absolute', bottom: 100, alignSelf: 'center', color: 'black'}}>Order delivered successfully !</Text>
         </Modal>
-        <Animated.View style={{backgroundColor: 'rgba(235,235,235,0.95)', padding: 15, paddingLeft: 0, position: 'absolute', bottom: 50, width: '100%', transform: [{translateY: activeOrderLen > 0 ? slideUp : 150}]}}>
-          <View>
-            {activeOrderRespStatus === 200 ?
-              <Carousel 
-                itemWidth={wp(95)}
-                sliderWidth={screenWidth}
-                containerCustomStyle={{alignSelf: 'center'}}
-                data={activeOrders}
-                onSnapToItem={(index) => setactiveSlide1(index)}
-                renderItem={({item, index}) => {
-                  return (
-                    <View key={item.id} style={{flexDirection: 'row', alignItems: 'center'}}>
-                      {getStatus(item) === 'Order Placed' ?  
-                        <LottieView source={require('../assets/animations/40101-waiting-pigeon.json')} loop={true} autoPlay={true} style={{width: 50}} />
-                        : getStatus(item) === 'Order Confirmed' ? 
-                          <LottieView source={require('../assets/animations/64289-jiji.json')} loop={true} autoPlay={true} style={{width: 50}} />
-                        : getStatus(item) === 'Out for delivery' ? 
-                          <LottieView source={require('../assets/animations/delivery.json')} loop={true} autoPlay={true} style={{width: 70}} />
-                        : null}
-                      <Text style={{fontFamily: 'sf', textAlign: 'center', fontSize: wp(3), flex: 1, marginLeft: 5, marginRight: 10, color: 'black'}}>
-                        {getStatus(item) === 'Order Placed' ? 
-                          'Order placed successfully ! Please bear with us while we confirm your order !'
-                          : getStatus(item) === 'Order Confirmed' ? 
-                            'Thanks for your patience. We are packing your healthy box of happiness and will be delivered soon !'
-                          : getStatus(item) === 'Out for delivery' ? 
-                            'Your order is out for delivery !'
-                          : null}
-                      </Text>
-                      <TouchableOpacity style={{alignSelf: 'center'}} onPress={() => navigation.navigate('ActiveOrders', {activeOrder: item.id})}>
-                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>View</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )
-                }}
-              />
-            : null}
-            {activeOrderRespStatus === 200 ? 
-              activeOrders.length > 1 ?
-              <Pagination
-                dotsLength={activeOrders.length}
-                activeDotIndex={activeSlide1}
-                containerStyle={{alignSelf: 'center', paddingVertical: 0, marginTop: 10, marginBottom: 5}}
-                dotStyle={{
-                    width: 20,
-                    height: 2,
-                    borderRadius: 0,
-                    backgroundColor: '#249C86'
-                }}
-                inactiveDotStyle={{
-                    // Define styles for inactive dots here
-                    backgroundColor: '#fff'
-                }}
-                inactiveDotOpacity={1}
-                inactiveDotScale={1}
-              />
-            : null
-            : null}
+        <Animated.View style={{transform: [{translateY: headerHide}], position: 'absolute', left: 0, right: 0, backgroundColor: '#fcfcfc', elevation: headerShadow ? 5 : 0, paddingTop: 25, shadowColor: "#000", shadowOffset: headerShadow ? {width: 0, height: 2} : {width: 0, height: 0}, shadowOpacity: headerShadow ? 0.25 : 0, shadowRadius: headerShadow ? 3.84 : 0}}>
+          <View style={{flexDirection: 'row', alignItems: 'center', paddingRight: 25, paddingTop: 25, paddingBottom: 20}}>
+            <View style={{flex: 1}}><View style={{flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start'}} activeOpacity={1}>
+              <CopilotStep text={isLogin ? "Manage your profile" : 'Manage your profile'} order={4} name={'Profile'}>
+                  <CoPilotTouchableOpacity onPress={() => navigation.navigate('Profile')} style={{elevation: 1, shadowColor: '#fcfcfc', backgroundColor: '#fcfcfc', paddingLeft: 25}} activeOpacity={1}>
+                    {isLogin ? userData.image ? <Image source={{uri: userData.image}} style={{width: 40, height: 40, borderRadius: 50}} />: <LottieView source={require('../assets/animations/43110-male-avatar.json')} autoPlay={true} loop={true} style={{width: 60}}  />: <LottieView source={require('../assets/animations/43110-male-avatar.json')} autoPlay={true} loop={true} style={{width: 60}}  />}
+                  </CoPilotTouchableOpacity>
+              </CopilotStep>
+              <Animated.Text style={{fontFamily: 'Maven-bold', fontSize: wp(5), color: '#228f7b', marginLeft: 10, transform: [{translateX: hideGreet}]}}> {isLogin ? userData.name ? moment().format('HH') >= '0' && moment().format('HH') < '12' ? 'Good morning, ' + userData.name.match(/^\S*/) + '.' : moment().format('HH') >= '12' && moment().format('HH') < '17' ? 'Good afternoon, ' + userData.name.match(/^\S*/) + '.' : 'Good evening, ' + userData.name.match(/^\S*/) + '.' : moment().format('HH') >= '0' && moment().format('HH') < '12' ? 'Good morning.': moment().format('HH') >= '12' && moment().format('HH') < '17' ? 'Good afternoon.' : 'Good evening.' : moment().format('HH') >= '0' && moment().format('HH') < '12' ? 'Good morning.': moment().format('HH') >= '12' && moment().format('HH') < '17' ? 'Good afternoon.' : 'Good evening.'}</Animated.Text>
+            </View>
+            </View>
+            <View>
+              <TouchableOpacity onPress={() => navigation.navigate('cart')} style={{}} activeOpacity={1}><CustomIcon name="cart" size={wp(6)} color="black" style={{alignSelf: 'center'}} /></TouchableOpacity>
+              {cartBadge ? <View style={{position: 'absolute', borderRadius: 50, backgroundColor: '#249c86', width: 15, height: 15, right: -10, top: -8}}>
+              </View> : null}
+            </View>
+            
           </View>
         </Animated.View>
-        <View style={{width: '100%', backgroundColor: '#fafafa', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51, shadowColor: '#000'}}>
+        {/* <View style={{width: '100%', backgroundColor: '#fcfcfc', padding: 5, paddingTop: 10, flexDirection: 'row', alignItems: 'center', elevation: 15, shadowOffset: {width: 0, height: 7}, shadowOpacity: 0.43, shadowRadius: 9.51, shadowColor: '#000'}}>
           <View style={{flex: 1}}>
             <CopilotStep text="View offers of the day and other information " order={1} name={'Home'}>
               <CoPilotTouchableOpacity activeOpacity={1} style={{alignSelf: 'center'}}>
-                <CustomIcon name="home" size={wp(6)} color="#249c86" style={{alignSelf: 'center'}} />
-                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: '#249c86', textAlign: 'center'}}>Home</Text>
+                <CustomIcon name="home-b" size={wp(6)} color="#249c86" style={{alignSelf: 'center'}} />
+                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3), color: '#249c86', textAlign: 'center'}}>Home</Text>
               </CoPilotTouchableOpacity>
             </CopilotStep>
           </View>
           <View style={{flex: 1}}>
             <CopilotStep text="Explore all items and add to cart !" order={2} name={"Store"}>
               <CoPilotTouchableOpacity onPress={() => navigation.navigate('Fruits')} activeOpacity={1} style={{alignSelf: 'center'}}>
-                <CustomIcon name="store-1" size={wp(6)} color="black" style={{alignSelf: 'center'}} />
-                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Store</Text>
+                <CustomIcon name="store" size={wp(6)} color="black" style={{alignSelf: 'center'}} />
+                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Store</Text>
               </CoPilotTouchableOpacity>
             </CopilotStep>            
           </View>
           <View style={{flex: 1}}>
-            <CopilotStep text="View all the recipes here" order={3} name={"Recipes"}>
-              <CoPilotTouchableOpacity onPress={() => navigation.navigate('Recipes')} activeOpacity={1} style={{alignSelf: 'center'}}>
-                <CustomIcon name="salad-1" size={wp(6.5)} color="black" style={{alignSelf: 'center'}} />
-                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Recipes</Text>
+            <CopilotStep text="Start your subscription" order={3} name={"Recipes"}>
+              <CoPilotTouchableOpacity onPress={() => navigation.navigate('Subscription')} activeOpacity={1} style={{alignSelf: 'center'}}>
+                <CustomIcon name="subscription" size={wp(6.5)} color="black" style={{alignSelf: 'center'}} />
+                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3), color: 'black', textAlign: 'center'}}>Subscription</Text>
               </CoPilotTouchableOpacity>
             </CopilotStep>
           </View>          
-        </View>
+        </View> */}
       </View>
     )
 }
@@ -1150,7 +1069,6 @@ const styles = StyleSheet.create({
       paddingTop: hp(0)
     },
     imageContainer: {
-      flex: 1,
       alignSelf: 'center',
       width: '90%',
       height: 700*(screenWidth/1334),
@@ -1180,10 +1098,10 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
     },
     text: {
-      fontFamily: 'sofia-black',
+      fontFamily: 'Maven-bold',
     },
     modalContent: {
-      fontFamily: 'sofia-black',
+      fontFamily: 'Maven-bold',
       fontSize: wp(6),
       color: 'black',
     },
@@ -1281,7 +1199,7 @@ var mapStyle =
       "elementType": "geometry.fill",
       "stylers": [
           {
-              "color": "#fafafa"
+              "color": "#fcfcfc"
           },
           {
               "saturation": "-22"
@@ -1370,30 +1288,30 @@ const TooltipComponent = ({
   return (
     <View>
     <View style={{flex: 1}}>
-      <Text testID="stepDescription" style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{currentStep.text}</Text>
+      <Text testID="stepDescription" style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black'}}>{currentStep.text}</Text>
     </View>
     <View style={{marginTop: 10, flexDirection: 'row', justifyContent: 'flex-end'}}>
       {
         !isLastStep ?
-          <TouchableOpacity onPress={handleStop}>
-            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.skip || 'Skip'}</Text>
+          <TouchableOpacity onPress={handleStop} activeOpacity={1}>
+            <Text style={{padding: 10, fontFamily: 'Maven-sem', color: '#249c86'}}>{labels.skip || 'Skip'}</Text>
           </TouchableOpacity>
           : null
       }
       {
         !isFirstStep ?
-          <TouchableOpacity onPress={handlePrev}>
-            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.previous || 'Previous'}</Text>
+          <TouchableOpacity onPress={handlePrev} activeOpacity={1}>
+            <Text style={{padding: 10, fontFamily: 'Maven-sem', color: '#249c86'}}>{labels.previous || 'Previous'}</Text>
           </TouchableOpacity>
           : null
       }
       {
         !isLastStep ?
-          <TouchableOpacity onPress={handleNext}>
-            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.next || 'Next'}</Text>
+          <TouchableOpacity onPress={handleNext} activeOpacity={1}>
+            <Text style={{padding: 10, fontFamily: 'Maven-sem', color: '#249c86'}}>{labels.next || 'Next'}</Text>
           </TouchableOpacity> :
-          <TouchableOpacity onPress={handleStop}>
-            <Text style={{padding: 10, fontFamily: 'Maison-bold', color: '#249c86'}}>{labels.finish || 'Done'}</Text>
+          <TouchableOpacity onPress={handleStop} activeOpacity={1}>
+            <Text style={{padding: 10, fontFamily: 'Maven-sem', color: '#249c86'}}>{labels.finish || 'Done'}</Text>
           </TouchableOpacity>
       }
     </View>

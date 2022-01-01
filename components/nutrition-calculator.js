@@ -11,6 +11,7 @@ import Carousel, {ParallaxImage, Pagination} from 'react-native-snap-carousel';
 import { VictoryLabel, VictoryPie } from "victory-native";
 import Svg, { Path, G, Rect, Circle, Polygon, Ellipse, Defs } from 'react-native-svg';
 import { StatusBar } from 'expo-status-bar';
+import Ripple from 'react-native-material-ripple';
 
 const {width: screenWidth} = Dimensions.get('window');
 
@@ -145,7 +146,7 @@ export default function NutritionCalculator({ navigation, route }) {
             <StatusBar style="inverted" />
             <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{minHeight: hp(99)}}>
             <Image source={{uri: Item.image}} style={{width: 175, height: 175, alignSelf: 'center'}} />
-            <Text style={{fontFamily: 'sofia-black', textAlign: 'center', fontSize: wp(6), marginTop: 15, color: 'black'}}>{Item.name}</Text>
+            <Text style={{fontFamily: 'Maven-bold', textAlign: 'center', fontSize: wp(6), marginTop: 15, color: 'black'}}>{Item.name}</Text>
             <Text style={{backgroundColor: '#ebebeb', height: 1, marginTop: 25, width: '80%', alignSelf: 'center'}}></Text>
             <Carousel 
                 ref={carouselRef}
@@ -158,44 +159,44 @@ export default function NutritionCalculator({ navigation, route }) {
                 renderItem={({item, index}) => {
                     return (
                         <View style={{width: '80%', alignSelf: 'center'}}>
-                            {index === 0 ? <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginBottom: 25, marginTop: 25, color: 'black'}}>Choose how you want to measure the item in .</Text>: null}
+                            {index === 0 ? <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), marginBottom: 25, marginTop: 25, color: 'black'}}>Choose how you want to measure the item in .</Text>: null}
                             {index === 0 ? 
                                 <DropDownPicker 
                                     placeholder={'Select......'}
-                                    placeholderStyle={{fontFamily: 'Maison-bold'}}
+                                    placeholderStyle={{fontFamily: 'Maven-sem'}}
                                     open={open}
                                     value={customUnit}
                                     items={defUnits}
                                     setOpen={setOpen}
                                     setValue={(value) => (setCustomUnit(value), setTimeout(() => carouselRef.current.snapToNext(), 500))}
-                                    listItemLabelStyle={{fontFamily: 'Maison-bold'}}
-                                    selectedItemLabelStyle={{fontFamily: 'Maison-bold', color: '#249c86'}}
-                                    labelStyle={{color: '#249c86', fontFamily: 'Maison-bold'}}
+                                    listItemLabelStyle={{fontFamily: 'Maven-sem'}}
+                                    selectedItemLabelStyle={{fontFamily: 'Maven-sem', color: '#249c86'}}
+                                    labelStyle={{color: '#249c86', fontFamily: 'Maven-sem'}}
                                     dropDownContainerStyle={{elevation: 3, backgroundColor: 'white', borderColor: '#fcfcfc', borderTopColor: '#ebebeb', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.22, shadowRadius: 2.22, shadowColor: '#000'}}
                                     style={{elevation: 3, borderColor: '#fcfcfc', backgroundColor: '#fff', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.22, shadowRadius: 2.22, shadowColor: '#000'}}
                                     
                                 />
                                 : index === 1 ? 
                                     <View style={{marginTop: 25}}>
-                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Enter weight of the item .</Text>
+                                        <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black'}}>Enter weight of the item .</Text>
                                         
                                         <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, justifyContent: 'center'}}>
-                                            <TextInput style={{fontFamily: 'sf', fontSize: wp(4), width: '30%', borderBottomWidth: 1, borderBottomColor: '#ebebeb', textAlign: 'center'}} placeholder={'Weight'} onChangeText={(text) => setCustomWeight(text)} keyboardType={'numeric'} onSubmitEditing={() => customWeight ? (calculate(), carouselRef.current.snapToNext()) : null} />
-                                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 10, color: 'black'}}>{customUnit}</Text>
-                                            <TouchableOpacity style={{}} onPress={() => {carouselRef.current.snapToPrev()}}>
-                                                <Text style={{marginLeft: 5, fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}>(Change)</Text>
+                                            <TextInput style={{fontFamily: 'Maven-med', fontSize: wp(4), width: '30%', borderBottomWidth: 1, borderBottomColor: '#ebebeb', textAlign: 'center'}} placeholder={'Weight'} onChangeText={(text) => setCustomWeight(text)} keyboardType={'numeric'} onSubmitEditing={() => customWeight ? (calculate(), carouselRef.current.snapToNext()) : null} />
+                                            <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), marginLeft: 10, color: 'black'}}>{customUnit}</Text>
+                                            <TouchableOpacity style={{}} onPress={() => {carouselRef.current.snapToPrev()}} activeOpacity={1}>
+                                                <Text style={{marginLeft: 5, fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}>(Change)</Text>
                                             </TouchableOpacity>
                                         </View>
-                                        <TouchableOpacity disabled={customWeight ?  false : true} style={{opacity: customWeight ? 1 : 0.2, backgroundColor: '#6aab9e', alignSelf: 'center', padding: 10, paddingLeft: 15, paddingRight: 15, borderRadius: 5, marginTop: 25}} onPress={() => {calculate(), carouselRef.current.snapToNext()}}>
-                                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>Get values</Text>
-                                        </TouchableOpacity>
+                                        <Ripple activeOpacity={1} disabled={customWeight ?  false : true} style={{opacity: customWeight ? 1 : 0.2, backgroundColor: '#6aab9e', alignSelf: 'center', padding: 10, paddingLeft: 15, paddingRight: 15, borderRadius: 10, marginTop: 25}} onPress={() => {calculate(), carouselRef.current.snapToNext()}} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                                            <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black'}}>Get values</Text>
+                                        </Ripple>
                                         
                                     </View>
                                 : index === 2 ?
                                     <View>
                                         <View style={{flexDirection: 'row', alignItems: 'center',  marginTop: 25}}>
-                                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Nutrition in </Text>
-                                            <Text style={{color: '#249c86', fontFamily: 'Maison-bold', fontSize: wp(4)}}>{customWeight} {customUnit}</Text>
+                                            <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black'}}>Nutrition in </Text>
+                                            <Text style={{color: '#249c86', fontFamily: 'Maven-sem', fontSize: wp(4)}}>{customWeight} {customUnit}</Text>
                                         </View>
                                         <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 35}}>
                                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
@@ -215,8 +216,8 @@ export default function NutritionCalculator({ navigation, route }) {
                                                 </View>
                                                 
                                                 <View style={{flex: 1}}>
-                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#c58c85'}}>Protein</Text>
-                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{protein} g</Text>
+                                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#c58c85'}}>Protein</Text>
+                                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black'}}>{protein} g</Text>
                                                 </View>
                                             </View>
                                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
@@ -235,8 +236,8 @@ export default function NutritionCalculator({ navigation, route }) {
                                                     </Svg>
                                                 </View>
                                                 <View style={{flex: 1}}>
-                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'grey'}}>Sugar</Text>
-                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{sugar} g</Text>
+                                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'grey'}}>Sugar</Text>
+                                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black'}}>{sugar} g</Text>
                                                 </View>
                                             </View>
                                         </View>
@@ -261,8 +262,8 @@ export default function NutritionCalculator({ navigation, route }) {
                                                 </View>
                                                 
                                                 <View style={{flex: 1}}>
-                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'green'}}>Carbs</Text>
-                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{carbs} g</Text>
+                                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'green'}}>Carbs</Text>
+                                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black'}}>{carbs} g</Text>
                                                 </View>
                                             </View>
                                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
@@ -281,15 +282,15 @@ export default function NutritionCalculator({ navigation, route }) {
                                                     </Svg>
                                                 </View>
                                                 <View style={{flex: 1}}>
-                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#8b8000'}}>Fat</Text>
-                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>{fat} g</Text>
+                                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#8b8000'}}>Fat</Text>
+                                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black'}}>{fat} g</Text>
                                                 </View>
                                             </View>
                                         </View>
                                         <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 50, justifyContent: 'center'}}>
                                             <MaterialIcons name="local-fire-department" size={wp(4)} color="#249C86" />
-                                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 5, color: 'grey'}}>Calorie intake -</Text>
-                                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), marginLeft: 5, color: 'black'}}>{calories} k cal</Text>
+                                            <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), marginLeft: 5, color: 'grey'}}>Calorie intake -</Text>
+                                            <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), marginLeft: 5, color: 'black'}}>{calories} k cal</Text>
                                         </View>
                                     </View>
                                 : null

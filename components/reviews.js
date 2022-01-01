@@ -11,10 +11,16 @@ import { StatusBar } from 'expo-status-bar';
 import Modal from 'react-native-modal';
 import { showMessage, hideMessage } from "react-native-flash-message";
 import * as SecureStore from 'expo-secure-store';
+import NetInfo from "@react-native-community/netinfo";
+import Ripple from 'react-native-material-ripple';
 
 const {width: screenWidth} = Dimensions.get('window');
 
 export default function Reviews({ route, navigation }) {
+
+    const [mounted, setMounted] = useState(true);
+    const [isOffline, setIsOffline] = useState(false);
+    const [showIndic, setShowInidc] = useState(false);
 
     const [reviews, setReviews] = useState([]);
     const [storeData, setStoreData] = useState([]);
@@ -47,6 +53,28 @@ export default function Reviews({ route, navigation }) {
     const { rateItem } = route.params;
 
 
+    //Checks for internet connection
+    useEffect(() => {
+        NetInfo.fetch().then(state => {
+        if (!state.isConnected) {
+            setIsOffline(true);
+        }
+        })
+    }, [])
+
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+        if (!state.isConnected || !state.isInternetReachable) {
+            setIsOffline(true);
+        } 
+        })
+
+        return () => {
+            unsubscribe();
+        }
+    }, [])
+
+
     useEffect(() => {
         (async () => {
             const token = await SecureStore.getItemAsync('USER_TOKEN')
@@ -59,14 +87,17 @@ export default function Reviews({ route, navigation }) {
                     }
                 })
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-                .then(resp => (setReviews(resp.json.rating), setStoreData(resp.json.store_data) ))
+                .then(resp => {if (mounted) {setReviews(resp.json.rating), setStoreData(resp.json.store_data)} })
                 .catch(error => setError(error))
             } else {
-                navigation.navigate('Register')
+                setRespStatus(401);
             }
         })().catch(error => setError(error))
           
       
+        return () => {
+            setMounted(false);
+        }
   }, [])
 
 
@@ -83,10 +114,10 @@ export default function Reviews({ route, navigation }) {
                   body: JSON.stringify({id: rateItem.id})
               })
               .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
-              .then(resp => (setRatingItems(resp.json.items), setRespStatus(resp.status), setActiveItem(resp.json.items[0])))
+              .then(resp => {if (mounted) {setRatingItems(resp.json.items), setRespStatus(resp.status), setActiveItem(resp.json.items[0])}})
               .catch(error => setError(error))
             } else {
-              navigation.navigate('Register')
+                setRespStatus(401);
             }
           })().catch(error => setError(error))
     
@@ -136,11 +167,12 @@ export default function Reviews({ route, navigation }) {
                         message: 'Please provide a valid rating',
                         position: 'top',
                         floating: true,
-                        titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                        titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                         style: {alignItems: 'center'},
                         icon: 'auto',
                         type: 'warning',
-                        statusBarHeight: hp(3)
+                        statusBarHeight: hp(3),
+                        duration: 5000
                     })
                 }
         } else {
@@ -158,7 +190,71 @@ export default function Reviews({ route, navigation }) {
         }
     }
     
-    if (respStatus === 0){
+
+    const retry = async () => {
+        setShowInidc(true);
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
+        try {
+            if (token) {
+                fetch('http://192.168.0.156:8000/store/createrating/',{
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-type': 'application/json'
+                    }
+                })
+                .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => (setReviews(resp.json.rating), setStoreData(resp.json.store_data) ))
+                .catch(error => setError(error))
+
+                fetch('http://192.168.0.156:8000/store/getratingitems/',{
+                    method: 'POST',
+                    headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-type': 'application/json'
+                    },
+                    body: JSON.stringify({id: rateItem.id})
+                })
+                .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => (setRatingItems(resp.json.items), setRespStatus(resp.status), setActiveItem(resp.json.items[0])))
+                .then(() => setShowInidc(false))
+                .then(() => setIsOffline(false))
+                .catch(error => setError(error))
+            } else {
+                if (mounted) {
+                    setRespStatus(401);
+                    setShowInidc(false);
+                    setIsOffline(false);
+                }
+            }
+        } catch (error) {
+            setError(error)
+        } finally {
+            NetInfo.fetch().then(state => {
+                if (!state.isConnected) {
+                  setTimeout(() => setShowInidc(false), 3000)
+                }
+            })
+        }
+    }
+
+
+    if (isOffline) {
+        return (
+            <View style={{flex: 1, backgroundColor: '#fcfcfc'}}>
+                <StatusBar style="inverted" />
+                <Image source={require('../assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
+                <View style={{width: '80%', alignSelf: 'center'}}>
+                <Text style={{fontFamily: 'Maven-bold', fontSize: wp(6), marginTop: 50, textAlign: 'center', color: 'black'}}>Uh oh! Seems like you are disconnected !</Text>
+                {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={retry} activeOpacity={1}>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
+                </TouchableOpacity>: <LottieView source={require('../assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
+                </View>
+            </View>
+        )
+    }
+
+    if (respStatus === 0 || respStatus === 401){
         return (
             <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
                 <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
@@ -171,7 +267,7 @@ export default function Reviews({ route, navigation }) {
     return (
         <View style={styles.container}>
             <StatusBar style="inverted" />
-            <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), marginTop: 5, color: 'black', width: '90%', alignSelf: 'center'}}>Share your experience{'\n'}with us !</Text>
+            <Text style={{fontFamily: 'Maven-sem', fontSize: wp(8), marginTop: 5, color: 'black', width: '90%', alignSelf: 'center'}}>Share your experience{'\n'}with us !</Text>
             <Carousel 
                 ref={carouselRef}
                 data={['one', 'two']}
@@ -188,8 +284,8 @@ export default function Reviews({ route, navigation }) {
                                 {ratingItems.map((item) => {
                                     return (
                                         <View key={item.item_name} style={{marginRight: 35, marginTop: 25}}>
-                                            <TouchableOpacity onPress={() => (setActiveItem(item), setSliderValue(1), setSliderPosition(1))} activeOpacity={0.8}>
-                                                <Text style={{fontSize: wp(4.5), fontFamily: 'Maison-bold', color: activeItem.item_name === item.item_name ? '#249c86' : 'black', opacity: activeItem.item_name === item.item_name ? 1: 0.1, textDecorationLine: activeItem.item_name === item.item_name ? 'underline': 'none', fontWeight: 'bold'}}>{item.item_name}</Text>
+                                            <TouchableOpacity onPress={() => (setActiveItem(item), setSliderValue(1), setSliderPosition(1))} activeOpacity={1}>
+                                                <Text style={{fontSize: wp(4.5), fontFamily: 'Maven-sem', color: activeItem.item_name === item.item_name ? '#249c86' : 'black', opacity: activeItem.item_name === item.item_name ? 1: 0.1, textDecorationLine: activeItem.item_name === item.item_name ? 'underline': 'none', fontWeight: 'bold'}}>{item.item_name}</Text>
                                             </TouchableOpacity>
                                         </View>
                                     )
@@ -198,91 +294,91 @@ export default function Reviews({ route, navigation }) {
                             <View style={{marginTop: 50}}>
                                 {exists() ? 
                                     <View style={{alignItems: 'center'}}>
-                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), marginBottom: 25, color: 'black'}}>You have rated {activeItem.item_name} : </Text>
+                                        <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4.5), marginBottom: 25, color: 'black'}}>You have rated {activeItem.item_name} : </Text>
                                         {exists() === 1 ? emojis[0]: exists() === 2 ? emojis[1]: exists() === 3 ? emojis[2]: exists() === 4 ? emojis[3]: exists() === 5 ? emojis[4] : null } 
-                                        <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5), color: 'black'}}>{exists() === 1 ? 'Ugh ! Terrible !': exists() === 2 ? 'Bad': exists() === 3 ? 'Could have been better !' : exists() === 4 ? 'Good': exists() === 5 ? 'Awesome': null}</Text>
-                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#6aab9e', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
-                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Next</Text>
+                                        <Text style={{marginTop: 25, fontFamily: 'Maven-sem', textAlign: 'center', fontSize: wp(5.5), color: 'black'}}>{exists() === 1 ? 'Ugh ! Terrible !': exists() === 2 ? 'Bad': exists() === 3 ? 'Could have been better !' : exists() === 4 ? 'Good': exists() === 5 ? 'Awesome': null}</Text>
+                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#6aab9e', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={1}>
+                                            <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', color: 'black'}}>Next</Text>
                                         </TouchableOpacity>
                                     </View> :
                                     <View>
                                         <View style={{alignItems: 'center'}}>
                                             {sliderValue === 1 ? emojis[0]: sliderValue === 2 ? emojis[1]: sliderValue === 3 ? emojis[2]: sliderValue === 4 ? emojis[3]: sliderValue === 5 ? emojis[4]:  null}
                                         </View>
-                                        <Text style={{marginTop: 25, fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5.5), color: 'black'}}>{sliderValue === 1 ? 'Ugh ! Terrible !': sliderValue === 2 ? 'Bad': sliderValue === 3 ? 'Could have been better !' : sliderValue === 4 ? 'Good': sliderValue === 5 ? 'Awesome': null}</Text>
+                                        <Text style={{marginTop: 25, fontFamily: 'Maven-sem', textAlign: 'center', fontSize: wp(5.5), color: 'black'}}>{sliderValue === 1 ? 'Ugh ! Terrible !': sliderValue === 2 ? 'Bad': sliderValue === 3 ? 'Could have been better !' : sliderValue === 4 ? 'Good': sliderValue === 5 ? 'Awesome': null}</Text>
                                         <Slider style={{marginTop: 25, width: '60%', alignSelf: 'center'}} minimumValue={1} maximumValue={5} onValueChange={(value) => (setSliderValue(value), setSliderPosition(value))} step={1} value={sliderPosition} thumbTintColor={'#6aab9e'} minimumTrackTintColor={'#6aab9e'} />
                                         <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 45}}>
                                             <Ionicons name="ios-chatbox-ellipses" size={wp(4.5)} color="#6aab9e" />
                                             <View style={{marginLeft: 5}}>
-                                                <Text style={{fontSize: wp(4.5), fontFamily: 'Maison-bold', color: 'black'}}>Wanna leave a comment?</Text>
+                                                <Text style={{fontSize: wp(4.5), fontFamily: 'Maven-sem', color: 'black'}}>Wanna leave a comment?</Text>
                                             </View>
                                         </View>
-                                        <TextInput style={{fontFamily: 'sf', fontSize: wp(4), width: wp(50), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} onChangeText={(text) => setComment(text)} />
-                                        <TouchableOpacity style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#6aab9e', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => carouselRef.current.snapToNext()} activeOpacity={0.8}>
-                                            <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Next</Text>
-                                        </TouchableOpacity>
+                                        <TextInput style={{fontFamily: 'Maven-med', fontSize: wp(4), width: wp(50), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} onChangeText={(text) => setComment(text)} />
+                                        <Ripple style={{marginTop: 75, alignSelf: 'center', padding: 10, backgroundColor: '#6aab9e', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => carouselRef.current.snapToNext()} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                                            <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', color: 'black'}}>Next</Text>
+                                        </Ripple>
                                     </View>
                                 }
                             </View>
                         </ScrollView>
                         : 
                         <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{marginTop: 40, width: '90%', alignSelf: 'center', paddingBottom: 25}}>
-                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), color: 'black'}}>Rate packaging and delivery</Text>
+                            <Text style={{fontFamily: 'Maven-sem', fontSize: wp(6), color: 'black'}}>Rate packaging and delivery</Text>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, justifyContent: 'space-between'}}>
-                                <TouchableOpacity onPress={() => (setDelPackRating(1), emoji1.current.play())} activeOpacity={0.8}>
+                                <TouchableOpacity onPress={() => (setDelPackRating(1), emoji1.current.play())} activeOpacity={1}>
                                     <LottieView source={require('../assets/animations/42754-angry-face-with-horns.json')} style={{height: 45, opacity: delPackRating === 1 ? 1 : 0.4}} ref={emoji1} loop={false} />
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={() => (setDelPackRating(2), emoji2.current.play())} activeOpacity={0.8}>
+                                <TouchableOpacity onPress={() => (setDelPackRating(2), emoji2.current.play())} activeOpacity={1}>
                                     <LottieView source={require('../assets/animations/42753-angry-face.json')} style={{height: 50, opacity: delPackRating === 2 ? 1 : 0.4}} ref={emoji2} loop={false} />
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={() => (setDelPackRating(3), emoji3.current.play())} activeOpacity={0.8}>
+                                <TouchableOpacity onPress={() => (setDelPackRating(3), emoji3.current.play())} activeOpacity={1}>
                                     <LottieView source={require('../assets/animations/43008-expressionless-face.json')} style={{height: 50, opacity: delPackRating === 3 ? 1 : 0.4}} ref={emoji3} loop={false} />
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={() => (setDelPackRating(4), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''), emoji4.current.play())} activeOpacity={0.8}>
+                                <TouchableOpacity onPress={() => (setDelPackRating(4), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''), emoji4.current.play())} activeOpacity={1}>
                                     <LottieView source={require('../assets/animations/42762-beaming-face-with-smiling-eyes.json')} style={{height: 50, opacity: delPackRating === 4 ? 1 : 0.4}} ref={emoji4} loop={false} />
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={() => (setDelPackRating(5), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''), emoji5.current.play())} activeOpacity={0.8}>
+                                <TouchableOpacity onPress={() => (setDelPackRating(5), setProblem1(''), setProblem2(''), setProblem3(''), setProblem4(''), setProblem5(''), emoji5.current.play())} activeOpacity={1}>
                                     <LottieView source={require('../assets/animations/43010-kissing.json')} style={{height: 50, opacity: delPackRating === 5 ? 1 : 0.4}} ref={emoji5} loop={false} />
                                 </TouchableOpacity>
                             </View>
                             {delPackRating >0 && delPackRating <=3 ? 
                                 <View style={{marginTop: 30}}>
-                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Sorry to hear that! Please tell us what went wrong</Text>
+                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black'}}>Sorry to hear that! Please tell us what went wrong</Text>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
-                                        <TouchableOpacity style={{flex: 1, marginRight: 25, backgroundColor: problem1 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem1 !== '' ? setProblem1(''): setProblem1('Items were damaged ')} activeOpacity={0.8}>
-                                            <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Items were damaged</Text>
+                                        <TouchableOpacity style={{flex: 1, marginRight: 25, backgroundColor: problem1 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem1 !== '' ? setProblem1(''): setProblem1('Items were damaged ')} activeOpacity={1}>
+                                            <Text style={{fontFamily: 'Maven-med', textAlign: 'center', color: 'black'}}>Items were damaged</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem2 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem2 !== '' ? setProblem2(''): setProblem2('Delivery man was impolite ')} activeOpacity={0.8}>
-                                            <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Delivery man was impolite</Text>
+                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem2 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem2 !== '' ? setProblem2(''): setProblem2('Delivery man was impolite ')} activeOpacity={1}>
+                                            <Text style={{fontFamily: 'Maven-med', textAlign: 'center', color: 'black'}}>Delivery man was impolite</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 25}}>
-                                        <TouchableOpacity style={{flex: 1, marginRight: 15, backgroundColor: problem3 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem3 !== '' ? setProblem3(''): setProblem3("Packing wasn't up-to mark ")} activeOpacity={0.8}>
-                                            <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Packing wasn't up-to mark</Text>
+                                        <TouchableOpacity style={{flex: 1, marginRight: 15, backgroundColor: problem3 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem3 !== '' ? setProblem3(''): setProblem3("Packing wasn't up-to mark ")} activeOpacity={1}>
+                                            <Text style={{fontFamily: 'Maven-med', textAlign: 'center', color: 'black'}}>Packing wasn't up-to mark</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem4 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem4 !== '' ?(setProblem4(''), setProblem5('')): setProblem4('other ')} activeOpacity={0.8}>
-                                            <Text style={{fontFamily: 'sf', textAlign: 'center', color: 'black'}}>Other</Text>
+                                        <TouchableOpacity style={{flex: 1, backgroundColor: problem4 === '' ? 'white' :'#6aab9e', padding: 10, borderRadius: 50, borderWidth: 1, borderColor: '#6aab9e'}} onPress={() => problem4 !== '' ?(setProblem4(''), setProblem5('')): setProblem4('other ')} activeOpacity={1}>
+                                            <Text style={{fontFamily: 'Maven-med', textAlign: 'center', color: 'black'}}>Other</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <View style={{display: problem4 === '' ? 'none': 'flex', marginTop: 25}}>
-                                        <Text style={{fontFamily: 'Maison-bold', color: 'black'}}>Please specify the reason</Text>
-                                        <TextInput style={{fontFamily: 'sf', fontSize: wp(4), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} value={problem5} onChangeText={(text) => setProblem5(text)} />
+                                        <Text style={{fontFamily: 'Maven-sem', color: 'black'}}>Please specify the reason</Text>
+                                        <TextInput style={{fontFamily: 'Maven-med', fontSize: wp(4), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} value={problem5} onChangeText={(text) => setProblem5(text)} />
                                     </View>
                                 </View>
                                 : 
                                 delPackRating === 4 ?
                                 <View style={{marginTop: 30}}>
-                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Glad to hear that! Tell us what we can improve. (optional)</Text>
-                                    <TextInput style={{fontFamily: 'sf', fontSize: wp(4), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} value={problem5} onChangeText={(text) => setProblem5(text)} />
+                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black'}}>Glad to hear that! Tell us what we can improve. (optional)</Text>
+                                    <TextInput style={{fontFamily: 'Maven-med', fontSize: wp(4), marginTop: 10, color: 'black'}} placeholder={'Write Here...'} multiline={true} value={problem5} onChangeText={(text) => setProblem5(text)} />
                                 </View>
                                 : 
                                 delPackRating === 5 ?
-                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginTop: 30, color: 'black'}}>Awesome ! We will do our best to continue this experience with you !</Text>
+                                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), marginTop: 30, color: 'black'}}>Awesome ! We will do our best to continue this experience with you !</Text>
                                 : null
                             }
-                            <TouchableOpacity style={{marginTop: 50, alignSelf: 'center', padding: 10, backgroundColor: '#6aab9e', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => (createDelPackRating(), createRating(activeItem.item_name))} activeOpacity={0.8}>
-                                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Done</Text>
-                            </TouchableOpacity>
+                            <Ripple style={{marginTop: 50, alignSelf: 'center', padding: 10, backgroundColor: '#6aab9e', borderRadius: 5, width: '50%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => (createDelPackRating(), createRating(activeItem.item_name))} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                                <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', color: 'black'}}>Done</Text>
+                            </Ripple>
                             <Modal
                                 isVisible={showModal}
                                 useNativeDriver={true}
@@ -302,7 +398,7 @@ export default function Reviews({ route, navigation }) {
                                     <LottieView source={require('../assets/animations/43010-kissing.json')} style={{height: wp(30), alignSelf: 'center'}} autoPlay={true} loop={false} onAnimationFinish={() => (setShowModal(false), navigation.goBack())} />
                                 : <Text>null</Text>
                                 }
-                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black', marginTop: 100, textAlign: 'center'}}>Thank you for taking the time to leave a rating !</Text>
+                                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(5), color: 'black', marginTop: 100, textAlign: 'center'}}>Thank you for taking the time to leave a rating !</Text>
                             </Modal>
                         </ScrollView>
                     )

@@ -6,7 +6,6 @@ import { useIsFocused } from '@react-navigation/native';
 import { Ionicons, FontAwesome, FontAwesome5, MaterialCommunityIcons, MaterialIcons, Feather } from "@expo/vector-icons";
 import Svg, { Path, G, Rect, Circle } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 import { StatusBar } from 'expo-status-bar';
 import LottieView from 'lottie-react-native';
 import * as SecureStore from 'expo-secure-store';
@@ -97,7 +96,7 @@ export default function FavRecipe({ navigation }){
                 data={recipesList}
                 keyExtractor={(item, index) => index.toString()}
                 contentContainerStyle={{paddingLeft: 50, paddingBottom: 100}}
-                ListEmptyComponent={() => (!recipesList.length ? <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
+                ListEmptyComponent={() => (!recipesList.length ? <Text style={{fontFamily: 'Maven-sem', textAlign: 'center', fontSize: wp(5), color: 'grey', marginTop: 25}}>No recipes found !</Text>: null)}
                 renderItem={({ item }) => (
                     search(item) ?
                     <View style={{backgroundColor: 'white', marginTop: 15, marginBottom: 35, width: '90%', padding: 25, borderRadius: 25, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}} >
@@ -106,29 +105,29 @@ export default function FavRecipe({ navigation }){
                             </View>
                             <View style={{flex: 1, flexDirection: 'row', alignItems: 'center',  marginTop: 15, justifyContent: 'center'}}>
                               <MaterialIcons name="local-fire-department" size={wp(4.5)} color="#249C86" />
-                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
-                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
+                              <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), textAlign: 'center', color: 'grey'}}> {item.value1} </Text>
+                              <Text style={{fontFamily: 'Maven-sem', fontSize: wp(5), textAlign: 'center', color: 'grey'}}> | </Text>
                               <Ionicons name="ios-people" size={wp(4)} color="#249c86" />
-                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings} </Text>
+                              <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), textAlign: 'center', color: 'grey'}}>  Serves {item.servings} </Text>
                             </View>
                             <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 5}}>
                               <View style={{ flex: 1, alignItems: 'flex-end'}}>
                                 <MaterialIcons name="favorite" size={wp(4)} color="#249C86" />
                               </View>
-                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
+                              <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), textAlign: 'left', color: 'grey', flex: 1}}> {item.count} </Text>
                             </View>
-                            <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 15, color: 'black'}}>{item.name}</Text>
-                            <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 15, color: '#525252'}} numberOfLines={5} ellipsizeMode={'tail'}>{item.description}</Text>
+                            <Text style={{fontFamily: 'Maven-sem', fontSize: wp(6), marginTop: 15, color: 'black'}}>{item.name}</Text>
+                            <Text style={{fontFamily: 'Maven-med', fontSize: wp(3.5), marginTop: 15, color: '#525252'}} numberOfLines={5} ellipsizeMode={'tail'}>{item.description}</Text>
                             
-                            <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={() => navigation.navigate('RecipeDetails', {recipe_id: item.id, recipe_ingredients: ingredients})}>
-                                <Text style={{textAlign: 'right', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
+                            <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={() => navigation.navigate('RecipeDetails', {recipe_id: item.id, recipe_ingredients: ingredients})} activeOpacity={1}>
+                                <Text style={{textAlign: 'right', fontFamily: 'Maven-sem', fontSize: wp(3.5), color: '#249c86'}}>VIEW RECIPE</Text>
                             </TouchableOpacity>
                         </View>
                     : null
                     )}
                 />:
                 <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black'}}>No favorites added !</Text>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(5), color: 'black'}}>No favorites added !</Text>
                 </View>
             }
             </View>

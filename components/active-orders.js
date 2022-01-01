@@ -1,28 +1,49 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Image, Dimensions } from 'react-native';
 import Modal from 'react-native-modal';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottieView from 'lottie-react-native';
-import StepIndicator from 'react-native-step-indicator';
 import { Feather } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
+import NetInfo from "@react-native-community/netinfo";
 
+const {width: screenWidth} = Dimensions.get('window');
 
 export default function ActiveOrders({ navigation, route }) {
 
-    const { activeOrder } = route.params;
     const [mounted, setMounted] = useState(true);
+    const [isOffline, setIsOffline] = useState(false);
+    const [showIndic, setShowInidc] = useState(false);
 
     const [activeOrders, setActiveOrders] = useState([]);
-    const [orderStatus, setOrderStatus] = useState([]);
+    const [itemsList, setItemsList] = useState([]);
+    const [orderDetails, setOrderDetails] = useState([]);
     const [respStatus, setRespStatus] = useState(0);
-
-    const [showModal, setShowModal] = useState(false);
 
     const [error, setError] = useState(null);
 
+    //Checks for internet connection
+    useEffect(() => {
+        NetInfo.fetch().then(state => {
+        if (!state.isConnected) {
+            setIsOffline(true);
+        }
+        })
+    }, [])
+
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+        if (!state.isConnected || !state.isInternetReachable) {
+            setIsOffline(true);
+        } 
+        })
+
+        return () => {
+            unsubscribe();
+        }
+    }, [])
 
     useEffect(() => {
         (async () => {
@@ -37,13 +58,14 @@ export default function ActiveOrders({ navigation, route }) {
                 })
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                 .then(resp => {if(mounted) {
-                    setActiveOrders(resp.json.data);
-                    setOrderStatus(resp.json.orderstatus);
+                    setActiveOrders(resp.json.active_list);
+                    setItemsList(resp.json.items_list);
+                    setOrderDetails(resp.json.order_data);
                     setRespStatus(resp.status);
                 }})
                 .catch(error => setError(error))
             } else {
-                navigation.navigate('Register');
+                setRespStatus(404);
             }
         })().catch(error => setError(error))
 
@@ -53,113 +75,142 @@ export default function ActiveOrders({ navigation, route }) {
     }, [])
 
 
-    const getStatus = (item) => {
-        if (respStatus === 200) {
-            for (var i=0; i < orderStatus.length; i++) {
-                if (orderStatus[i].order_number === item.id) {
-                    return orderStatus[i].order_status;
+
+    const retry = async () => {
+        setShowInidc(true);
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
+        try {
+            if (token) {
+                fetch('http://192.168.0.156:8000/store/activeorders/',{
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-type': 'application/json'
+                    }
+                })
+                .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => {if(mounted) {
+                    setActiveOrders(resp.json.active_list);
+                    setItemsList(resp.json.items_list);
+                    setOrderDetails(resp.json.order_data);
+                    setRespStatus(resp.status);
+                }})
+                .then(() => setIsOffline(false))
+                .catch(error => setError(error))
+            } else {
+                if (mounted) {
+                    setRespStatus(404);
+                    setShowInidc(false);
+                    setIsOffline(false);
                 }
             }
+        } catch (error) {
+            setError(error)
+        } finally {
+            NetInfo.fetch().then(state => {
+                if (!state.isConnected) {
+                  setTimeout(() => setShowInidc(false), 3000)
+                }
+            })
         }
+    }
+
+
+    if (isOffline) {
+        return (
+            <View style={{flex: 1, backgroundColor: '#fcfcfc'}}>
+                <StatusBar style="inverted" />
+                <Image source={require('../assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
+                <View style={{width: '80%', alignSelf: 'center'}}>
+                <Text style={{fontFamily: 'Maven-bold', fontSize: wp(6), marginTop: 50, textAlign: 'center', color: 'black'}}>Uh oh! Seems like you are disconnected !</Text>
+                {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={retry} activeOpacity={1}>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
+                </TouchableOpacity>: <LottieView source={require('../assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
+                </View>
+            </View>
+        )
     }
 
 
     return (
         <View style={styles.container}>
             <StatusBar style="inverted" />
-                {respStatus === 200 ? 
-                    activeOrders.map((item) => {
-                        return item.id === activeOrder ? (
-                            <View key={item.id} style={{width: '85%', alignSelf: 'center', flex: 1, justifyContent: 'center'}} >
-                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(6), marginTop: 25, marginBottom: 25, color: 'black'}}>Order Details</Text>
-                                <StepIndicator
-                                    stepCount={3}
-                                    direction='vertical'
-                                    currentPosition={getStatus(item) === 'Order Placed' ? 0 : getStatus(item) === 'Order Confirmed' ? 1 : 2}
-                                    labels={[getStatus(item) === 'Order Placed' || getStatus(item) === 'Order Confirmed' || getStatus(item) === 'Out for delivery' ? 'Order placed successfully ! Please bear with us while we confirm your order !': null, 
-                                            getStatus(item) === 'Order Confirmed' || getStatus(item) === 'Out for delivery' ? 'Thanks for your patience. We are packing your healthy box of happiness and will be delivered soon !' : null,
-                                            getStatus(item) === 'Out for delivery' ? 'Your order is out for delivery !' : null]}
-                                    customStyles={{
-                                        stepIndicatorSize: 25,
-                                        currentStepIndicatorSize:30,
-                                        separatorStrokeWidth: 2,
-                                        currentStepStrokeWidth: 3,
-                                        stepStrokeCurrentColor: '#249c86',
-                                        stepStrokeWidth: 3,
-                                        stepStrokeFinishedColor: '#249c86',
-                                        stepStrokeUnFinishedColor: '#ebebeb',
-                                        separatorFinishedColor: '#249c86',
-                                        separatorUnFinishedColor: '#ebebeb',
-                                        stepIndicatorFinishedColor: '#249c86',
-                                        stepIndicatorUnFinishedColor: '#ffffff',
-                                        stepIndicatorLabelFontSize: 13,
-                                        currentStepIndicatorLabelFontSize: 13,
-                                        stepIndicatorLabelCurrentColor: '#249c86',
-                                        stepIndicatorLabelUnFinishedColor: '#ebebeb',
-                                        labelSize: wp(3.5),
-                                        currentStepLabelColor: '#249c86',
-                                        labelFontFamily: 'sf',
-                                        labelColor: '#ebebeb'
-                                    }}
-                                />
-                                 <TouchableOpacity style={{alignSelf: 'flex-start', marginTop: 25, flexDirection: 'row', alignItems: 'center'}} onPress={() => setShowModal(true)}>
-                                    <Feather name="info" size={wp(4)} color="#249c86" />
-                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86', marginLeft: 10}}>Order details</Text>
-                                </TouchableOpacity>
-                                {getStatus(item) === 'Order Placed' ? 
-                                    <View style={{marginBottom: hp(10), marginTop: hp(5)}}>
-                                        <LottieView source={require('../assets/animations/40101-waiting-pigeon.json')} loop={true} autoPlay={true} style={{alignSelf: 'center', width: 150}} />
-                                        
-                                    </View>
-                                    :
-                                    getStatus(item) === 'Order Confirmed' ? 
-                                    <View style={{marginBottom: hp(10), marginTop: hp(5)}}>
-                                        <LottieView source={require('../assets/animations/64289-jiji.json')} loop={true} autoPlay={true} style={{alignSelf: 'center', width: 150}} />                                        
-                                    </View>:
-                                    getStatus(item) === 'Out for delivery' ? 
-                                    <View style={{marginBottom: hp(10), marginTop: hp(5)}}>
-                                        <LottieView source={require('../assets/animations/delivery.json')} loop={true} autoPlay={true} style={{alignSelf: 'center', width: 200}} />
-                                        
-                                    </View>
-                                    : null
-                                }
-                                <Modal 
-                                    isVisible={showModal} 
-                                    backdropOpacity={0.5} 
-                                    backdropColor={'white'}
-                                    animationInTiming={500}
-                                    animationOutTiming={500}
-                                    backdropTransitionInTiming={500}
-                                    backdropTransitionOutTiming={500}
-                                    style={{margin: 0}} 
-                                    onBackdropPress={() => setShowModal(false)}
-                                    onBackButtonPress={() => setShowModal(false)}
-                                    useNativeDriver={true}
-                                    useNativeDriverForBackdrop={true}
-                                >
-                                    <View style={{backgroundColor: 'white', height: '50%', position: 'absolute', bottom: 0, width: '100%', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000', padding: 25, paddingBottom: 5}}>
-                                        <ScrollView showsVerticalScrollIndicator={false}>
-                                            <Text style={{fontFamily: 'Maison-bold', marginTop: 25, fontSize: wp(4), color: 'black'}}>Ordered Items -</Text>
-                                            <Text style={{fontFamily: 'sf', fontSize: wp(3.5), marginTop: 5, color: 'black'}}>{item.ordereditems.replace(/', '/g, '').replace(/, ']/g, '').replace(/[[']/g, '').replace(/w/g, ' ').replace(/, /g, '\n')}</Text>
-                                            <Text style={{fontFamily: 'Maison-bold', marginTop: 50, fontSize: wp(4), color: 'black'}}>Delivering to - </Text>
-                                            <Text style={{fontFamily: 'sf', marginTop: 5, fontSize: wp(3.5), color: 'black'}}>{item.ordered_address}, {item.ordered_locality}, {item.ordered_city}</Text>   
+            {respStatus === 200 ? 
+                <ScrollView
+                showsVerticalScrollIndicator={false}>
+                    
+                        {activeOrders.map((item, index) => {
+                            return (
+                                <View key={item.id} style={{flex: 1, padding: 25, paddingTop: 0}} >
+                                    <Text style={{fontFamily: 'Maven-bold', marginBottom: 10, fontSize: wp(5.5), color: 'black'}}>Order #{item.order_number}</Text>
+                                    <View style={{marginBottom: 50}} >
+                                        <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 25}}>
+                                            {item.order_status === 'Order Placed' ? 
+                                                <View style={{flex: 0.5}}>
+                                                    <LottieView source={require('../assets/animations/40101-waiting-pigeon.json')} loop={true} autoPlay={true} style={{width: 75}} />
+                                                    
+                                                </View>
+                                                :
+                                                item.order_status === 'Order Confirmed' ? 
+                                                <View style={{flex: 0.5}}>
+                                                    <LottieView source={require('../assets/animations/64289-jiji.json')} loop={true} autoPlay={true} style={{width: 75}} />                                        
+                                                </View>:
+                                                item.order_status === 'Out for delivery' ? 
+                                                <View style={{flex: 0.5}}>
+                                                    <LottieView source={require('../assets/animations/delivery.json')} loop={true} autoPlay={true} style={{width: 125}} />
+                                                    
+                                                </View>
+                                                : null
+                                            }
+                                            <Text style={{fontFamily: 'Maven-med', fontSize: wp(3.3), color: 'black', flex: 1}}>{item.order_status === 'Order Placed' ? 'Order placed successfully ! Please bear with us while we confirm your order !': 
+                                                            item.order_status === 'Order Confirmed' ? 'Thanks for your patience. We are packing your healthy box of happiness and will be delivered soon !' :
+                                                            item.order_status === 'Out for delivery' ? 'Your order is out for delivery !' : null}</Text>
                                             
-                                            <View style={{ marginTop: 50}}>
-                                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), marginBottom: 5, color: 'black'}}>Total - &#8377; {item.total_price}</Text>
-                                                {item.payment_mode === 'Cash On Delivery' ? <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), color: '#FF847C'}}>Cash On Delivery</Text> : <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4), color: 'green'}}>Paid with {item.payment_mode}</Text>}
-                                            </View>
-                                        </ScrollView>
+                                        </View>
+                                        <View style={{flex: 1}}>
+                                            <Text style={{fontFamily: 'Maven-sem', marginBottom: 0, fontSize: wp(4.5), color: 'black'}}>Ordered Items</Text>
+                                            {itemsList.map((item1) => {
+                                                        return item1.id_of_order === item.order_number ? (
+                                                            <View key={item1.id} style={{flexDirection: 'row'}}>
+                                                                <Text style={{fontFamily: 'Maven-med', fontSize: wp(3.5), marginTop: 5, color: 'black', flex: 1}}>{item1.item_name}</Text>
+                                                                <Text style={{fontFamily: 'Maven-med', fontSize: wp(3.5), marginTop: 5, color: 'black', flex: 1}}>{item1.item_weight}  x{item1.item_count}</Text>
+                                                                <Text style={{fontFamily: 'Maven-med', fontSize: wp(3.5), marginTop: 5, color: 'black', flex: 1}}>&#8377; {item1.item_price}</Text>
+                                                            </View>
+                                                        ): null
+                                            })}
+                                            {orderDetails.map((item2) => {
+                                                    return item2.id === item.order_number ? (
+                                                        <View key={item2.id} style={{}}>
+                                                            <View style={{ marginTop: 10, flexDirection: 'row'}}>
+                                                                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black', flex: 1}}>Total (paid using {item2.payment_mode})</Text>
+                                                                <Text style={{flex: 1}}></Text>
+                                                                {item2.payment_mode === 'Cash On Delivery' ? <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black'}}>Cash On Delivery</Text> : <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black', flex: 1}}>&#8377; {item2.total_price}</Text>}
+                                                            </View>
+                                                            <Text style={{fontFamily: 'Maven-sem', marginTop: 35, fontSize: wp(4.5), color: 'black'}}>Delivery address</Text>
+                                                            <Text style={{fontFamily: 'Maven-med', fontSize: wp(3.5), color: 'black'}}>{item2.ordered_address}, {item2.ordered_locality}, {item2.ordered_city}</Text>   
+                                                            
+                                                            
+                                                        </View>
+                                                    ): null
+                                            })}
+                                        </View>
+                                        
                                     </View>
-                                </Modal>
-                            </View>
-                        ) : null
-                    })
+                                    {activeOrders.length - 1 === index ? null : <Text style={{width: '100%', height: 1, backgroundColor: '#ebebeb', marginBottom: 25}}></Text>}
+                                    
+                                </View>
+                            )
+                        })}
+                </ScrollView>
                 : respStatus === 404 ?
-                    <View style={{flex: 1, justifyContent: 'center'}}>
-                        <Image source={require('../assets/not-found.png')} style={{width: '85%', height: 2071*(screenWidth/3994), alignSelf: 'center'}} />
-                        <Text style={{marginTop: 50, fontFamily: 'Maison-bold', fontSize: wp(5), textAlign: 'center'}}>You don't have any active orders !</Text>
-                    </View>
-                : <ActivityIndicator size={40} color={'#6aab9e'} style={{marginTop: wp(50)}} />}
+                <View style={{flex: 1, justifyContent: 'center'}}>
+                    <Image source={require('../assets/not-found.png')} style={{width: '85%', height: 2071*(screenWidth/3994), alignSelf: 'center'}} />
+                    <Text style={{marginTop: 50, fontFamily: 'Maven-sem', fontSize: wp(5), textAlign: 'center'}}>You don't have any active orders !</Text>
+                </View>
+            :   <View style={{flex: 1, backgroundColor: '#fcfcfc', justifyContent: 'center', alignItems: 'center'}}>
+                    <LottieView source={require('../assets/animations/9258-bouncing-fruits.json')} style={{width: 200}} loop={true} autoPlay={true} />
+                </View>
+        }
         </View>
     )
 }
@@ -168,7 +219,7 @@ export default function ActiveOrders({ navigation, route }) {
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#fff',
-      paddingTop: hp(10),
+      backgroundColor: '#fcfcfc',
+      paddingTop: 25,
     },
 });

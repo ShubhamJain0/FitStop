@@ -7,10 +7,13 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-nat
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import Svg, { Path, Rect, Circle, G, Polygon, Ellipse, Defs, Stop } from 'react-native-svg';
-import Clipboard from 'expo-clipboard';
+import * as Clipboard from 'expo-clipboard';
 import { showMessage } from 'react-native-flash-message';
 import * as SecureStore from 'expo-secure-store';
-import { UserContext } from './context';
+import { UserContext, IsLoginContext } from './context';
+import NetInfo from "@react-native-community/netinfo";
+import LottieView from 'lottie-react-native';
+import Ripple from 'react-native-material-ripple';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -19,7 +22,12 @@ export default function OtpComponent({ navigation, route }){
     const { phone } = route.params;
     const { action } = route.params;
 
+    const [mounted, setMounted] = useState(true);
+    const [isOffline, setIsOffline] = useState(false);
+    const [showIndic, setShowInidc] = useState(false);
+
     const [verifyOTPDisabled, setVerifyOTPDisabled] = useState(false);
+
 
     const [counter, setCounter] = useState(60);
 
@@ -49,6 +57,30 @@ export default function OtpComponent({ navigation, route }){
     const keyboardDidHideListener = useRef();
 
     const [error, setError] = useState(null);
+
+    const [conIsLogin, setConIsLogin] = useContext(IsLoginContext);
+
+
+    //Checks for internet connection
+    useEffect(() => {
+        NetInfo.fetch().then(state => {
+        if (!state.isConnected) {
+            setIsOffline(true);
+        }
+        })
+    }, [])
+
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+        if (!state.isConnected || !state.isInternetReachable) {
+            setIsOffline(true);
+        } 
+        })
+
+        return () => {
+            unsubscribe();
+        }
+    }, [])
 
 
     useEffect(() => {
@@ -116,11 +148,12 @@ export default function OtpComponent({ navigation, route }){
             message: 'OTP did not match or has expired.',
             position: 'top',
             floating: true,
-            titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+            titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
             style: {alignItems: 'center'},
             icon: 'auto',
             type: 'danger',
-            statusBarHeight: hp(3)
+            statusBarHeight: hp(3),
+            duration: 5000
         }), setVerifyOTPDisabled(false))})
         .catch(error => setError(error))
     }
@@ -145,11 +178,12 @@ export default function OtpComponent({ navigation, route }){
                 message: 'You are successfully logged in !',
                 position: 'top',
                 floating: true,
-                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                 style: {alignItems: 'center'},
                 icon: 'auto',
                 type: 'success',
-                statusBarHeight: hp(3)
+                statusBarHeight: hp(3),
+                duration: 4000
             }))
           .catch(error => setError(error))
         }
@@ -189,15 +223,22 @@ export default function OtpComponent({ navigation, route }){
                 .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
                 //.then(resp => {if (resp.json.length > 0) {setConCart(true)}})
                 .then(() => setTimeout(() => navigation.pop(2), 1500))
+                .then(() => {if (conIsLogin)  
+                    {
+                      setConIsLogin(false);
+                    } else {
+                      setConIsLogin(true);
+                    };})
                 .then(() => setTimeout(() => showMessage({
                     message: 'You are successfully logged in !',
                     position: 'top',
                     floating: true,
-                    titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                    titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                     style: {alignItems: 'center'},
                     icon: 'auto',
                     type: 'success',
-                    statusBarHeight: hp(3)
+                    statusBarHeight: hp(3),
+                    duration: 4000
                 }), 1500))
                 .catch(error => setError(error))
             }
@@ -225,39 +266,76 @@ export default function OtpComponent({ navigation, route }){
         }
     }
 
+
+    const retry = async () => {
+        setShowInidc(true);
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
+        try {
+            if (mounted){
+                setCounter(60);
+                setShowInidc(false);
+                setIsOffline(false);
+            }
+        } catch (error) {
+            setError(error)
+        } finally {
+            NetInfo.fetch().then(state => {
+                if (!state.isConnected) {
+                  setTimeout(() => setShowInidc(false), 3000)
+                }
+            })
+        }
+    }
+
+
+    if (isOffline) {
+        return (
+            <View style={{flex: 1, backgroundColor: '#fcfcfc'}}>
+                <StatusBar style="inverted" />
+                <Image source={require('../assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
+                <View style={{width: '80%', alignSelf: 'center'}}>
+                <Text style={{fontFamily: 'Maven-bold', fontSize: wp(6), marginTop: 50, textAlign: 'center', color: 'black'}}>Uh oh! Seems like you are disconnected !</Text>
+                {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={retry} activeOpacity={1}>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
+                </TouchableOpacity>: <LottieView source={require('../assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
+                </View>
+            </View>
+        )
+    }
+
     
     return (
         <View style={styles.container}>
             <StatusBar style="inverted" />
             <Image source={require('../assets/message-sent.png')} style={{width: '100%', height: 2073*(screenWidth/3381), alignSelf: 'center'}} />
             <Animated.View style={{width: '100%', height: '100%', backgroundColor: 'white', position:'absolute', transform: [{translateY: keyboardOffset}], borderTopLeftRadius: 50, borderTopRightRadius: 50, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}}>
-                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), paddingTop: wp(8), textAlign: 'center', color: 'black'}} >We have sent the verification code to{'\n'}+91 {phone}.</Text>
+                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), paddingTop: wp(8), textAlign: 'center', color: 'black'}} >We have sent the verification code to{'\n'}+91 {phone}.</Text>
                 <View style={{flexDirection: 'row', marginTop: 40, alignSelf: 'center', alignItems: 'center'}}>
-                <TextInput ref={ti1} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                <TextInput ref={ti1} style={{ textAlign: 'center', fontFamily: 'Maven-med', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
                         value={OTP1} onChangeText={(text) => {setOTP1(text); if (text) {copyFromClipboard(text), ti2.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) Login()}} />
-                    <TextInput ref={ti2} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                    <TextInput ref={ti2} style={{ textAlign: 'center', fontFamily: 'Maven-med', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
                         value={OTP2} onChangeText={(text) => {setOTP2(text); if (text) {ti3.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) Login()}}
                         onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti1.current.focus(): null}} />
-                    <TextInput ref={ti3} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                    <TextInput ref={ti3} style={{ textAlign: 'center', fontFamily: 'Maven-med', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
                         value={OTP3} onChangeText={(text) => {setOTP3(text); if (text) {ti4.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) Login()}}
                         onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti2.current.focus(): null}} />
-                    <TextInput ref={ti4} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                    <TextInput ref={ti4} style={{ textAlign: 'center', fontFamily: 'Maven-med', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
                         value={OTP4} onChangeText={(text) => {setOTP4(text); if (text) {ti5.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) Login()}}
                         onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti3.current.focus(): null}} />
-                    <TextInput ref={ti5} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                    <TextInput ref={ti5} style={{ textAlign: 'center', fontFamily: 'Maven-med', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
                         value={OTP5} onChangeText={(text) => {setOTP5(text); if (text) {ti6.current.focus()} }} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) Login()}}
                         onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti4.current.focus(): null}} />
-                    <TextInput ref={ti6} style={{ textAlign: 'center', fontFamily: 'sf', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
+                    <TextInput ref={ti6} style={{ textAlign: 'center', fontFamily: 'Maven-med', fontSize: wp(6), marginRight: 15, alignSelf: 'center', width: '10%', borderWidth: 1, borderStyle: 'dotted', borderRadius: 1}}
                         value={OTP6} onChangeText={(text) => (setOTP6(text), setOTP(OTP1 + OTP2 + OTP3 + OTP4 + OTP5 + text))} keyboardType={'numeric'} maxLength={1} onSubmitEditing={() => {if (OTP.toString().length === 6) Login()}}
                         onKeyPress={({ nativeEvent }) => {nativeEvent.key === 'Backspace' ? ti5.current.focus(): null}} />
                 </View>
                 <View style={{flexDirection: 'row', alignItems: 'center', alignSelf: 'center', marginTop: 40}}>
-                    <Text style={{fontFamily: 'sf', fontSize: wp(4), color: 'black'}}>Didn't received code? </Text>
-                    <TouchableOpacity disabled={counter === 0 ? false: true} style={counter === 0 ? {opacity: 1}: {opacity: 0.3}} onPress={resendOTP}>
-                        <Text style={{fontFamily: 'Maison-bold', color: '#249c86', textDecorationLine: 'underline', fontSize: wp(3.5)}}> Resend code </Text>
+                    <Text style={{fontFamily: 'Maven-med', fontSize: wp(4), color: 'black'}}>Didn't received code? </Text>
+                    <TouchableOpacity disabled={counter === 0 ? false: true} style={counter === 0 ? {opacity: 1}: {opacity: 0.3}} onPress={resendOTP} activeOpacity={1}>
+                        <Text style={{fontFamily: 'Maven-sem', color: '#249c86', textDecorationLine: 'underline', fontSize: wp(3.5)}}> Resend code </Text>
                     </TouchableOpacity>
                 </View>
-                <Text style={{fontFamily: 'sf', fontSize: wp(4), textAlign: 'center', color: 'black'}}> in {counter}s</Text>
+                <Text style={{fontFamily: 'Maven-med', fontSize: wp(4), textAlign: 'center', color: 'black'}}> in {counter}s</Text>
             </Animated.View>
 
             <Modal
@@ -266,21 +344,21 @@ export default function OtpComponent({ navigation, route }){
                 backdropOpacity={1}
                 >
                     <Text style={{borderTopWidth: 0.3}}></Text>
-                    <TouchableOpacity style={{alignSelf: 'flex-end'}} onPress={() => navigation.pop(2)}>
-                        <Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline', fontSize: wp(3), color: 'black'}}>Do it later &#187;</Text>
+                    <TouchableOpacity style={{alignSelf: 'flex-end'}} onPress={() => navigation.pop(2)} activeOpacity={1}>
+                        <Text style={{fontFamily: 'Maven-sem', textDecorationLine: 'underline', fontSize: wp(3), color: 'black'}}>Do it later &#187;</Text>
                     </TouchableOpacity>
-                    <Text style={{fontFamily: 'sofia-black', fontSize: wp(8), marginBottom: 50, color: 'black'}}>Enter your{'\n'}Personal Information.</Text>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(8), marginBottom: 50, color: 'black'}}>Enter your{'\n'}Personal Information.</Text>
                     <TextInput style={{ borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%' }} 
                         placeholder={'Name'} onChangeText={(text) => setChangeName(text)} />
                     <TextInput style={{ borderColor: '#f0f0f0', borderBottomWidth: 2, marginBottom: 25, width: '80%' }} 
                         placeholder={'Email'} onChangeText={(text) => setChangeEmail(text)} keyboardType={'email-address'} />
                     {changeName === '' && changeEmail === '' ?
-                        <TouchableOpacity disabled={true} style={{opacity: 0.2, backgroundColor: '#6aab9e', padding: 10, paddingLeft: 20, paddingRight: 20, borderRadius: 10, alignSelf: 'flex-start'}}>
-                        <Text style={{fontFamily: 'sf', color: 'black'}}>Save</Text>
+                        <TouchableOpacity disabled={true} style={{opacity: 0.2, backgroundColor: '#6aab9e', padding: 10, paddingLeft: 20, paddingRight: 20, borderRadius: 10, alignSelf: 'flex-start'}} activeOpacity={1}>
+                        <Text style={{fontFamily: 'Maven-med', color: 'black'}}>Save</Text>
                         </TouchableOpacity> :
-                        <TouchableOpacity disabled={false} style={{opacity: 1, backgroundColor: '#6aab9e', padding: 10, paddingLeft: 20, paddingRight: 20, borderRadius: 10, alignSelf: 'flex-start'}} onPress={editProfile}>
-                        <Text style={{fontFamily: 'sf', color: 'black'}}>Save</Text>
-                        </TouchableOpacity>
+                        <Ripple disabled={false} style={{opacity: 1, backgroundColor: '#6aab9e', padding: 10, paddingLeft: 20, paddingRight: 20, borderRadius: 10, alignSelf: 'flex-start'}} onPress={editProfile} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                            <Text style={{fontFamily: 'Maven-med', color: 'black'}}>Save</Text>
+                        </Ripple>
                     }
             </Modal>
             
@@ -288,7 +366,7 @@ export default function OtpComponent({ navigation, route }){
                 <View style={{alignSelf: 'center', backgroundColor: 'white', padding: 25}}>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
                         <ActivityIndicator size={40} color={'#6aab9e'}  />
-                        <Text style={{fontFamily: 'Maison-bold', marginLeft: 20, color: 'black'}}>Verifying code...</Text>
+                        <Text style={{fontFamily: 'Maven-sem', marginLeft: 20, color: 'black'}}>Verifying code...</Text>
                     </View>
                 </View>
             </Modal>

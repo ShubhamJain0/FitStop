@@ -3,23 +3,32 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { TouchableNativeFeedback } from 'react-native';
 import { StyleSheet, Text, View, RefreshControl, ScrollView, SafeAreaView, Image, Button, TouchableOpacity, TextInput, FlatList, ActivityIndicator, Dimensions } from 'react-native';
 import Modal from 'react-native-modal';
-import { AntDesign, FontAwesome, MaterialIcons, Entypo, Ionicons, EvilIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { AntDesign, FontAwesome, MaterialIcons, Entypo, Ionicons, EvilIcons, MaterialCommunityIcons, createIconSetFromIcoMoon } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserContext, PushTokenContext } from './context';
+import { UserContext, PushTokenContext, CartContext } from './context';
 import * as Location from 'expo-location';
 import MapView, {Marker, AnimatedRegion, Callout, MarkerAnimated} from 'react-native-maps';
 import RazorpayCheckout from 'react-native-razorpay';
 import { showMessage } from 'react-native-flash-message';
 import * as SecureStore from 'expo-secure-store';
+import icoMoonConfig from '../selection.json';
+import NetInfo from "@react-native-community/netinfo";
+import Ripple from 'react-native-material-ripple';
 
+const {width: screenWidth} = Dimensions.get('window');
 export default function Cart({ navigation }) {
 
+  const CustomIcon = createIconSetFromIcoMoon(icoMoonConfig, 'IcoMoon');
+
   const [mounted, setMounted] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
+  const [showIndic, setShowInidc] = useState(false);
 
   const [cartList, setCartList] = useState([]);
   const [itemPhotos, setItemPhotos] = useState([]);
+  const [recipePhotos, setRecipePhotos] = useState([]);
   const [test, setTest] = useState([]);
   const [cartStatus, setCartStatus] = useState(0);
   const [total, setTotal] = useState(0);
@@ -54,12 +63,35 @@ export default function Cart({ navigation }) {
   const [error, setError] = useState('');
 
   const [conPushToken] = useContext(PushTokenContext);
+  const [conCart, setConCart] = useContext(CartContext);
 
   //For prefill-razorpay-checkout
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+
+
+    //Checks for internet connection
+    useEffect(() => {
+        NetInfo.fetch().then(state => {
+        if (!state.isConnected) {
+            setIsOffline(true);
+        }
+        })
+    }, [])
+
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+        if (!state.isConnected || !state.isInternetReachable) {
+            setIsOffline(true);
+        } 
+        })
+
+        return () => {
+            unsubscribe();
+        }
+    }, [])
 
 
     useEffect(() => {
@@ -74,7 +106,7 @@ export default function Cart({ navigation }) {
                         }
                     })
                     .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-                    .then(resp => {if (mounted) {setCartList(resp.json.items), setTotal(resp.json.total), setCartStatus(resp.status), setItemPhotos(resp.json.photos), setTest(resp.json.custom_count)}})
+                    .then(resp => {if (mounted) {setCartList(resp.json.items), setTotal(resp.json.total), setCartStatus(resp.status), setItemPhotos(resp.json.photos), setRecipePhotos(resp.json.recipe_photos), setTest(resp.json.custom_count)}})
                     .catch(error => setError(error))
                 } else {
                     setCartStatus(401);
@@ -231,11 +263,12 @@ export default function Cart({ navigation }) {
                 message: 'Address saved !',
                 position: 'top',
                 floating: true,
-                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                 style: {alignItems: 'center'},
                 icon: 'auto',
                 type: 'success',
-                statusBarHeight: hp(3)
+                statusBarHeight: hp(3),
+                duration: 4000
             }))
             .catch(error => setError(error))
         } else {
@@ -381,11 +414,12 @@ const createPaymentOrder = async (payMethod) => {
                 message: 'Payment failed.',
                 position: 'top',
                 floating: true,
-                titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                 style: {alignItems: 'center'},
                 icon: 'auto',
                 type: 'danger',
-                statusBarHeight: hp(3)
+                statusBarHeight: hp(3),
+                duration: 5000
             })
           },
           confirm_close: true
@@ -421,11 +455,12 @@ const createPaymentOrder = async (payMethod) => {
                         message: 'Order placed !',
                         position: 'top',
                         floating: true,
-                        titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                        titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                         style: {alignItems: 'center'},
                         icon: 'auto',
                         type: 'success',
-                        statusBarHeight: hp(3)
+                        statusBarHeight: hp(3),
+                        duration: 4000
                     })
                     navigation.pop();
                     navigation.navigate('ActiveOrders', {activeOrder: resp.json.active_order_id})
@@ -436,11 +471,12 @@ const createPaymentOrder = async (payMethod) => {
                         message: 'We could not verify the source of payment. If any amount is debited, it will be refunded at the earliest.',
                         position: 'top',
                         floating: true,
-                        titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                        titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                         style: {alignItems: 'center'},
                         icon: 'auto',
                         type: 'danger',
-                        statusBarHeight: hp(3)
+                        statusBarHeight: hp(3),
+                        duration: 5000
                     })
                 }
             })
@@ -454,11 +490,12 @@ const createPaymentOrder = async (payMethod) => {
             message: 'Payment failed. If any amount is debited, it will be refunded at the earliest.',
             position: 'top',
             floating: true,
-            titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+            titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
             style: {alignItems: 'center'},
             icon: 'auto',
             type: 'danger',
-            statusBarHeight: hp(3)
+            statusBarHeight: hp(3),
+            duration: 5000
         })
       setOnPlace(false);
       setAfterPaymentModal(false);
@@ -486,11 +523,12 @@ const createPaymentOrder = async (payMethod) => {
                     message: 'Order placed !',
                     position: 'top',
                     floating: true,
-                    titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                    titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                     style: {alignItems: 'center'},
                     icon: 'auto',
                     type: 'success',
-                    statusBarHeight: hp(3)
+                    statusBarHeight: hp(3),
+                    duration: 4000
                 })
                 navigation.pop();
                 navigation.navigate('ActiveOrders', {activeOrder: resp.json.active_order_id})
@@ -508,7 +546,7 @@ const createPaymentOrder = async (payMethod) => {
 
   const deleteCart = () => async evt=>  {
     const token = await SecureStore.getItemAsync('USER_TOKEN')
-    if (token)
+    if (token){
         fetch('http://192.168.0.156:8000/store/cart/',{
             method: 'DELETE',
             headers: {
@@ -517,9 +555,10 @@ const createPaymentOrder = async (payMethod) => {
             }
         })
         .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
-        .then(resp => {if (mounted && resp.status === 200) {setCartStatus(404)}})
+        .then(resp => {if (mounted && resp.status === 200) {setCartStatus(404), setConCart(false)}})
         .catch(error => setError(error))
     }
+  }
 
 
     const deleteItem = async (item) => {
@@ -538,6 +577,7 @@ const createPaymentOrder = async (payMethod) => {
                 setCartList(resp.json.items);
                 setTotal(resp.json.total);
                 setItemPhotos(resp.json.photos);
+                setRecipePhotos(resp.json.recipe_photos);
                 if (resp.json.items.length === 0){
                     setCartStatus(404);
                 }
@@ -557,6 +597,103 @@ const createPaymentOrder = async (payMethod) => {
 
 
 
+    const retry = async () => {
+        setShowInidc(true);
+        const token = await SecureStore.getItemAsync('USER_TOKEN')
+        try {
+            if (token) {
+                fetch('http://192.168.0.156:8000/store/confirm/',{
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-type': 'application/json'
+                    }
+                })
+                .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => {if (mounted) {setCartList(resp.json.items), setTotal(resp.json.total), setCartStatus(resp.status), setItemPhotos(resp.json.photos), setTest(resp.json.custom_count)}})
+                .catch(error => setError(error))
+
+                fetch('http://192.168.0.156:8000/store/myaddress/',{
+                    method: 'GET',
+                    headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-type': 'application/json'
+                    }
+                })
+                .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => {if (mounted) {setMyAddresses(resp.json), setMyAddressesStatus(resp.status)}})
+                .catch(error => setError(error))
+
+                fetch('http://192.168.0.156:8000/store/getdeliveryaddress/',{
+                    method: 'GET',
+                    headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-type': 'application/json'
+                    }
+                })
+                .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => {if (mounted) {setDeliveryAddress(resp.json.address), setDeliveryAddressStatus(resp.status)}})
+                .catch(error => setError(error))
+
+
+                fetch('http://192.168.0.156:8000/store/coupons/',{
+                    method: 'GET',
+                    headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-type': 'application/json'
+                    }
+                })
+                .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => {if (mounted) {setCouponList(resp.json.data)}})
+                .catch(error => setError(error))
+
+                fetch('http://192.168.0.156:8000/api/me/',{
+                        method: 'GET',
+                        headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-type': 'application/json'
+                        }
+                })
+                .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
+                .then(resp => {if (mounted) {setName(resp.json.name), setEmail(resp.json.email), setPhone(resp.json.phone)}})
+                .then(() => setIsOffline(false))
+                .catch(error => setError(error));
+                    
+            } else {
+                if (mounted)
+                {setCartStatus(401);
+                setIsOffline(false);
+                setShowInidc(false);
+                }
+            }
+        } catch (error) {
+            setError(error)
+        } finally {
+            NetInfo.fetch().then(state => {
+                if (!state.isConnected) {
+                  setTimeout(() => setShowInidc(false), 3000)
+                }
+            })
+        }
+    }
+
+
+    if (isOffline) {
+        return (
+            <View style={{flex: 1, backgroundColor: '#fcfcfc'}}>
+                <StatusBar style="inverted" />
+                <Image source={require('../assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
+                <View style={{width: '80%', alignSelf: 'center'}}>
+                <Text style={{fontFamily: 'Maven-bold', fontSize: wp(6), marginTop: 50, textAlign: 'center', color: 'black'}}>Uh oh! Seems like you are disconnected !</Text>
+                {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={retry} activeOpacity={1}>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
+                </TouchableOpacity>: <LottieView source={require('../assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
+                </View>
+            </View>
+        )
+    }
+
+
 
   if (cartStatus === 0) {
       return (
@@ -573,9 +710,9 @@ const createPaymentOrder = async (payMethod) => {
           <View style={{flex: 1, backgroundColor: 'white', justifyContent: 'center'}}>
               <StatusBar style="inverted" />
               <LottieView source={require('../assets/animations/empty-cart.json')} autoPlay={true} style={{width: 225, alignSelf: 'center'}} />
-              <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(5), marginTop: 25}}>Your cart is empty!</Text>
-              <TouchableOpacity style={{alignSelf: 'center', marginTop: 15}} onPress={() => navigation.goBack()}>
-                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}>ADD NOW</Text>
+              <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', fontSize: wp(5), marginTop: 25}}>Your cart is empty!</Text>
+              <TouchableOpacity style={{alignSelf: 'center', marginTop: 15}} onPress={() => navigation.goBack()} activeOpacity={1}>
+                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}>ADD NOW</Text>
               </TouchableOpacity>
           </View>
       )
@@ -584,11 +721,13 @@ const createPaymentOrder = async (payMethod) => {
 
   if (cartStatus === 401){
         return (
-            <View style={[styles.container, {flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}]}>
-                <TouchableOpacity onPress={() => (navigation.goBack(), navigation.navigate('Register'))}>
-                    <Text style={{color: '#249c86', fontFamily: 'sofia-bold', fontSize: wp(5)}}>Login </Text>
-                </TouchableOpacity> 
-                <Text style={{fontFamily: 'sofia-medium', fontSize: wp(5)}}>to continue!</Text>
+            <View style={{flex: 1, backgroundColor: 'white', justifyContent: 'center'}}>
+              <StatusBar style="inverted" />
+              <LottieView source={require('../assets/animations/empty-cart.json')} autoPlay={true} style={{width: 225, alignSelf: 'center'}} />
+              <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', fontSize: wp(5), marginTop: 25}}>Your cart is empty!</Text>
+              <TouchableOpacity style={{alignSelf: 'center', marginTop: 15}} onPress={() => navigation.goBack()} activeOpacity={1}>
+                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}>ADD NOW</Text>
+              </TouchableOpacity>
             </View>
         )
     }
@@ -596,123 +735,129 @@ const createPaymentOrder = async (payMethod) => {
   return (
       <View style={styles.container}>
           <StatusBar style="inverted" />
-        <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 50}}>
-            <TouchableOpacity style={{marginRight: hp(5), marginBottom: hp(5), alignSelf: 'flex-end'}} disabled={cartStatus === 200 ? false: true} onPress={deleteCart()}>
-                <Text style={{fontFamily: 'Maison-bold', color: "#F67280", fontSize: wp(4)}}>Empty cart</Text>
-            </TouchableOpacity>
+        <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 50, paddingTop: 15}} overScrollMode={'never'}>
+            
             <View>
                 <ScrollView contentContainerStyle={cartList.length > 2 ? {paddingBottom: 25, paddingLeft: 30}: {flex: 1, justifyContent: 'center', paddingBottom: 25, paddingLeft: 30}} horizontal={true} showsHorizontalScrollIndicator={false}>
                 {cartStatus === 200 ? cartList.map((item) => {
                     return (
-                        <View style={{backgroundColor: 'white', maxWidth: '40%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', marginBottom: 15, marginRight: 35, marginTop: 10, padding: 20, paddingBottom: 30, borderRadius: 10}} key={item.id}>
-                            {itemPhotos.map((item1) => {
-                                return item1.name === item.ordereditem ? 
-                                <View key={item1.id}>
-                                    <Image source={{uri: item1.image}} style={{width: 100, height: 80}} />
-                                </View>
-                                : null
-                            })}
-                            <Text style={{fontFamily: 'Maison-bold', textAlign: 'center', marginTop: 5, fontSize: wp(4), color: 'black'}}>{item.ordereditem}</Text>
-                            {test.map(w => {
-                                return w.get_count.map(x => {
-                                    return x.ordereditem === item.ordereditem ?
-                                    <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}} key={x.weight}>
-                                        <Text style={{fontFamily: 'sf', textAlign: 'center', marginTop: 5, fontSize: wp(3.5), color: 'black'}}>{x.weight}  x{x.cou}</Text>
-                                    </View>: null
+                        <View style={{backgroundColor: 'white', flex: cartList.length > 1 ? 0 : 0, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowRadius: 3.84, shadowOpacity: 0.25, shadowColor: '#000', marginBottom: 15, marginRight: 35, marginTop: 10, padding: 20, paddingBottom: 50, borderRadius: 10}} key={item.id}>
+                            {item.item_type === 'Products' ?
+                                itemPhotos.map((item1) => {
+                                    return item1.name === item.ordereditem ? 
+                                    <View key={item1.id}>
+                                        <Image source={{uri: item1.image}} style={{width: 100, height: 80, alignSelf: 'center'}} />
+                                    </View>
+                                    : null
+                                }) :
+                                recipePhotos.map((item1) => {
+                                    return item1.name === item.ordereditem ? 
+                                    <View key={item1.id}>
+                                        <Image source={{uri: item1.image}} style={{width: 80, height: 80, alignSelf: 'center'}} />
+                                    </View>
+                                    : null
                                 })
-                            })}
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), position: 'absolute', bottom: 5, alignSelf: 'center', marginTop: 10, color: 'black'}}> &#8377; {item.items_price['price__sum']} </Text>
-                            <TouchableOpacity style={{position: 'absolute', top: 2, right: 2}} onPress={() => deleteItem(item)}>
+                            }
+                            <Text style={{fontFamily: 'Maven-sem', textAlign: 'center', marginTop: 5, fontSize: wp(4), color: 'black'}}>{item.ordereditem}</Text>
+                            {item.item_type === 'Products' ?
+                                test.map(w => {
+                                    return w.get_count.map(x => {
+                                        return x.ordereditem === item.ordereditem ?
+                                        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}} key={x.weight}>
+                                            <Text style={{fontFamily: 'Maven-med', textAlign: 'center', marginTop: 5, fontSize: wp(3.2), color: 'black'}}>{x.weight} (&#8377; {x.price})  x{x.cou}</Text>
+                                        </View>: null
+                                    })
+                                }):
+                                <Text style={{fontFamily: 'Maven-med', textAlign: 'center', position: 'absolute', bottom: 25, alignSelf: 'center', fontSize: wp(3.2), color: 'black'}}>&#8377; {item.price}   x{item.count}</Text>
+                            }
+                            <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), position: 'absolute', bottom: 5, alignSelf: 'center', marginTop: 10, color: 'black'}}> &#8377; {item.items_price['price__sum']} </Text>
+                            <TouchableOpacity style={{position: 'absolute', top: 2, right: 2}} onPress={() => deleteItem(item)} activeOpacity={1}>
                                 <Entypo name="circle-with-cross" size={15} color="#F67280" />
                             </TouchableOpacity>
                         </View>
                     )
-                }): cartStatus === 404 ? <Text style={{textAlign: 'center', fontFamily: 'sofia-medium', color: 'black'}}>Your cart is empty!</Text>: <Text>Please Login to build your cart!</Text>}
+                }): cartStatus === 404 ? <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', color: 'black'}}>Your cart is empty!</Text>: <Text>Please Login to build your cart!</Text>}
                 </ScrollView>
+                <TouchableOpacity style={{marginBottom: 25, alignSelf: 'center'}} disabled={cartStatus === 200 ? false: true} onPress={deleteCart()} activeOpacity={1}>
+                    <Text style={{fontFamily: 'Maven-sem', color: "#F67280", fontSize: wp(4)}}>Empty cart</Text>
+                </TouchableOpacity>
             </View>
-            <View style={{flex: 1, marginTop: 20, width: '85%', alignSelf: 'center'}}>
+            
+            <View style={{flex: 1, marginTop: 0, width: '85%', alignSelf: 'center'}}>
                 {deliveryAddressStatus === 200 ? deliveryAddress.map((item) => {
                     return (
                         <View key={item.id}>
                             <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                <Ionicons name="location-sharp" size={wp(4.5)} color="#249c86" />
-                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), marginLeft: 5, color: 'black'}}>Order will be delivered at:</Text>
+                                <CustomIcon name="location" size={20} color="#249c86" />
+                                <Text style={{fontFamily: 'Maven-bold', fontSize: wp(4.5), marginLeft: 5, color: 'black'}}>Delivery address</Text>
                             </View>
-                            <Text style={{flex: 1, fontFamily: 'Maison-bold', fontSize: wp(3.5), marginTop: 5, marginLeft: 25, color: 'black'}}>{item.address}, {item.locality}, {item.city}</Text>
-                            <TouchableOpacity style={{marginTop: 5, alignSelf: 'flex-start', marginLeft: 25}} onPress={() => setAddressModal(true)}>
-                                <Text style={{fontFamily: 'Maison-bold', color: '#249c86', fontSize: wp(3.5)}}>Change delivery address</Text>
+                            <Text style={{flex: 1, fontFamily: 'Maven-med', fontSize: wp(3.5), marginTop: 5, marginLeft: 25, color: 'black'}}>{item.address}, {item.locality}, {item.city}</Text>
+                            <TouchableOpacity style={{marginTop: 5, alignSelf: 'flex-start', marginLeft: 25}} onPress={() => setAddressModal(true)} activeOpacity={1}>
+                                <Text style={{fontFamily: 'Maven-sem', color: '#249c86', fontSize: wp(3.5)}}>Change delivery address</Text>
                             </TouchableOpacity>
                         </View>
                     )
                 }):
                 <View>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <Ionicons name="location-sharp" size={wp(4.5)} color="#249c86" />
-                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'red', marginLeft: 5}}>You haven't set your delivery address yet!</Text>
+                        <CustomIcon name="location" size={20} color="#249c86" />
+                        <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'red', marginLeft: 5}}>You haven't set your delivery address yet!</Text>
                     </View>
-                    <TouchableOpacity style={{marginTop: 5, alignSelf: 'flex-start', marginLeft: 25}} onPress={() => setAddressModal(true)}>
-                        <Text style={{fontFamily: 'Maison-bold', color: '#249c86', fontSize: wp(3.5)}}>Add delivery address</Text>
+                    <TouchableOpacity style={{marginTop: 5, alignSelf: 'flex-start', marginLeft: 25}} onPress={() => setAddressModal(true)} activeOpacity={1}>
+                        <Text style={{fontFamily: 'Maven-sem', color: '#249c86', fontSize: wp(3.5)}}>Add delivery address</Text>
                     </TouchableOpacity>
                 </View>}
-                <View style={{marginTop: 40, backgroundColor: '#fff', padding: 10, paddingBottom: 20, borderRadius: 10, elevation: 2, shadowOffset: {width: 0, height: 1}, shadowRadius: 1.41, shadowOpacity: 0.20, shadowColor: '#000'}}>
+                <View style={{marginTop: 40, backgroundColor: '#fcfcfc', elevation: 2, paddingBottom: 20, borderRadius: 10, padding: 15, shadowOffset: {width: 0, height: 1}, shadowRadius: 1.41, shadowOpacity: 0.20, shadowColor: '#000'}}>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
                         <View style={{flex: 1}}>
                             <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                 <LottieView source={require('../assets/animations/48974-offer-animation.json')} autoPlay={true} loop={true} style={{width: 30, height: 30}} />
-                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(4.5), color: 'black'}}>Offers</Text>
+                                <Text style={{fontFamily: 'Maven-bold', fontSize: wp(4.5), color: 'black'}}>Offers</Text>
                             </View>
-                            {appliedCoupon ? <Text style={{fontFamily: 'Maison-bold', flex: 1, fontSize: wp(3.5), marginLeft: 25, color: 'black'}}>&#8377; {appliedCoupon.discount} off applied on your order!</Text> : <Text style={{fontFamily: 'Maison-bold', flex: 1, marginLeft: 25, fontSize: wp(3.5), color: 'black'}}>No offer applied!</Text>}
+                            {appliedCoupon ? <Text style={{fontFamily: 'Maven-med', flex: 1, fontSize: wp(3.5), marginLeft: 25, color: 'black'}}>&#8377; {appliedCoupon.discount} off applied on your order!</Text> : <Text style={{fontFamily: 'Maven-med', flex: 1, marginLeft: 25, fontSize: wp(3.5), color: 'black'}}>No offer applied!</Text>}
                         </View>
                         {appliedCoupon ? 
-                            <TouchableOpacity style={{flex: 0.2, justifyContent: 'center', marginTop: 5}} onPress={() => setAppliedCoupon(null)}>
+                            <TouchableOpacity style={{flex: 0.2, justifyContent: 'center', marginTop: 5}} onPress={() => setAppliedCoupon(null)} activeOpacity={1}>
                                 <FontAwesome name="remove" size={wp(3.5)} color="#249c86" />
                             </TouchableOpacity>:
-                            <TouchableOpacity style={{flex: 0.5, marginTop: 5}} onPress={() => setCouponModal(true)}>
-                                <Text style={{fontFamily: 'Maison-bold', color: '#249C86', fontSize: wp(3.5)}}>View offers</Text>
+                            <TouchableOpacity style={{flex: 0.5, marginTop: 5}} onPress={() => setCouponModal(true)} activeOpacity={1}>
+                                <Text style={{fontFamily: 'Maven-sem', color: '#249C86', fontSize: wp(3.5)}}>View offers</Text>
                             </TouchableOpacity>
                         }
                     </View>
                 </View>
-                <View style={{marginTop: 40, borderRadius: 10, marginBottom: 50}}>
+                <Text style={{backgroundColor: '#ebebeb', alignSelf: 'center', width: '100%', height: 1, marginTop: 50}}></Text>
+                <View style={{marginTop: 25, borderRadius: 5, marginBottom: 50, backgroundColor: '#fcfcfc'}}>
+                    <Text style={{fontFamily: 'Maven-bold', fontSize: wp(5), color: 'black', marginBottom: 25}}>Bill details</Text>
                     <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
-                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>Item subtotal</Text>
-                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>&#8377; {total}</Text>
+                        <Text style={{flex: 1, fontFamily: 'Maven-med', fontSize: wp(4), color: 'black'}}>Item subtotal</Text>
+                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maven-med', fontSize: wp(4), color: 'black'}}>&#8377; {total}</Text>
                     </View>
                     <Text style={{backgroundColor: 'white', height: 1, marginBottom: 10}}></Text>
                     <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
-                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>Delivery Charges</Text>
-                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>&#8377; {deliveryCharges}</Text>
+                        <Text style={{flex: 1, fontFamily: 'Maven-med', fontSize: wp(4), color: 'black'}}>Delivery Charges</Text>
+                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maven-med', fontSize: wp(4), color: 'black'}}>&#8377; {deliveryCharges}</Text>
                     </View>
                     <Text style={{backgroundColor: 'white', height: 1, marginBottom: 10}}></Text>
                     <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
-                        <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>Taxes</Text>
-                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4), color: 'black'}}>&#8377; {taxes}</Text>
+                        <Text style={{flex: 1, fontFamily: 'Maven-med', fontSize: wp(4), color: 'black'}}>Taxes</Text>
+                        <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maven-med', fontSize: wp(4), color: 'black'}}>&#8377; {taxes}</Text>
                     </View>
                     <Text style={{backgroundColor: 'white', height: 1, marginBottom: 10}}></Text>
                     {appliedCoupon ? 
                         <View>
                             <View style={{flexDirection: 'row', marginBottom: 10, alignItems: 'center'}}>
-                                <Text style={{flex: 1, fontFamily: 'sofia-bold', fontSize: wp(4), color: '#249c86'}}>Coupon Applied</Text>
-                                <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-bold', fontSize: wp(4), color: '#249c86'}}>- &#8377; {appliedCoupon.discount}</Text>
+                                <Text style={{flex: 1, fontFamily: 'Maven-med', fontSize: wp(4), color: '#249c86'}}>Coupon Applied</Text>
+                                <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maven-med', fontSize: wp(4), color: '#249c86'}}>- &#8377; {appliedCoupon.discount}</Text>
                             </View>
                             <Text style={{backgroundColor: 'white', height: 2, marginBottom: 10}}></Text>
                         </View>: null
                     }
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <Text style={{flex: 1, fontFamily: 'sofia-black', fontSize: wp(4.5), color: 'black'}}>Grand Total</Text>
-                        {appliedCoupon ? <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-black', fontSize: wp(4.5), color: 'black'}}>&#8377; {total + deliveryCharges + taxes - appliedCoupon.discount}</Text>: <Text style={{flex: 1, textAlign: 'right', fontFamily: 'sofia-black', fontSize: wp(4.5), color: 'black'}}>&#8377; {total + deliveryCharges + taxes}</Text>}
+                        <Text style={{flex: 1, fontFamily: 'Maven-sem', fontSize: wp(4.5), color: 'black'}}>Grand Total</Text>
+                        {appliedCoupon ? <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maven-sem', fontSize: wp(4.5), color: 'black'}}>&#8377; {total + deliveryCharges + taxes - appliedCoupon.discount}</Text>: <Text style={{flex: 1, textAlign: 'right', fontFamily: 'Maven-sem', fontSize: wp(4.5), color: 'black'}}>&#8377; {total + deliveryCharges + taxes}</Text>}
                     </View>
                 </View>
-
-                {onPlace ? <ActivityIndicator color="#6aab9e" size={50} />
-                 : myAddressesStatus === 200 && deliveryAddressStatus === 200 && cartStatus === 200 ? 
-                    <TouchableOpacity onPress={() => setPaymentModal(true)} style={{flex: 1, opacity: 1, backgroundColor: '#6aab9e', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}}>
-                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black'}}>Place Order &raquo;</Text>
-                    </TouchableOpacity>:
-                    <TouchableOpacity disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#6aab9e', borderRadius: 5, padding: 15, alignSelf: 'center', width: '60%'}}>
-                        <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>Place Order &raquo;</Text>
-                    </TouchableOpacity>
-                }
 
                 <Modal
                     isVisible={addressModal}
@@ -744,60 +889,60 @@ const createPaymentOrder = async (payMethod) => {
                             />
                         </MapView>
                         
-                        <TouchableOpacity style={{position: 'absolute', top: 5, left: 15}} onPress={() => (setAddressModal(false), setInputAddress(''), setInputLocality(''), setInputAddressType(''))}>
+                        <TouchableOpacity style={{position: 'absolute', top: 5, left: 15}} onPress={() => (setAddressModal(false), setInputAddress(''), setInputLocality(''), setInputAddressType(''))} activeOpacity={1}>
                             <Text style={{fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={{position: 'absolute', top: 15, right: 15, backgroundColor: '#f0f0f0', padding: wp(2), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}} onPress={getLocation}>
+                        <TouchableOpacity style={{position: 'absolute', top: 15, right: 15, backgroundColor: '#f0f0f0', padding: wp(2), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}} onPress={getLocation} activeOpacity={1}>
                         {Platform.OS === 'android' ? <MaterialIcons name="my-location" size={wp(8)} color="black" />: <Ionicons name="ios-location" size={wp(6.5)} color="black" />}
                         </TouchableOpacity>
                     </View>
                     <View style={{backgroundColor: '#fafafa', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000', borderTopLeftRadius: 50, borderTopRightRadius: 50, flex: 1, paddingTop: 5}}>
                         <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{padding: 35, paddingBottom: 50}} >
                             <View>
-                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginBottom: 25, color: 'black'}}>Choose delivery address</Text>
+                                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(5), marginBottom: 25, color: 'black'}}>Choose delivery address</Text>
                                 {myAddressesStatus === 200 ? myAddresses.map((item, index) => {
                                     return (
                                         <View key={item.id}>
-                                            <TouchableOpacity onPress={setDeliveryAdrress(item)}>
+                                            <Ripple onPress={setDeliveryAdrress(item)} rippleDuration={600} rippleOpacity={0.5} onLongPress={{}} >
                                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                                     {item.type_of_address === 'Home' ?  <MaterialIcons name="home" size={wp(4)} color="#249c86" />: <MaterialIcons name="work" size={wp(3)} color="#249c86" />}
-                                                    <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}> {item.type_of_address}</Text>
+                                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}> {item.type_of_address}</Text>
                                                 </View>
                                                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10}}>
-                                                    <Text style={{fontFamily: 'sf', flex: 1, fontSize: wp(3.5), color: 'black'}}>{item.address}, {item.locality}, {item.city}</Text>
-                                                    <TouchableOpacity onPress={deleteAddress(item)}>
-                                                        <Text style={{fontFamily: 'sf', color: 'red'}}>Remove</Text>
+                                                    <Text style={{fontFamily: 'Maven-med', flex: 1, fontSize: wp(3.5), color: 'black'}}>{item.address}, {item.locality}, {item.city}</Text>
+                                                    <TouchableOpacity onPress={deleteAddress(item)} activeOpacity={1}>
+                                                        <Text style={{fontFamily: 'Maven-med', color: 'red'}}>Remove</Text>
                                                     </TouchableOpacity>
                                                 </View>
-                                            </TouchableOpacity>
+                                            </Ripple>
                                             {myAddresses && index !== (myAddresses.length - 1) ?<Text style={{borderBottomWidth: 1, marginBottom: 20, borderBottomColor: '#f0f0f0'}}></Text> : null}
                                         </View>
                                     )
-                                }):<Text style={{fontFamily: 'sf', color: 'black'}}>You don't have any saved addresses. Add one now!</Text>}
+                                }):<Text style={{fontFamily: 'Maven-med', color: 'black'}}>You don't have any saved addresses. Add one now!</Text>}
                             </View>
                             <Text style={{borderBottomWidth: 1, borderBottomColor: '#ebebeb', marginTop: 25}}></Text>
                             <View style={{marginTop: 25}} >
-                                <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), color: 'black'}}>Add an address</Text>
-                                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), marginBottom: 25, color: 'black'}}>(Use the map to auto-fill)</Text>
+                                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(5), color: 'black'}}>Add an address</Text>
+                                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3), marginBottom: 25, color: 'black'}}>(Use the map to auto-fill)</Text>
                                 <ActivityIndicator size={50} color="#6aab9e" style={{position: indicPos, display: 'none', alignSelf: 'center', top: 0, bottom: 0}} />
-                                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'House/Colony'} value={inputAddress} onChangeText={(text) => setInputAddress(text)} />
-                                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'Road Number, Road Name'} value={inputLocality} onChangeText={(text) => setInputLocality(text)} />
-                                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'City'} value={inputCity} onChangeText={(text) => setInputCity(text)} />
+                                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'Maven-med' }} placeholder={'House/Colony'} value={inputAddress} onChangeText={(text) => setInputAddress(text)} />
+                                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'Maven-med' }} placeholder={'Road Number, Road Name'} value={inputLocality} onChangeText={(text) => setInputLocality(text)} />
+                                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'Maven-med' }} placeholder={'City'} value={inputCity} onChangeText={(text) => setInputCity(text)} />
                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                     <TouchableOpacity style={{backgroundColor: inputAddressType === 'Home' ? '#249c86' :'white', padding: 10, borderRadius: 5, borderWidth: 0.3, borderColor: inputAddressType === 'Home' ? '#249c86': 'black'}} onPress={() => setInputAddressType('Home')} activeOpacity={1}>
-                                        <Text style={{fontFamily: 'sf', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Home' ? 'white': 'black'}}>Home</Text>
+                                        <Text style={{fontFamily: 'Maven-med', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Home' ? 'white': 'black'}}>Home</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity style={{marginLeft: 25, backgroundColor: inputAddressType === 'Work' ? '#249c86' :'white', padding: 10, borderRadius: 5, borderWidth: 0.3, borderColor: inputAddressType === 'Work' ? '#249c86': 'black'}} onPress={() => setInputAddressType('Work')} activeOpacity={1}>
-                                    <Text style={{fontFamily: 'sf', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Work' ? 'white': 'black'}}>Work</Text>
+                                    <Text style={{fontFamily: 'Maven-med', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Work' ? 'white': 'black'}}>Work</Text>
                                     </TouchableOpacity>
                                 </View>
                                 {inputAddress === '' || inputLocality === '' || inputCity === '' || inputAddressType === '' ? 
-                                    <TouchableOpacity style={{marginTop: 25, opacity: 0.2, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10}} disabled={true}>
-                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
-                                    </TouchableOpacity>:
-                                    <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} disabled={false} onPress={addAddress}>
-                                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
-                                    </TouchableOpacity>
+                                    <Ripple style={{marginTop: 25, opacity: 0.2, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10}} disabled={true} activeOpacity={1}>
+                                        <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
+                                    </Ripple>:
+                                    <Ripple style={{marginTop: 25, opacity: 1, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} disabled={false} onPress={addAddress} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                                        <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
+                                    </Ripple>
                                 }
                             </View>
                         </ScrollView>    
@@ -806,8 +951,8 @@ const createPaymentOrder = async (payMethod) => {
 
                 <Modal 
                     isVisible={paymentModal}
-                    backdropColor={'black'}
-                    backdropOpacity={0.2} 
+                    backdropColor={'white'}
+                    backdropOpacity={0.7} 
                     backdropTransitionInTiming={600}
                     backdropTransitionOutTiming={600}
                     animationInTiming={600}
@@ -818,25 +963,34 @@ const createPaymentOrder = async (payMethod) => {
                     onBackdropPress={() => setPaymentModal(false)}
                     style={{margin: 0}}
                 >
-                    <View style={{flex: 1, backgroundColor: 'white', height: '50%', position: 'absolute', bottom: 0, width: '100%', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000', padding: 25, paddingBottom: 5}}>
-                        <Text style={{fontFamily: 'sofia-black', fontSize: wp(6), marginBottom: 5, color: 'black'}}>Choose payment method</Text>
-                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, alignSelf: 'flex-start'}} onPress={() => (setPaymentModal(false), createPaymentOrder('card'))}>
-                            <Entypo name="credit-card" size={15} color="black" />
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black', marginLeft: 10}}>Card</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, alignSelf: 'flex-start'}} onPress={() => (setPaymentModal(false), createPaymentOrder('upi'))}>
-                            <FontAwesome name="google-wallet" size={15} color="black" />
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black', marginLeft: 10}}>Upi</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, alignSelf: 'flex-start'}} onPress={() => (setPaymentModal(false), createPaymentOrder('netbanking'))}>
-                            <FontAwesome name="bank" size={15} color="black" />
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black', marginLeft: 10}}>Net banking</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, alignSelf: 'flex-start'}} onPress={() => (setPaymentModal(false), placeOrder())}>
-                            <MaterialCommunityIcons name="cash" size={20} color="black"/>
-                            <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: 'black', marginLeft: 10}}>Cash On Delivery</Text>
-                        </TouchableOpacity>
-                        <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3)}}>(Note: If selected Cash On Delivery you won't be able to choose another method as order will be placed. We recommend paying online to ensure safety in these tough times !)</Text>
+                    <View style={{flex: 1, backgroundColor: 'white', height: '35%', position: 'absolute', bottom: 0, width: '100%', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000', paddingBottom: 5}}>
+                        <Text style={{paddingLeft: 25, paddingTop: 25, fontFamily: 'Maven-bold', fontSize: wp(6), marginBottom: 5, color: 'black'}}>Choose payment method</Text>
+                        <ScrollView
+                         overScrollMode={'never'} 
+                         showsHorizontalScrollIndicator={false}
+                         horizontal={true}
+                         contentContainerStyle={{ paddingBottom: 25}}
+                        >
+                            <View style={{paddingLeft: 25, flexDirection: 'row', alignItems: 'center', paddingRight: 25}}>
+                                <TouchableOpacity style={{marginRight: 25, padding: 25, paddingLeft: 35, paddingRight: 35, borderRadius: 10, backgroundColor: '#fcfcfc', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => (setPaymentModal(false), createPaymentOrder('card'))} activeOpacity={1}>
+                                    <CustomIcon name="card" size={20} color="black" style={{alignSelf: 'center'}}  />
+                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black', marginTop: 10, textAlign: 'center'}}>Card</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={{marginRight: 25, padding: 25, paddingLeft: 35, paddingRight: 35, borderRadius: 10, backgroundColor: '#fcfcfc', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => (setPaymentModal(false), createPaymentOrder('upi'))} activeOpacity={1}>
+                                    <CustomIcon name="upi" size={20} color="black" style={{alignSelf: 'center'}}  />
+                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black', marginTop: 10, textAlign: 'center'}}>UPI</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={{marginRight: 25, padding: 25, paddingLeft: 35, paddingRight: 35, borderRadius: 10, backgroundColor: '#fcfcfc', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={() => (setPaymentModal(false), createPaymentOrder('netbanking'))} activeOpacity={1}>
+                                    <CustomIcon name="netbanking" size={20} color="black" style={{alignSelf: 'center'}}  />
+                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black', marginTop: 10, textAlign: 'center'}}>Net banking</Text>
+                                </TouchableOpacity>
+                                {/* <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginTop: 25, alignSelf: 'flex-start'}} onPress={() => (setPaymentModal(false), placeOrder())} activeOpacity={1}>
+                                    <MaterialCommunityIcons name="cash" size={20} color="black"/>
+                                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black', marginLeft: 10}}>Cash On Delivery</Text>
+                                </TouchableOpacity>
+                                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3)}}>(Note: If selected Cash On Delivery you won't be able to choose another method as order will be placed. We recommend paying online to ensure safety in these tough times !)</Text> */}
+                            </View>
+                        </ScrollView>
                     </View>
                     
                 </Modal>
@@ -853,20 +1007,20 @@ const createPaymentOrder = async (payMethod) => {
                     useNativeDriver={true}
                 >
                     <View style={{backgroundColor: 'white', padding: 20, maxHeight: '30%', borderRadius: 10, elevation: 25, shadowOffset: {width: 0, height: 12}, shadowOpacity: 0.58, shadowRadius: 16.00, shadowColor: '#000'}}>
-                        {couponList.length > 0 ? <Text style={{fontFamily: 'sofia-black', marginBottom: 25, fontSize: wp(5), textAlign: 'center', color: 'black'}}>Available Offers</Text>: <LottieView source={require('../assets/animations/823-crying.json')} autoPlay={true} loop={true} style={{width: 80, height: 80, alignSelf: 'center'}} />}
+                        {couponList.length > 0 ? <Text style={{fontFamily: 'Maven-sem', marginBottom: 25, fontSize: wp(5), textAlign: 'center', color: 'black'}}>Available Offers</Text>: <LottieView source={require('../assets/animations/823-crying.json')} autoPlay={true} loop={true} style={{width: 80, height: 80, alignSelf: 'center'}} />}
                         <FlatList 
                             data={couponList}
                             keyExtractor={(item, index) => index.toString()}
                             showsVerticalScrollIndicator={false}
-                            ListEmptyComponent={() => (!couponList.length ? <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', color: 'black'}}>No offers available right now!</Text>: null)}
+                            ListEmptyComponent={() => (!couponList.length ? <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', color: 'black'}}>No offers available right now!</Text>: null)}
                             renderItem={({ item }) => (
                                 <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 20, borderWidth: 0.7, borderStyle: 'dashed', borderRadius: 1, padding: 10}}>
                                     <View style={{flex: 1}}>
-                                        <Text style={{fontFamily: 'sf', color: 'black'}}>{item.name}</Text>
-                                        <Text style={{fontFamily: 'Maison-bold', textDecorationLine: 'underline', color: 'black'}}>{item.description}</Text>
+                                        <Text style={{fontFamily: 'Maven-med', color: 'black'}}>{item.name}</Text>
+                                        <Text style={{fontFamily: 'Maven-sem', textDecorationLine: 'underline', color: 'black'}}>{item.description}</Text>
                                     </View>
-                                    <TouchableOpacity disabled={total > item.min_items_price ? false : true} onPress={() => (setAppliedCoupon(item), setCouponModal(false), animationModalShow())}>
-                                        <Text style={total > item.min_items_price ? {opacity: 1, fontFamily: 'Maison-bold', color: '#249c86'}: {opacity: 0.2, fontFamily: 'Maison-bold', color: '#249c86'}}>Apply</Text>
+                                    <TouchableOpacity disabled={total > item.min_items_price ? false : true} onPress={() => (setAppliedCoupon(item), setCouponModal(false), animationModalShow())} activeOpacity={1}>
+                                        <Text style={total > item.min_items_price ? {opacity: 1, fontFamily: 'Maven-sem', color: '#249c86'}: {opacity: 0.2, fontFamily: 'Maven-sem', color: '#249c86'}}>Apply</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -884,7 +1038,7 @@ const createPaymentOrder = async (payMethod) => {
                     backdropOpacity={1}
                 >
                     <LottieView style={{alignSelf: 'center', width: 300}} source={require('../assets/animations/order-placed.json')} autoPlay={true} loop={false} onAnimationFinish={() => navigation.pop()} />
-                    <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), marginTop: 50, textAlign: 'center', color: 'black'}}>Order Placed !</Text>
+                    <Text style={{fontFamily: 'Maven-sem', fontSize: wp(7), marginTop: 50, textAlign: 'center', color: 'black'}}>Order Placed !</Text>
                 </Modal>
 
                 <Modal
@@ -896,11 +1050,25 @@ const createPaymentOrder = async (payMethod) => {
                 </Modal>
             </View>
         </ScrollView>
+        <View style={{position: 'absolute', backgroundColor: '#fcfcfc', padding: 15, bottom: 0, width: '100%', flexDirection: 'row', alignItems: 'center', elevation: 20, shadowColor: "#000", shadowOffset: {width: 0, height: 10}, shadowOpacity: 0.51, shadowRadius: 13.16}}>
+            <View style={{flex: 1}}>
+                {appliedCoupon ? <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', fontSize: wp(4.5), color: 'black'}}>Total   &#8377; {total + deliveryCharges + taxes - appliedCoupon.discount}</Text>: <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', fontSize: wp(4.5), color: 'black'}}>Total   &#8377; {total + deliveryCharges + taxes}</Text>}
+            </View>
+            {onPlace ? <ActivityIndicator color="#6aab9e" size={50} style={{flex: 1}} />
+            : myAddressesStatus === 200 && deliveryAddressStatus === 200 && cartStatus === 200 ? 
+                <Ripple onPress={() => setPaymentModal(true)} style={{flex: 1, opacity: 1, backgroundColor: '#6aab9e', borderRadius: 5, padding: 15, alignSelf: 'flex-end', width: '60%', elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                    <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', fontSize: wp(4), color: 'black'}}>Place Order &raquo;</Text>
+                </Ripple>:
+                <Ripple disabled={true} style={{flex: 1, opacity: 0.1, backgroundColor: '#6aab9e', borderRadius: 5, padding: 15, alignSelf: 'flex-end', width: '60%'}} activeOpacity={1}>
+                    <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', color: 'black'}}>Place Order &raquo;</Text>
+                </Ripple>
+            }
+        </View>
         {/* <View style={{flexDirection: 'row', alignItems: 'center'}}>
-            <Text style={{fontFamily: 'Maison-bold', position: 'absolute', top: 0, left: 50, fontSize: wp(2.5)}}>Payment type</Text>
+            <Text style={{fontFamily: 'Maven-sem', position: 'absolute', top: 0, left: 50, fontSize: wp(2.5)}}>Payment type</Text>
             <TouchableOpacity style={{flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}} onPress={() => setPaymentModal(true)}>
                 {paymentType === 'Cash On Delivery' ? <MaterialCommunityIcons name="cash" size={20} color="green"/> : paymentType === 'Card' ? <Entypo name="credit-card" size={20} color="black" />: <FontAwesome name="google-wallet" size={20} color="blue" />}
-                <Text style={{textAlign: 'center', fontFamily: 'Maison-bold'}}> {paymentType}</Text>
+                <Text style={{textAlign: 'center', fontFamily: 'Maven-sem'}}> {paymentType}</Text>
             </TouchableOpacity>
             
         </View> */}
@@ -913,8 +1081,8 @@ const createPaymentOrder = async (payMethod) => {
 const styles = StyleSheet.create({
   container: {
       flex: 1,
-      backgroundColor: '#fafafa',
-      paddingTop: 100
+      backgroundColor: '#fcfcfc',
+      paddingTop: 15
       
   },
   refreshcontainer: {

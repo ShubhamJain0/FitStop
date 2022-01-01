@@ -1,8 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, Image, SafeAreaView, ActivityIndicator, Platform, Button, Animated } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, Image, SafeAreaView, ActivityIndicator, Platform, Button, Animated, Dimensions } from 'react-native';
 import Modal from 'react-native-modal';
-import { FontAwesome5, MaterialIcons, AntDesign, MaterialCommunityIcons, Entypo, FontAwesome, Ionicons } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons, AntDesign, MaterialCommunityIcons, Entypo, FontAwesome, Ionicons, createIconSetFromIcoMoon } from '@expo/vector-icons';
+import icoMoonConfig from '../selection.json';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { ScrollView } from 'react-native';
@@ -12,12 +13,20 @@ import MapView, {Marker, AnimatedRegion, Callout, MarkerAnimated} from 'react-na
 import * as ImagePicker from 'expo-image-picker';
 import { showMessage } from 'react-native-flash-message';
 import * as SecureStore from 'expo-secure-store';
-import { UserContext } from './context';
+import { UserContext, IsLoginContext } from './context';
+import NetInfo from "@react-native-community/netinfo";
+import Ripple from 'react-native-material-ripple';
+
+const {width: screenWidth} = Dimensions.get('window');
 
 
 export default function Profile({ navigation }) {
 
+  const CustomIcon = createIconSetFromIcoMoon(icoMoonConfig, 'IcoMoon');
+
   const [mounted, setMounted] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
+  const [showIndic, setShowInidc] = useState(false);
 
   const [userData, setUserData] = useState({});
   const [respStatus, setRespStatus] = useState(0);
@@ -40,6 +49,7 @@ export default function Profile({ navigation }) {
   const [inputAddressType, setInputAddressType] = useState('');
   const [indicPos, setIndicPos] = useState('relative');
   
+  const [conIsLogin, setConIsLogin] = useContext(IsLoginContext);
 
   const [mapDefLocation, setMapDefLocation] = useState({latitude: 17.4217697, longitude: 78.4749875, latitudeDelta: 0.1, longitudeDelta: 0.1});
   const [markerData, setMarkerData] = useState(new AnimatedRegion({ latitude: 17.4217697, longitude: 78.4749875, latitudeDelta:  0.1,
@@ -48,6 +58,28 @@ export default function Profile({ navigation }) {
   const markerRef = useRef(null);
 
   const [errorMsg, setErrormsg] = useState('');
+
+
+    //Checks for internet connection
+    useEffect(() => {
+        NetInfo.fetch().then(state => {
+        if (!state.isConnected) {
+            setIsOffline(true);
+        }
+        })
+    }, [])
+
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+        if (!state.isConnected || !state.isInternetReachable) {
+            setIsOffline(true);
+        } 
+        })
+
+        return () => {
+          unsubscribe();
+        }
+    }, [])
 
   useEffect(() => {
     const getToken = navigation.addListener('focus', () => {
@@ -103,17 +135,23 @@ export default function Profile({ navigation }) {
 
   const logout = async () => {
     await SecureStore.deleteItemAsync('USER_TOKEN')
+    .then(() => {if (conIsLogin)  
+      {
+        setConIsLogin(false);
+      }
+    })
     .then(() => navigation.goBack())
     .then(() => setRespStatus(401))
     .then(() => showMessage({
         message: 'You are successfully logged out !',
         position: 'top',
         floating: true,
-        titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+        titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
         style: {alignItems: 'center'},
         icon: 'auto',
         type: 'success',
-        statusBarHeight: hp(3)
+        statusBarHeight: hp(3),
+        duration: 4000
     }))
   }
 
@@ -135,11 +173,12 @@ export default function Profile({ navigation }) {
           message: 'There was an error in uploading image, please try again !',
           position: 'top',
           floating: true,
-          titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+          titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
           style: {alignItems: 'center'},
           icon: 'auto',
           type: 'warning',
-          statusBarHeight: hp(3)
+          statusBarHeight: hp(3),
+          duration: 5000
       })}})
       .then(() => fetch('http://192.168.0.156:8000/api/me/',{
                       method: 'PATCH',
@@ -158,26 +197,34 @@ export default function Profile({ navigation }) {
                                 setChangeEmail('');
                                 setChangePhoto(null);
                                 setImage(null);
+                                if (conIsLogin)  
+                                {
+                                  setConIsLogin(false);
+                                } else {
+                                  setConIsLogin(true);
+                                };
                                 showMessage({
                                     message: 'Profile updated !',
                                     position: 'top',
                                     floating: true,
-                                    titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                                    titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                                     style: {alignItems: 'center'},
                                     icon: 'auto',
                                     type: 'success',
-                                    statusBarHeight: hp(3)
+                                    statusBarHeight: hp(3),
+                                    duration: 4000
                                 })
                                 } else {
                                   showMessage({
                                       message: 'Please enter valid information !',
                                       position: 'top',
                                       floating: true,
-                                      titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+                                      titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
                                       style: {alignItems: 'center'},
                                       icon: 'auto',
                                       type: 'warning',
-                                      statusBarHeight: hp(3)
+                                      statusBarHeight: hp(3),
+                                      duration: 5000
                                   })
                                   setProfileIndic('relative')
                                 }
@@ -303,15 +350,15 @@ export default function Profile({ navigation }) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       showMessage({
-          message: 'Sorry, we need gallery permissions to make this work ! Turn on gallery permissions in your app settings .',
+          message: 'Sorry, we need gallery permissions to make this work! Turn on gallery permissions in your app settings .',
           position: 'top',
           floating: true,
-          titleStyle: {fontFamily: 'Maison-bold', fontSize: wp(3.5)},
+          titleStyle: {fontFamily: 'Maven-sem', fontSize: wp(3.5)},
           style: {alignItems: 'center'},
           icon: 'auto',
           type: 'danger',
           statusBarHeight: hp(3),
-          duration: 4000
+          duration: 5000
       })
     } else {
       let result = await ImagePicker.launchImageLibraryAsync({
@@ -337,6 +384,69 @@ export default function Profile({ navigation }) {
     } 
   }
 
+
+  const retry = async () => {
+    setShowInidc(true);
+    const token = await SecureStore.getItemAsync('USER_TOKEN')
+    try {
+        if (token) {
+          fetch('http://192.168.0.156:8000/api/me/',{
+              method: 'GET',
+              headers: {
+              'Authorization': `Token ${token}`,
+              'Content-type': 'application/json'
+              }
+          })
+          .then(resp => resp.json().then(data => ({status: resp.status, json: data})))
+          .then(resp => (setUserData(resp.json), setRespStatus(resp.status)))
+          .catch(error => setError(error));
+
+          fetch('http://192.168.0.156:8000/store/myaddress/',{
+                method: 'GET',
+                headers: {
+                'Authorization': `Token ${token}`,
+                'Content-type': 'application/json'
+                }
+            })
+            .then(resp =>  resp.json().then(data => ({status: resp.status, json: data})))
+            .then(resp => {if (mounted) {setMyAddresses(resp.json), setMyAddressesStatus(resp.status)}})
+            .then(() => setIsOffline(false))
+            .then(() => setShowInidc(false))
+            .catch(error => setError(error))
+        } else {
+            if (mounted) {
+                setRespStatus(401);
+                setShowInidc(false);
+                setIsOffline(false);
+            }
+        }
+    } catch (error) {
+        setError(error)
+    } finally {
+        NetInfo.fetch().then(state => {
+            if (!state.isConnected) {
+              setTimeout(() => setShowInidc(false), 3000)
+            }
+        })
+    }
+  }
+
+
+  if (isOffline) {
+      return (
+          <View style={{flex: 1, backgroundColor: '#fcfcfc'}}>
+              <StatusBar style="inverted" />
+              <Image source={require('../assets/offline.png')} style={{width: '95%', height: 1939*(screenWidth/3300), marginTop: wp(30), alignSelf: 'center'}} />
+              <View style={{width: '80%', alignSelf: 'center'}}>
+              <Text style={{fontFamily: 'Maven-bold', fontSize: wp(6), marginTop: 50, textAlign: 'center', color: 'black'}}>Uh oh! Seems like you are disconnected !</Text>
+              {!showIndic ? <TouchableOpacity style={{alignSelf: 'center', marginTop: 25}} onPress={retry} activeOpacity={1}>
+                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}>RETRY</Text>
+              </TouchableOpacity>: <LottieView source={require('../assets/animations/connecting.json')} autoPlay={true} loop={true} style={{height: 100, alignSelf: 'center'}} />}
+              </View>
+          </View>
+      )
+  }
+
   
 
 
@@ -348,10 +458,10 @@ export default function Profile({ navigation }) {
           <StatusBar style="inverted" />
           <Image source={require('../assets/eCommerce_solid.png')} style={{width: '100%', height: '50%'}} />
           <View style={{width: '70%', alignSelf: 'center'}}>
-            <Text style={{fontFamily: 'sofia-black', textAlign: 'center', fontSize: wp(12), color: 'black'}}>EatFrut</Text>
-            <Text style={{fontFamily: 'sf', marginTop: hp(2), textAlign: 'center', fontSize: wp(3.5), color: 'black'}}>Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out print, graphic or web designs.</Text>
-              <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(10), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(10), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} onPress={() => navigation.navigate('Register')} activeOpacity={0.8} >
-                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(5), color: 'black'}}>&#x27F6;</Text>
+            <Text style={{fontFamily: 'Maven-sem', textAlign: 'center', fontSize: wp(12), color: 'black'}}>EatFrut</Text>
+            <Text style={{fontFamily: 'Maven-med', marginTop: hp(2), textAlign: 'center', fontSize: wp(3.5), color: 'black'}}>Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out print, graphic or web designs.</Text>
+              <TouchableOpacity style={Platform.OS === 'android' ? {alignSelf: 'flex-end', backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 10, borderRadius: 20, marginTop: hp(10), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}: {alignSelf: 'flex-end', backgroundColor: '#6aab9e', paddingLeft: 20, paddingRight: 20, paddingBottom: 15, paddingTop: 15, borderRadius: 20, marginTop: hp(10), elevation: 10, shadowOffset: {width: 0, height: 5}, shadowRadius: 6.27, shadowOpacity: 0.34, shadowColor: '#000'}} onPress={() => navigation.navigate('Register')} activeOpacity={1} >
+                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(5), color: 'black'}}>&#x27F6;</Text>
               </TouchableOpacity>
           </View>
         </View>
@@ -380,119 +490,133 @@ export default function Profile({ navigation }) {
             </View>
             <Text style={{ backgroundColor: '#f0f0f0', height: '80%', width: 1.5}}></Text>
             <View style={{flex: 1}}>
-              <TouchableOpacity style={{alignSelf: 'center'}} onPress={() => {setModalVisible(true); userData.name ? setChangeName(userData.name): setChangeName(''); userData.email ? setChangeEmail(userData.email): setChangeEmail('')}} activeOpacity={0.5}>
-                <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 10, color: 'black'}}>Edit Profile</Text>
+              <TouchableOpacity style={{alignSelf: 'center', flexDirection: 'row', alignItems: 'center'}} onPress={() => {setModalVisible(true); userData.name ? setChangeName(userData.name): setChangeName(''); userData.email ? setChangeEmail(userData.email): setChangeEmail('')}} activeOpacity={1}>
+                <CustomIcon name="edit" size={20} color="#000000" />
+                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), marginLeft: 10, color: 'black'}}>Edit Profile</Text>
               </TouchableOpacity>
             </View>
           </View>
-          <Text style={{marginLeft: wp(16), marginTop: 10, fontFamily: 'sofia-black', fontSize: wp(7), marginBottom: 50, color: 'black'}}>{userData.name ? userData.name.replace(' ', '\n') : ''}</Text>
+          <Text style={{marginLeft: wp(16), marginTop: 10, fontFamily: 'Maven-sem', fontSize: wp(7), marginBottom: 50, color: 'black'}}>{userData.name ? userData.name.replace(' ', '\n') : ''}</Text>
 
-          <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+          <ScrollView bounces={false} showsVerticalScrollIndicator={false} overScrollMode={'never'}>
             <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: wp(10)}}>
-              <View style={{backgroundColor: '#edf0ff', borderRadius: 10, paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1)}}>
-                <FontAwesome5 name="list" size={wp(3.5)} color="#5e72eb" />
+              <View style={{}}>
+                <CustomIcon name="prevorders" size={20} color="#000000" />
               </View>
-              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>My Orders</Text>
+              <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>Order History</Text>
               <View style={{flex: 1}}>
-                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => navigation.navigate('PreviousOrders')}>
-                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
-                </TouchableOpacity>
+                <Ripple style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => navigation.navigate('PreviousOrders')} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
+                </Ripple>
               </View>
             </View>
 
             <Text style={{backgroundColor: '#f0f0f0', width: '80%', height: 1, alignSelf: 'center', marginTop: 30}}></Text>
 
             <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: wp(10), marginTop: 30}}>
-              <View style={{backgroundColor: '#f0f0f0', borderRadius: 10, paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1)}}>
-                <FontAwesome5 name="address-book" size={wp(4)} color="#041b2d" />
+              <View style={{}}>
+                <CustomIcon name="subscription" size={20} color="#000000" />
               </View>
-              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>Address Book</Text>
+              <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>My Subscriptions</Text>
               <View style={{flex: 1}}>
-                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => setAddressModal(true)}>
-                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
-                </TouchableOpacity>
+                <Ripple style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => navigation.navigate('MySubscriptions')} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
+                </Ripple>
+              </View>
+            </View>
+            <Text style={{backgroundColor: '#f0f0f0', width: '80%', height: 1, alignSelf: 'center', marginTop: 30}}></Text>    
+
+            <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: wp(10), marginTop: 30}}>
+              <View style={{}}>
+                <CustomIcon name="address" size={20} color="#000000" />
+              </View>
+              <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>Address Book</Text>
+              <View style={{flex: 1}}>
+                <Ripple style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => setAddressModal(true)} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
+                </Ripple>
               </View>
             </View>
             <Text style={{backgroundColor: '#f0f0f0', width: '80%', height: 1, alignSelf: 'center', marginTop: 30}}></Text>
 
 
             <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: wp(10), marginTop: 30}}>
-              <View style={{backgroundColor: '#fff2ed', borderRadius: 10, paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1)}}>
-                <MaterialCommunityIcons name="clipboard-list-outline" size={wp(4)} color="#ff8e61" />
+              <View style={{}}>
+                <CustomIcon name="terms" size={20} color="#000000" />
               </View>
-              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>Terms and Conditions</Text>
+              <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>Terms and Conditions</Text>
               <View style={{flex: 1}}>
-                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => navigation.navigate('TermsandConditions')}>
-                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
-                </TouchableOpacity>
+                <Ripple style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} onPress={() => navigation.navigate('TermsandConditions')} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
+                </Ripple>
               </View>
             </View>
 
             <Text style={{backgroundColor: '#f0f0f0', width: '80%', height: 1, alignSelf: 'center', marginTop: 30}}></Text>
 
             <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: wp(10), marginTop: 30}}>
-              <View style={{backgroundColor: '#fffade', borderRadius: 10, paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1)}}>
-                <FontAwesome5 name="star-half-alt" size={wp(3.5)} color="#f0c23e" />
+              <View style={{}}>
+                <CustomIcon name="star" size={20} color="#000000" />
               </View>
-              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>Rate us !</Text>
+              <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), marginLeft: 25, flex: 1, color: 'black'}}>Rate us !</Text>
               <View style={{flex: 1}}>
-                <TouchableOpacity style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}}>
-                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
-                </TouchableOpacity>
+                <Ripple style={{alignSelf: 'center', backgroundColor: '#6aab9e', paddingLeft: wp(2), paddingRight: wp(2), paddingTop: wp(1), paddingBottom: wp(1), borderRadius: 10, elevation: 10, shadowOffset: {width: 0, height: 5}, shadowOpacity: 0.34, shadowRadius: 6.27, shadowColor: '#000'}} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4.5), color: 'black'}}>&rarr;</Text>
+                </Ripple>
               </View>
             </View>
 
             <Text style={{backgroundColor: '#f0f0f0', width: '80%', height: 1, alignSelf: 'center', marginTop: 30}}></Text>
 
-            <TouchableOpacity style={{marginBottom: 25, flexDirection: 'row', alignItems: 'center', marginLeft: wp(10), marginTop: 50, backgroundColor: '#fff5f7', width: wp(35), padding: 10, borderRadius: 10, justifyContent: 'center'}} onPress={logout}>
-              <MaterialCommunityIcons name="logout" size={wp(5)} color="red" />
-              <Text style={{fontFamily: 'Maison-bold', marginLeft: 15, fontSize: wp(4), color: 'black'}}>Sign Out</Text>
-            </TouchableOpacity>
+            <Ripple style={{marginBottom: 25, backgroundColor: '#6aab9e', elevation: 5, padding: 15, borderRadius: 10, flexDirection: 'row', alignItems: 'center', marginLeft: wp(10), marginTop: 30, alignSelf: 'flex-start'}} onPress={logout} rippleDuration={600} rippleContainerBorderRadius={10} rippleOpacity={0.5} onLongPress={{}}>
+              <CustomIcon name="signout" size={20} color="#000000" />
+              <Text style={{fontFamily: 'Maven-sem', marginLeft: 15, fontSize: wp(4), color: 'black'}}>Sign Out</Text>
+            </Ripple>
           </ScrollView>
           
           <Modal
             isVisible={modalVisible}
-            backdropOpacity={0.2}
+            backdropOpacity={0.5}
             backdropColor={'white'}
             onBackButtonPress={() => (setModalVisible(false))}
             onBackdropPress={() => setModalVisible(false)}
             style={{margin: 0}}
-            backdropTransitionInTiming={600}
-            backdropTransitionOutTiming={600}
-            animationInTiming={600}
-            animationOutTiming={600}
+            backdropTransitionInTiming={400}
+            backdropTransitionOutTiming={400}
+            animationInTiming={400}
+            animationOutTiming={400}
             useNativeDriver={true}
           >
             <View style={{flex: 1, backgroundColor: 'white', height: '100%', marginTop: hp(40), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000', borderTopLeftRadius: 50, borderTopRightRadius: 50}}>
               <ActivityIndicator size={45} color={'#6aab9e'} style={{position: profileIndic, display: 'none', alignSelf: 'center', top: 0, bottom: 0}}  />
               <ScrollView contentContainerStyle={{paddingBottom: 50, padding: 50, paddingTop: 25}} showsVerticalScrollIndicator={false} bounces={false}>
-                <Text style={{fontFamily: 'sofia-black', fontSize: wp(7), marginBottom: 35, color: 'black'}}>Edit Profile</Text>
-                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: hp(2), fontFamily: 'sf', fontSize: wp(3.5) }} 
+                <Text style={{fontFamily: 'Maven-sem', fontSize: wp(7), marginBottom: 35, color: 'black'}}>Edit Profile</Text>
+                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: hp(2), fontFamily: 'Maven-med', fontSize: wp(3.5) }} 
                     placeholder={'Name'} value={changeName} onChangeText={(text) => setChangeName(text)} />
-                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: hp(2), fontFamily: 'sf', fontSize: wp(3.5) }} 
+                <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: hp(2), fontFamily: 'Maven-med', fontSize: wp(3.5) }} 
                     placeholder={'Email'} value={changeEmail} onChangeText={(text) => setChangeEmail(text)} keyboardType={'email-address'} />
                 <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15, justifyContent: 'space-between'}}>
                   <View style={{flexDirection: 'row', alignItems: 'center'}}>
                     {Platform.OS === 'android' ? <MaterialIcons name="monochrome-photos" size={wp(5)} color="#11999e" /> : <Ionicons name="ios-camera-outline" size={wp(5)} color="#11999e" />}
-                    <TouchableOpacity style={{marginLeft: 3}} onPress={choosePhoto} activeOpacity={0.5} >
-                      <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}> Edit Photo</Text>
+                    <TouchableOpacity style={{marginLeft: 3}} onPress={choosePhoto} activeOpacity={1} >
+                      <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black'}}> Edit Photo</Text>
                     </TouchableOpacity>
                   </View>
                   {image && 
                   <View>
                     <Image source={{uri : image}} style={{width: wp(35), height: wp(35), borderRadius: 100}} />
-                    <TouchableOpacity style={{position: 'absolute', top: 0, right: 0}} onPress={() => (setImage(null), setChangePhoto(null))}>
+                    <TouchableOpacity style={{position: 'absolute', top: 0, right: 0}} onPress={() => (setImage(null), setChangePhoto(null))} activeOpacity={1}>
                       <Entypo name="circle-with-cross" size={15} color="#F67280" />
                     </TouchableOpacity>
                   </View>
                   }                
                 </View>
                 {changeName === '' && changeEmail === '' && changePhoto === null ?
-                  <TouchableOpacity disabled={true} style={{opacity: 0.2, marginTop: 25, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10}}>
-                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>Update</Text>
+                  <TouchableOpacity disabled={true} style={{opacity: 0.2, marginTop: 25, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10}} activeOpacity={1}>
+                    <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black'}}>Update</Text>
                   </TouchableOpacity> :
-                  <TouchableOpacity disabled={profileIndic === 'absolute' ? true: false} style={profileIndic === 'absolute' ? {opacity: 0.2, marginTop: 25, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10} : {opacity: 1, marginTop: 25, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={editProfile} activeOpacity={0.6}>
-                    <Text style={{textAlign: 'center', fontFamily: 'Maison-bold', fontSize: wp(3.5), color: 'black'}}>Update</Text>
+                  <TouchableOpacity disabled={profileIndic === 'absolute' ? true: false} style={profileIndic === 'absolute' ? {opacity: 0.2, marginTop: 25, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10} : {opacity: 1, marginTop: 25, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} onPress={editProfile} activeOpacity={1}>
+                    <Text style={{textAlign: 'center', fontFamily: 'Maven-sem', fontSize: wp(3.5), color: 'black'}}>Update</Text>
                   </TouchableOpacity>
                 }
               </ScrollView>
@@ -531,59 +655,59 @@ export default function Profile({ navigation }) {
                         />
                     </MapView>
                     
-                    <TouchableOpacity style={{position: 'absolute', top: 5, left: 15}} onPress={() => (setAddressModal(false), setInputAddress(''), setInputLocality(''), setInputAddressType(''))}>
+                    <TouchableOpacity style={{position: 'absolute', top: 5, left: 15}} onPress={() => (setAddressModal(false), setInputAddress(''), setInputLocality(''), setInputAddressType(''))} activeOpacity={1}>
                       <Text style={{fontSize: wp(7), fontWeight:'bold', color: 'black'}}>&#x27F5;</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={{position: 'absolute', top: 15, right: 15, backgroundColor: '#f0f0f0', padding: wp(2), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}} onPress={getLocation}>
+                    <TouchableOpacity style={{position: 'absolute', top: 15, right: 15, backgroundColor: '#f0f0f0', padding: wp(2), elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000'}} onPress={getLocation} activeOpacity={1}>
                       {Platform.OS === 'android' ? <MaterialIcons name="my-location" size={wp(8)} color="black" />: <Ionicons name="ios-location" size={wp(6.5)} color="black" />}
                     </TouchableOpacity>
                   </View>
                   <View style={{backgroundColor: '#fafafa', elevation: 25, shadowOffset: {width: 0, height: 12}, shadowRadius: 16, shadowOpacity: 0.58, shadowColor: '#000', borderTopLeftRadius: 50, borderTopRightRadius: 50, flex: 1, paddingTop: 5}}>
                     <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={{padding: 35, paddingBottom: 50}} >
                       <View>
-                          <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), marginBottom: 25, color: 'black'}}>Choose delivery address</Text>
+                          <Text style={{fontFamily: 'Maven-sem', fontSize: wp(5), marginBottom: 25, color: 'black'}}>Choose delivery address</Text>
                           {myAddressesStatus === 200 ? myAddresses.map((item, index) => {
                               return (
                                   <View key={item.id}>
-                                      <TouchableOpacity onPress={setDeliveryAdrress(item)}>
+                                      <TouchableOpacity onPress={setDeliveryAdrress(item)} activeOpacity={1}>
                                           <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                               {item.type_of_address === 'Home' ?  <MaterialIcons name="home" size={wp(4.5)} color="#249c86" />: <MaterialIcons name="work" size={wp(3.5)} color="#249c86" />}
-                                              <Text style={{fontFamily: 'Maison-bold', fontSize: wp(4), color: '#249c86'}}> {item.type_of_address}</Text>
+                                              <Text style={{fontFamily: 'Maven-sem', fontSize: wp(4), color: '#249c86'}}> {item.type_of_address}</Text>
                                           </View>
                                           <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10}}>
-                                              <Text style={{fontFamily: 'sf', flex: 1, fontSize: wp(3.5), color: 'black'}}>{item.address}, {item.locality}, {item.city}</Text>
-                                              <TouchableOpacity onPress={deleteAddress(item)}>
-                                                  <Text style={{fontFamily: 'sf', color: 'red'}}>Remove</Text>
+                                              <Text style={{fontFamily: 'Maven-med', flex: 1, fontSize: wp(3.5), color: 'black'}}>{item.address}, {item.locality}, {item.city}</Text>
+                                              <TouchableOpacity onPress={deleteAddress(item)} activeOpacity={1}>
+                                                  <Text style={{fontFamily: 'Maven-med', color: 'red'}}>Remove</Text>
                                               </TouchableOpacity>
                                           </View>
                                       </TouchableOpacity>
                                       {myAddresses && index !== (myAddresses.length - 1) ?<Text style={{borderBottomWidth: 1, marginBottom: 20, borderBottomColor: '#f0f0f0'}}></Text> : null}
                                   </View>
                               )
-                          }):<Text style={{fontFamily: 'sf', color: 'black'}}>You don't have any saved addresses. Add one now!</Text>}
+                          }):<Text style={{fontFamily: 'Maven-med', color: 'black'}}>You don't have any saved addresses. Add one now!</Text>}
                       </View>
                       <Text style={{borderBottomWidth: 1, borderBottomColor: '#ebebeb', marginTop: 25}}></Text>
                       <View style={{marginTop: 25}} >
-                          <Text style={{fontFamily: 'sofia-bold', fontSize: wp(5), color: 'black'}}>Add an address</Text>
-                          <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), marginBottom: 25, color: 'black'}}>(Use the map to auto-fill)</Text>
+                          <Text style={{fontFamily: 'Maven-sem', fontSize: wp(5), color: 'black'}}>Add an address</Text>
+                          <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3), marginBottom: 25, color: 'black'}}>(Use the map to auto-fill)</Text>
                           <ActivityIndicator size={50} color="#6aab9e" style={{position: indicPos, display: 'none', alignSelf: 'center', top: 0, bottom: 0}} />
-                          <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'House/Colony'} value={inputAddress} onChangeText={(text) => setInputAddress(text)} />
-                          <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'Road Number, Road Name'} value={inputLocality} onChangeText={(text) => setInputLocality(text)} />
-                          <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'sf' }} placeholder={'City'} value={inputCity} onChangeText={(text) => setInputCity(text)} />
+                          <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'Maven-med' }} placeholder={'House/Colony'} value={inputAddress} onChangeText={(text) => setInputAddress(text)} />
+                          <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'Maven-med' }} placeholder={'Road Number, Road Name'} value={inputLocality} onChangeText={(text) => setInputLocality(text)} />
+                          <TextInput style={{ borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginBottom: 10, fontFamily: 'Maven-med' }} placeholder={'City'} value={inputCity} onChangeText={(text) => setInputCity(text)} />
                           <View style={{flexDirection: 'row', alignItems: 'center'}}>
                               <TouchableOpacity style={{backgroundColor: inputAddressType === 'Home' ? '#249c86' :'white', padding: 10, borderRadius: 5, borderWidth: 0.3, borderColor: inputAddressType === 'Home' ? '#249c86': 'black'}} onPress={() => setInputAddressType('Home')} activeOpacity={1}>
-                                  <Text style={{fontFamily: 'sf', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Home' ? 'white': 'black'}}>Home</Text>
+                                  <Text style={{fontFamily: 'Maven-med', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Home' ? 'white': 'black'}}>Home</Text>
                               </TouchableOpacity>
                               <TouchableOpacity style={{marginLeft: 25, backgroundColor: inputAddressType === 'Work' ? '#249c86' :'white', padding: 10, borderRadius: 5, borderWidth: 0.3, borderColor: inputAddressType === 'Work' ? '#249c86': 'black'}} onPress={() => setInputAddressType('Work')} activeOpacity={1}>
-                              <Text style={{fontFamily: 'sf', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Work' ? 'white': 'black'}}>Work</Text>
+                              <Text style={{fontFamily: 'Maven-med', fontSize: wp(3), textAlign: 'center', color: inputAddressType === 'Work' ? 'white': 'black'}}>Work</Text>
                               </TouchableOpacity>
                           </View>
                           {inputAddress === '' || inputLocality === '' || inputCity === '' || inputAddressType === '' ? 
-                              <TouchableOpacity style={{marginTop: 25, opacity: 0.2, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10}} disabled={true}>
-                                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
+                              <TouchableOpacity style={{marginTop: 25, opacity: 0.2, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10}} disabled={true} activeOpacity={1}>
+                                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
                               </TouchableOpacity>:
-                              <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} disabled={false} onPress={addAddress}>
-                                  <Text style={{fontFamily: 'Maison-bold', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
+                              <TouchableOpacity style={{marginTop: 25, opacity: 1, backgroundColor: '#6aab9e', padding: 10, borderRadius: 10, elevation: 5, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, shadowRadius: 3.84, shadowColor: '#000'}} disabled={false} onPress={addAddress} activeOpacity={1}>
+                                  <Text style={{fontFamily: 'Maven-sem', fontSize: wp(3), textAlign: 'center', color: 'black'}}>Save address</Text>
                               </TouchableOpacity>
                           }
                       </View>
